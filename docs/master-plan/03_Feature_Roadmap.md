@@ -1,9 +1,33 @@
 # AlphaScribe vNext — Feature Roadmap
 
-Version: 1.0
-Status: Draft
-Owner: CEO & CTO
-Last Updated: July 2026
+| Field | Value |
+|-------|-------|
+| **Document Status** | 🧊 Frozen |
+| **Version** | 1.0.0 |
+| **Phase** | Product Discovery |
+| **Owner** | Product Team |
+| **Approved By** | CTO Review |
+| **Approval Date** | 2026-07-18 |
+| **Last Updated** | 2026-07-18 |
+| **Source of Truth** | Yes |
+
+**Downstream Dependencies:** PRDs · UX Flows · Wireframes · Design Specifications ·
+System Architecture · API Contracts · Database Design · AI Architecture ·
+Engineering Tasks · QA Test Plans · Acceptance Criteria
+
+> **Traceability:** The Version 1.0 (MVP) scope is aligned to the approved
+> [User Personas](../design/01_User_Personas.md) and
+> [User Journeys](../design/02_User_Journeys.md). "Version 1.0" throughout this
+> document refers to the **product/MVP release**, distinct from this document's
+> baseline version (1.0.0).
+
+---
+
+# Revision History
+
+| Version | Date | Author | Status | Description |
+|---------|------|--------|--------|-------------|
+| 1.0.0 | 2026-07-18 | Product Team | ✅ Approved Baseline | Initial frozen product baseline. Consolidates prior discovery-phase drafts: journey synchronization (J-01–J-06), cross-document consistency pass (audience alignment, research-continuity and research-report reframing, removal of duplicate/generic items), and recording the AI Conversation Lifecycle as future documentation. No roadmap redesign. |
 
 ---
 
@@ -50,7 +74,13 @@ Goal:
 
 Deliver the best AI-powered equity research experience for retail investors.
 
-## Authentication
+> Scope note: The MVP is scoped to the Primary personas — P-01 Retail Investor
+> and P-02 Student / Learner — and their approved journeys J-01 through J-06.
+> Journeys for the secondary personas (P-03 Professional Analyst, P-04 Long-Term
+> Investor, P-05 Content Creator / Finance Writer) are intentionally deferred
+> until post-MVP.
+
+## Authentication & AI Setup
 
 - User Registration
 - Login
@@ -58,13 +88,16 @@ Deliver the best AI-powered equity research experience for retail investors.
 - User Profile
 - API Key Management
 - BYOK Support
+- Managed AI Support
+- AI Setup Validation
+- Guided Onboarding
 
 ---
 
-## Dashboard
+## Research Workspace
 
 - Beautiful Landing Page
-- Personalized Dashboard
+- Research Workspace Home
 - Recent Research
 - Quick Actions
 - Search Bar
@@ -78,7 +111,8 @@ Deliver the best AI-powered equity research experience for retail investors.
 - Business Summary
 - Financial Highlights
 - Key Metrics
-- Historical Performance
+- Period-over-Period Performance
+- What Changed Since Last Review
 
 ---
 
@@ -104,6 +138,15 @@ Deliver the best AI-powered equity research experience for retail investors.
 
 ---
 
+## Trusted AI
+
+- Grounded AI
+- Explainable AI
+- Source Traceability
+- Citation Inspection
+
+---
+
 ## SEC Filing Analysis
 
 - 10-K Analysis
@@ -125,14 +168,23 @@ Deliver the best AI-powered equity research experience for retail investors.
 
 ---
 
-## AI Reports
+## Learning Mode
+
+- Learner-Level Explanations
+- Concepts Explained in Context
+- Guided Concept Exploration
+- Worked Analysis Examples
+- Interpretation Self-Check
+
+---
+
+## Research Reports
 
 - Research Report Generation
-- Executive Summary
-- SWOT Analysis
-- Investment Thesis
-- Risk Summary
-- PDF Export
+- Grounded Conclusions
+- Preserved Reasoning
+- Source-Backed Insights
+- Exportable Research Artifacts
 
 ---
 
@@ -146,13 +198,25 @@ Deliver the best AI-powered equity research experience for retail investors.
 
 ---
 
-## User Features
+## Research Sessions
 
-- Save Research
+- Durable Research Sessions
+- Saved Reasoning
+- Saved Sources
+- Resume Research
 - Research History
-- Favorite Companies
-- Dark Mode
-- Notifications
+
+---
+
+## Deferred to Post-MVP
+
+The following were considered for the MVP but deferred to keep it focused:
+
+- Favorite Companies — removed as duplicative; returning to companies is already
+  served by Recent Research (Research Workspace) and Research Sessions, and
+  ongoing tracking is covered by Watchlists in Version 1.1.
+- Notifications — deferred to Version 1.1, where it is represented concretely as
+  Company, Price, and Earnings Alerts under Watchlists.
 
 ---
 
@@ -296,6 +360,20 @@ The long-term roadmap includes:
 - Custom AI Models
 - Enterprise Security
 - Team Administration
+
+---
+
+# Future Documentation
+
+The following are planned **documentation** deliverables, not current MVP
+features. They are recorded here so scope stays clear as PRD writing begins.
+
+- **AI Conversation Lifecycle** — future documentation will define how the AI
+  copilot behaves across a research session, including conversation continuity,
+  follow-up interactions, context retention, conversation history, and research
+  session continuity. The MVP delivers the copilot and Research Sessions
+  capabilities; the detailed lifecycle model is deferred to that future
+  documentation and does not expand MVP scope.
 
 ---
 

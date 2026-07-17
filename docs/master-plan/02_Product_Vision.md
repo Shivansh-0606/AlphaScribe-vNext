@@ -1,9 +1,27 @@
 # AlphaScribe vNext — Product Vision
 
-Version: 1.0
-Status: Draft
-Owner: CEO & CTO
-Last Updated: July 2026
+| Field | Value |
+|-------|-------|
+| **Document Status** | 🧊 Frozen |
+| **Version** | 1.0.0 |
+| **Phase** | Product Discovery |
+| **Owner** | Product Team |
+| **Approved By** | CTO Review |
+| **Approval Date** | 2026-07-18 |
+| **Last Updated** | 2026-07-18 |
+| **Source of Truth** | Yes |
+
+**Downstream Dependencies:** PRDs · UX Flows · Wireframes · Design Specifications ·
+System Architecture · API Contracts · Database Design · AI Architecture ·
+Engineering Tasks · QA Test Plans · Acceptance Criteria
+
+---
+
+# Revision History
+
+| Version | Date | Author | Status | Description |
+|---------|------|--------|--------|-------------|
+| 1.0.0 | 2026-07-18 | Product Team | ✅ Approved Baseline | Initial frozen product baseline after cross-document review and consistency verification (consolidates prior discovery-phase drafts). |
 
 ---
 
@@ -74,18 +92,21 @@ AI is the engine behind the platform—not the entire product.
 
 # Target Audience
 
+The MVP audience is defined authoritatively in the
+[User Personas](../design/01_User_Personas.md) document. The two Primary personas
+below define the MVP; the secondary personas are supported where their needs
+overlap the Primary set.
+
 ## Primary Audience
 
-- Retail investors
-- Self-directed investors
+- Retail / self-directed investors (P-01)
+- Finance students and learners (P-02)
 
 ## Secondary Audience
 
-- Finance students
-- Equity research analysts
-- Investment researchers
-- Wealth managers
-- Financial professionals
+- Professional analysts and investment researchers (P-03)
+- Long-term investors (P-04)
+- Content creators and finance writers (P-05)
 
 ---
 
@@ -100,6 +121,17 @@ AlphaScribe enables investors to:
 - Make better-informed investment decisions
 
 without sacrificing transparency or usability.
+
+AlphaScribe's competitive advantage is not simply AI-powered research, but AI
+research that earns trust. Every insight is:
+
+- **Grounded** in primary sources rather than generated from open-ended memory
+- **Explainable**, so the user always understands how a conclusion was reached
+- **Traceable** back to the evidence behind it, inspectable down to the citation
+
+This trust-first positioning—grounded, explainable, and source-traceable AI—is
+what separates AlphaScribe from general-purpose AI tools and is the differentiator
+the rest of this documentation set is built to protect.
 
 ---
 

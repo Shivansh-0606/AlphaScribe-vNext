@@ -1,18 +1,27 @@
 # AlphaScribe vNext — User Personas
 
-Version: 1.0
-Status: Draft
-Owner: Product & Design
-Last Updated: July 2026
+| Field | Value |
+|-------|-------|
+| **Document Status** | 🧊 Frozen |
+| **Version** | 1.0.0 |
+| **Phase** | Product Discovery |
+| **Owner** | Product Team |
+| **Approved By** | CTO Review |
+| **Approval Date** | 2026-07-18 |
+| **Last Updated** | 2026-07-18 |
+| **Source of Truth** | Yes |
+
+**Downstream Dependencies:** PRDs · UX Flows · Wireframes · Design Specifications ·
+System Architecture · API Contracts · Database Design · AI Architecture ·
+Engineering Tasks · QA Test Plans · Acceptance Criteria
 
 ---
 
 # Revision History
 
-| Version | Status | Owner | Last Updated | Approver | Summary of Changes |
-|---------|--------|-------|--------------|----------|--------------------|
-| 1.0 | Draft | Product & Design | July 2026 | Product Lead | Initial five personas, MVP scope, and product-decision guidance. |
-| 1.1 | Draft | Product & Design | July 2026 | Product Lead | Added persona IDs, traceability, MVP feature coverage matrix, and post-v1 personas. |
+| Version | Date | Author | Status | Description |
+|---------|------|--------|--------|-------------|
+| 1.0.0 | 2026-07-18 | Product Team | ✅ Approved Baseline | Initial frozen product baseline after cross-document review and consistency verification (consolidates prior discovery-phase drafts). |
 
 ---
 
