@@ -1,0 +1,30 @@
+fastapi==0.110.1
+uvicorn==0.25.0
+python-dotenv>=1.0.1
+pymongo==4.6.3
+motor==3.3.1
+pydantic>=2.6.4
+numpy>=1.26.0
+python-multipart>=0.0.9
+requests>=2.31.0
+pytest>=8.0.0
+pytest-xdist>=3.6.0
+
+# --- LLM providers (bring-your-own key) ---
+# gemini via google SDK; openai SDK covers openai/groq/openrouter/deepseek/
+# mistral/custom (OpenAI-compatible); anthropic via its own SDK.
+google-generativeai>=0.8.0
+openai>=1.40.0
+anthropic>=0.34.0
+
+# --- global company data (non-US fallback when SEC EDGAR has nothing) ---
+yfinance>=0.2.40
+
+# --- PDF ingest (annual reports, esp. Indian NSE/BSE filings) ---
+pypdf>=4.0.0
+
+# --- imported by the app but were missing from the original manifest ---
+httpx>=0.27.0
+langgraph>=0.2.0
+rank-bm25>=0.2.2
+fastembed>=0.3.6

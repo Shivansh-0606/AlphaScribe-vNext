@@ -1,0 +1,38 @@
+{
+  "summary": "Iteration 6 (3 user-reported issues) verified end-to-end. Backend 8/9 pass (1 minor unrelated to code): (i) LATEST FILINGS — POST /api/companies/ensure {ticker:'TSLA',refresh:true} returns action=ingested_from_edgar with filing_date='YYYY-MM-DD' and source='10-Q <acc> filed <date>'; filings collection grew (before/after count verified). (ii) FOLLOW-UP CONTEXT — POST /api/reports/generate accepts context_report_id, returns job_id; regression run without context also works. (iii) INDIAN — /api/companies/search returns Reliance (RELIANCE, exchange:IN) and TCS (exchange:IN) as top matches; POST /api/companies/ensure with RELIANCE returns 422 with detail mentioning 'NSE/BSE' + 'Paste'/'Upload'; US ticker regression apple→AAPL(US) still top. Frontend all key flows pass: CompanyCombobox shows 'NSE/BSE' badge + 'paste/upload' tag on Reliance; selecting Reliance shows helper 'RELIANCE is on NSE/BSE — auto-fetch isn't supported. Head to Ingest…'; clicking Analyze fires toast + navigates to /ingest. ReportView Refresh button (data-testid=report-refresh-filings) triggers window.confirm and POST /api/companies/ensure {ticker,refresh:true} (confirmed via network payload). Follow-up submit posts context_report_id equal to current report id (network payload {ticker:'AAPL', query:'…', context_report_id:'<id>'}) and helper text 'Context-aware — the previous brief is passed to the synthesizer.' is rendered when report is complete. FIXED one blocking bug: ensureCompany was used in ReportView.jsx but not imported (import was `{generateReport, getReport, streamJob}`); added ensureCompany to the import — otherwise Refresh button would ReferenceError.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/companies/search?q=infy", "issue": "INFY top result is Infosys Ltd but exchange='US' (SEC company_tickers.json contains INFY as ADR and its US entry wins de-dup vs INDIAN_TICKERS). Spec expected exchange='IN'. Either drop INFY from indian_companies.py or add ADR-aware override to flag INFY as IN when Indian counterpart exists."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test_iter6.py",
+    "/app/test_reports/pytest/pytest_iter6.xml"
+  ],
+  "action_items": [
+    "(Optional) Decide INFY exchange labeling — currently shows as US ADR (SEC-registered); Indian bundled entry is de-duped."
+  ],
+  "critical_code_review_comments": [
+    "BUG FIXED IN THIS ITER: ReportView.jsx used ensureCompany without importing it — Refresh button would crash with ReferenceError. Fixed the import statement.",
+    "server.py _run_pipeline serializes prior_brief only via initial state dict; there is no synthesizer-level event that surfaces which prior_brief was used — hard to audit follow-ups after the fact. Consider emitting a trace event 'synthesizer: prior_brief loaded (N chars)'.",
+    "company_index.load_index dedup by ticker means Indian tickers listed as US ADRs (INFY, HDB, IBN, WIT etc.) will always resolve to exchange='US'. If IN dual-listing awareness is desired, keep a second-source-of-truth flag.",
+    "ensure_company: when refresh=True but SEC has no newer filing, we still re-ingest the same doc (creates duplicate chunks/filing rows). Consider checking accessionNumber against existing filings and short-circuiting."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test_iter6.py",
+    "/app/frontend/src/pages/ReportView.jsx"
+  ],
+  "success_rate": {"backend": "89% (8/9)", "frontend": "100% (5/5 flows)"},
+  "test_credentials": "N/A (no auth)",
+  "seed_data_creation": "test_ensure_tsla_refresh added 1 fresh TSLA 10-Q filing document via SEC EDGAR (as designed by refresh=true). test_generate_* dispatched 2 background report jobs (AAPL w/ context + AAPL w/o context) — jobs completed in background.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter6 fixed 3 user issues (latest filings via Refresh button + filing_date field; follow-up context via context_report_id in synth prior_brief; Indian companies via bundled INDIAN_TICKERS + exchange='IN' + 422 for ensure). New testids: report-refresh-filings, company-option-<TICKER>. Follow-up now sends context_report_id in payload. Only known minor is INFY resolving to US due to SEC ADR entry.",
+  "rca of the issue": "N/A for tests; but during review found: ensureCompany was called but not imported in ReportView.jsx — a runtime ReferenceError would fire the moment a user clicked Refresh, silently caught by the try/catch and shown as a toast. Fix: added `ensureCompany` to the named-import from '@/lib/api'."
+}

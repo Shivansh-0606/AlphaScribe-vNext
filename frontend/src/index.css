@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm-Light / Editorial-Fintech. Light theme with an emerald signature —
+       cream paper canvas, ink-navy ink, one confident emerald→teal accent.
+       Single token set (still no theme toggle); see CLAUDE.md. */
+    --background: 38 27% 91%;       /* #EEEAE2 warm parchment — softened from glare */
+    --foreground: 215 40% 14%;      /* #15212F ink navy */
+    --surface: 40 28% 95%;          /* #F6F3EF soft off-white — cards lift, not pure white */
+    --surface-hover: 38 22% 89%;    /* #E9E3DA gentle warm hover */
+
+    --card: 40 28% 95%;
+    --card-foreground: 215 40% 14%;
+    --popover: 40 28% 95%;
+    --popover-foreground: 215 40% 14%;
+
+    --primary: 215 40% 14%;         /* ink navy — solid buttons + strong text */
+    --primary-foreground: 42 30% 96%; /* soft cream text on navy buttons */
+    --secondary: 38 20% 88%;        /* #E7E0D6 warm light */
+    --secondary-foreground: 215 40% 14%;
+    --muted: 38 22% 90%;            /* #ECE6DD */
+    --muted-foreground: 215 14% 40%; /* #59626F slate */
+    --accent: 162 36% 84%;          /* #CFE7DD softer emerald tint */
+    --accent-foreground: 162 84% 15%;
+    --destructive: 0 70% 46%;       /* #C62D2D */
+    --destructive-foreground: 0 0% 100%;
+    --border: 36 18% 83%;           /* #DBD5CC warm hairline (reads on deeper paper) */
+    --input: 36 18% 83%;
+    --ring: 162 84% 28%;            /* deep emerald focus ring */
+    --chart-1: 162 78% 34%;         /* emerald */
+    --chart-2: 0 70% 48%;           /* red */
+    --chart-3: 32 90% 42%;          /* amber */
+    --chart-4: 210 84% 44%;         /* blue */
+    --chart-5: 280 52% 50%;         /* violet */
+    --radius: 0px;
+
+    --input-bg: 42 30% 96%;         /* #F8F5F0 warm off-white inputs */
+    --code-bg: 210 16% 92%;         /* #E9ECEF muted code surface */
+
+    /* Emerald→teal signature gradient — deepened so it reads rich, not neon. */
+    --brand-from: 162 88% 28%;      /* #069169 deep emerald */
+    --brand-to: 176 82% 29%;        /* #0D8C82 deep teal */
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html, body, #root { @apply bg-background text-foreground; min-height: 100%; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "ss02", "cv01";
+  }
+  button, a, input, li {
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+  }
+  ::selection { background: #0B8F6A; color: #ffffff; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #E7E1D7; }
+  ::-webkit-scrollbar-thumb { background: #CFC7B8; }
+  ::-webkit-scrollbar-thumb:hover { background: #B6AC98; }
+}
+
+@layer components {
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .label-mono {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .input-bg { background-color: hsl(var(--input-bg)); }
+  .terminal-cursor::after {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 1em;
+    margin-left: 4px;
+    vertical-align: -2px;
+    background: currentColor;
+    animation: blink 1s steps(2) infinite;
+  }
+  .grid-lines {
+    background-image:
+      linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .cell {
+    background: hsl(var(--surface) / 0.78);
+    border: 1px solid hsl(var(--border));
+    backdrop-filter: blur(12px) saturate(1.15);
+    -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  }
+  .divider-x > * + * { border-left: 1px solid hsl(var(--border)); }
+  .divider-y > * + * { border-top: 1px solid hsl(var(--border)); }
+}
+
+@layer base {
+  [data-debug-wrapper="true"] { display: contents !important; }
+  [data-debug-wrapper="true"] > * {
+    margin-left: inherit; margin-right: inherit; margin-top: inherit; margin-bottom: inherit;
+    padding-left: inherit; padding-right: inherit; padding-top: inherit; padding-bottom: inherit;
+    column-gap: inherit; row-gap: inherit; gap: inherit;
+    border-left-width: inherit; border-right-width: inherit;
+    border-top-width: inherit; border-bottom-width: inherit;
+    border-left-style: inherit; border-right-style: inherit;
+    border-top-style: inherit; border-bottom-style: inherit;
+    border-left-color: inherit; border-right-color: inherit;
+    border-top-color: inherit; border-bottom-color: inherit;
+  }
+}

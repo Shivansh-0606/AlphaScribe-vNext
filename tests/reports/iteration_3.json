@@ -1,0 +1,24 @@
+{
+  "summary": "Iteration 4 verified: backend /api/companies/search + /api/companies/ensure + /api/health all pass (7/7 pytest green). Frontend: dashboard CompanyCombobox debounced search returns AAPL with green FILINGS badge, ORCL with warning AUTO-FETCH badge; selecting AAPL shows 'Corpus ready for AAPL', selecting ORCL shows 'No filings yet — we'll fetch...'. All 4 preset tiles render with testids; clicking Bear/Risks updates query textarea and highlights tile. Analyze button correctly disabled without selection+query and enables afterwards. Watchlist section visible (empty then populated). Coverage strip renders ingested tickers as pills. ReportView: Share + Markdown buttons in header, WatchlistStar toggles + persists to localStorage 'alphascribe:watchlist:v1', Markdown download triggered file 'AAPL_Company_name_attach_test.md', follow-up form present, back-to-home navigates to /.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test_iter4.py",
+    "/app/test_reports/pytest/pytest_iter4.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py /api/companies/ensure hardcodes '10-Q' then '10-K' fallback — good, but no timeout guard on fetch_edgar_latest sequential loop; a slow SEC response could delay the request 30-60s. Consider adding asyncio.wait_for.",
+    "CompanyCombobox debounce useEffect re-runs on `value` change too (dependency [q, value]) — when a user picks a result, the value updates and the effect fires again with the guard `q === value?.name` to short-circuit. Works but slightly fragile; consider tracking a boolean 'just-picked' instead.",
+    "Dashboard.jsx: after ensureCompany success we do not re-check has_filings via a follow-up /companies/search — we optimistically set has_filings:true which is fine for the immediate generate call, but the ticker chip badge remains coloured warning until re-search. Acceptable.",
+    "ReportView.jsx: streamJob is reattached on id change; but if SSE dies during a running job we don't retry. Cosmetic — falls back to getReport() on end handler."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test_iter4.py"],
+  "success_rate": {"backend": "100% (7/7)", "frontend": "100% of exercised flows"},
+  "test_credentials": "N/A (no auth in app)",
+  "seed_data_creation": "No new seed data added by tests. AAPL/MSFT/NVDA/TSLA/TSTA/TSTC/ORCL(auto?)/IBM(possibly newly ingested from EDGAR during ensure test) present in db.companies.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter4 tests at /app/backend/tests/backend_test_iter4.py. SEC company index loaded (~10.4k tickers). AAPL/MSFT/NVDA/TSLA have filings; ORCL/IBM were NOT ingested prior to test start — the test_ensure_new_or_404 hit IBM and either 200'd or 404'd. Watchlist LS key: 'alphascribe:watchlist:v1'. Frontend combobox testids: ticker-input, ticker-input-listbox, ticker-input-clear, company-option-{TICKER}. Report header: report-copy-link, report-download-md, back-to-home, watchlist-toggle-{TICKER}, followup-input, followup-submit.",
+  "rca of the issue": "N/A — all Phase 4 features verified end-to-end."
+}
