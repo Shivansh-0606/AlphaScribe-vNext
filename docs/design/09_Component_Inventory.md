@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Document Status** | 📝 Draft |
-| **Version** | 0.1.0 |
+| **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | _Pending_ |
@@ -20,6 +20,7 @@ States · Frontend implementation · PRDs
 | Version | Date | Author | Status | Description |
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial Atomic-Design component catalogue for the MVP screens. |
+| 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added an Experiential Contract (interaction, motion intent, loading, focus, transition, accessibility, AI behavior) required of every component. No new components or scope. |
 
 ---
 
@@ -27,7 +28,7 @@ States · Frontend implementation · PRDs
 
 | Relationship | Documents |
 |--------------|-----------|
-| **Depends On** | [Design System](08_Design_System.md), [Wireframes](07_Wireframes.md), [Screen Inventory](05_Screen_Inventory.md), [UX Specifications](06_UX_Specifications.md) |
+| **Depends On** | [Design Constitution](00_Design_Constitution.md), [Design System](08_Design_System.md), [Wireframes](07_Wireframes.md), [Screen Inventory](05_Screen_Inventory.md), [UX Specifications](06_UX_Specifications.md) |
 | **Used By** | [Interaction Patterns](10_Interaction_Patterns.md), [States](13_States.md), [Accessibility](12_Accessibility.md), Frontend implementation. |
 | **Related Documents** | [Navigation Structure](04_Navigation_Structure.md), [Responsive Behavior](11_Responsive_Behavior.md) |
 
@@ -45,6 +46,31 @@ Templates. Each entry lists Purpose, Variants, Properties, States, Accessibility
 Screens Used, Dependencies, and Usage Rules. "Screens Used" references
 [Screen Inventory](05_Screen_Inventory.md) IDs. Component *State* names reference the
 canonical [States](13_States.md) catalogue.
+
+## Experiential Contract (applies to every component)
+
+Per the [Design Constitution](00_Design_Constitution.md), every component must feel crafted
+and alive, not merely functional. These **experiential expectations** are required of each
+component in addition to its listed attributes — stated once here to avoid repetition, and
+enforceable in review:
+
+- **Interaction behavior:** acknowledges the user immediately and proportionately (an alive,
+  responsive feel — §6, §19); the same acknowledgment vocabulary across components.
+- **Motion intent:** any motion communicates, guides, or reassures, is subtle and refined,
+  and never distracts (§14); motion that is removable without losing meaning is not added.
+- **Loading behavior:** loading feels *alive and productive* — skeletons/progress scoped to
+  the component, never an inert blank (§19; [States](13_States.md)).
+- **Focus behavior:** a clear, calm, visible focus state; predictable focus on interaction
+  ([Accessibility](12_Accessibility.md)).
+- **Transition expectations:** state changes are continuous and legible, preserving context
+  (§14) — nothing snaps jarringly.
+- **Accessibility expectations:** meets the WCAG AA contract in [Accessibility](12_Accessibility.md).
+- **AI behavior (where applicable):** AI-bearing components (`CopilotPanel`, `AISummary`,
+  `FilingViewer`) read as a partner *thinking and gathering evidence*, streaming naturally
+  with sources attaching — never a generic spinner (§9).
+
+Individual entries below note only where a component's experiential behavior is distinctive;
+this contract is otherwise assumed.
 
 ---
 

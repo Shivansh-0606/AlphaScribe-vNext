@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Document Status** | 📝 Draft |
-| **Version** | 0.1.0 |
+| **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | _Pending_ |
@@ -19,6 +19,7 @@
 | Version | Date | Author | Status | Description |
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial responsive behavior specification across desktop, tablet, and mobile. |
+| 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added the Responsive Experience Principle (behavior adapts, experience does not — the same premium, living, AI-native product at every size). Structure unchanged. |
 
 ---
 
@@ -26,7 +27,7 @@
 
 | Relationship | Documents |
 |--------------|-----------|
-| **Depends On** | [Navigation Structure](04_Navigation_Structure.md), [Screen Inventory](05_Screen_Inventory.md), [Wireframes](07_Wireframes.md), [Design System](08_Design_System.md), [Interaction Patterns](10_Interaction_Patterns.md) |
+| **Depends On** | [Design Constitution](00_Design_Constitution.md), [Navigation Structure](04_Navigation_Structure.md), [Screen Inventory](05_Screen_Inventory.md), [Wireframes](07_Wireframes.md), [Design System](08_Design_System.md), [Interaction Patterns](10_Interaction_Patterns.md) |
 | **Used By** | [Accessibility](12_Accessibility.md), Frontend implementation, QA. |
 | **Related Documents** | [Component Inventory](09_Component_Inventory.md), [States](13_States.md) |
 
@@ -34,6 +35,27 @@
 > [Navigation Structure](04_Navigation_Structure.md) holds throughout: **structure and
 > destinations are constant across contexts; only presentation density adapts.** No
 > destination exists in one context and not another.
+
+---
+
+# Responsive Experience Principle
+
+Per the [Design Constitution](00_Design_Constitution.md), **behavior adapts; experience does
+not.** AlphaScribe must feel like the *same premium, living product* on desktop, tablet, and
+mobile — equally calm, responsive, crafted, and collaborative. Responsive design here is not
+only about where regions go; it is about preserving the *feeling* across contexts:
+
+- The product feels equally **alive and responsive** at every size — inputs acknowledged
+  instantly, motion equally refined, nothing more sluggish or more static on smaller contexts.
+- **AI remains an embedded partner** everywhere — thinking, streaming, and gathering evidence
+  identically, never downgraded to a plainer "mobile" treatment.
+- **Craftsmanship is constant** — spacing rhythm, depth, and interaction polish are preserved,
+  only their density adapts.
+- **Continuity is constant** — context and work are preserved across sizes; resuming on one
+  device feels like the same workspace.
+
+What changes across sizes is *presentation density and arrangement*; what never changes is the
+premium, trustworthy, living experience.
 
 ---
 

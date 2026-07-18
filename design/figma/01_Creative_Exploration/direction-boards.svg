@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1040" viewBox="0 0 1680 1040" font-family="'IBM Plex Sans', system-ui, sans-serif">
+  <title>AlphaScribe vNext — Creative Exploration: Three Direction Boards (frozen tokens only)</title>
+  <desc>Specimen boards for Directions A (Broadsheet), B (Workbench), C (Study). Uses frozen palette: canvas #EEEAE2, surface #F6F3EF, ink #15212F, muted-fg #59626F, border #DBD5CC, signal emerald #069169 to teal #0D8C82. IBM Plex fallback to system fonts in this specimen.</desc>
+
+  <defs>
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#069169"/>
+      <stop offset="1" stop-color="#0D8C82"/>
+    </linearGradient>
+    <filter id="lift" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#15212F" flood-opacity="0.10"/>
+    </filter>
+    <style>
+      .label{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;fill:#59626F;font-weight:500}
+      .h1{font-size:26px;font-weight:600;fill:#15212F}
+      .h2{font-size:18px;font-weight:600;fill:#15212F}
+      .body{font-size:13px;fill:#15212F}
+      .muted{font-size:12px;fill:#59626F}
+      .fig{font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:500;fill:#15212F}
+      .cap{font-size:12px;fill:#59626F;font-style:italic}
+      .signaltx{fill:url(#signal);font-weight:600}
+    </style>
+  </defs>
+
+  <!-- page ground = parchment canvas -->
+  <rect width="1680" height="1040" fill="#EEEAE2"/>
+
+  <!-- header -->
+  <text x="56" y="58" class="h1">AlphaScribe vNext — Creative Exploration</text>
+  <text x="56" y="84" class="muted">Three expressions of ONE frozen identity. Same tokens, type, and single signal — different emphasis. North Star: a calm, living research workspace.</text>
+  <rect x="56" y="100" width="120" height="3" fill="url(#signal)"/>
+
+  <!-- palette strip -->
+  <g transform="translate(56,120)">
+    <text class="label" y="0">Frozen palette · one canvas · one ink · one signal</text>
+    <g transform="translate(0,10)">
+      <rect x="0" y="0" width="70" height="34" fill="#EEEAE2" stroke="#DBD5CC"/><text x="0" y="52" class="muted">canvas</text>
+      <rect x="80" y="0" width="70" height="34" fill="#F6F3EF" stroke="#DBD5CC"/><text x="80" y="52" class="muted">surface</text>
+      <rect x="160" y="0" width="70" height="34" fill="#15212F"/><text x="160" y="52" class="muted">ink</text>
+      <rect x="240" y="0" width="70" height="34" fill="#59626F"/><text x="240" y="52" class="muted">muted</text>
+      <rect x="320" y="0" width="140" height="34" fill="url(#signal)"/><text x="320" y="52" class="muted">signal (emerald→teal)</text>
+      <rect x="480" y="0" width="46" height="34" fill="#059669"/><text x="480" y="52" class="muted">bull</text>
+      <rect x="536" y="0" width="46" height="34" fill="#DC2626"/><text x="536" y="52" class="muted">bear</text>
+      <rect x="592" y="0" width="46" height="34" fill="#D97706"/><text x="592" y="52" class="muted">warn</text>
+    </g>
+  </g>
+
+  <!-- ============ COLUMN A : BROADSHEET ============ -->
+  <g transform="translate(56,220)">
+    <text class="label" y="0">Direction A</text>
+    <text class="h2" y="24">The Broadsheet</text>
+    <text class="cap" y="44">Editorial-forward · read the company like a briefing</text>
+
+    <!-- flat paper, hairlines only, no elevation -->
+    <g transform="translate(0,60)">
+      <rect x="0" y="0" width="480" height="560" fill="#EEEAE2" stroke="#DBD5CC"/>
+      <line x1="24" y1="40" x2="456" y2="40" stroke="#DBD5CC"/>
+      <text x="24" y="30" class="label">NSE:INFY · Company Research</text>
+      <text x="24" y="76" style="font-size:22px;font-weight:600;fill:#15212F">Infosys Ltd</text>
+      <text x="24" y="104" class="muted">IT Services · Large Cap · summary before detail</text>
+
+      <!-- long-read prose, wide measure -->
+      <text x="24" y="140" class="body">A well-set reading column. Structure comes from type</text>
+      <text x="24" y="160" class="body">and space — hairlines only, no raised panels. The page</text>
+      <text x="24" y="180" class="body">fills the frame; chrome recedes to near-invisibility.</text>
+
+      <!-- inline figures -->
+      <line x1="24" y1="210" x2="456" y2="210" stroke="#DBD5CC"/>
+      <text x="24" y="234" class="muted">Revenue (TTM)</text><text x="456" y="234" text-anchor="end" class="fig" font-size="14">₹1,53,670 Cr</text>
+      <text x="24" y="258" class="muted">Operating margin</text><text x="456" y="258" text-anchor="end" class="fig" font-size="14" fill="#059669">21.3% ▲</text>
+      <line x1="24" y1="278" x2="456" y2="278" stroke="#DBD5CC"/>
+
+      <!-- AI as quiet margin note -->
+      <text x="24" y="308" class="label" fill="#0D8C82">AI · in the margin</text>
+      <text x="24" y="330" class="body">“Margins held despite wage inflation…”</text>
+      <text x="24" y="350" class="body signaltx" font-size="12">↳ source: FY24 AR, p.42</text>
+
+      <text x="24" y="392" class="cap">Calm: excellent. Alive/spatial: thin.</text>
+    </g>
+  </g>
+
+  <!-- ============ COLUMN B : WORKBENCH ============ -->
+  <g transform="translate(600,220)">
+    <text class="label" y="0">Direction B</text>
+    <text class="h2" y="24">The Workbench</text>
+    <text class="cap" y="44">Spatial-forward · work at a living desk</text>
+
+    <g transform="translate(0,60)">
+      <!-- background plane -->
+      <rect x="0" y="0" width="480" height="560" fill="#EEEAE2" stroke="#DBD5CC"/>
+      <!-- context rail -->
+      <rect x="0" y="0" width="96" height="560" fill="#F6F3EF" stroke="#DBD5CC"/>
+      <text x="16" y="28" class="label">RAIL</text>
+      <rect x="16" y="44" width="64" height="10" rx="2" fill="#DBD5CC"/>
+      <rect x="16" y="64" width="64" height="10" rx="2" fill="#DBD5CC"/>
+      <rect x="16" y="84" width="64" height="10" rx="2" fill="url(#signal)"/>
+
+      <!-- elevated reading surface -->
+      <rect x="116" y="24" width="240" height="512" rx="4" fill="#F6F3EF" stroke="#DBD5CC" filter="url(#lift)"/>
+      <text x="132" y="52" class="label">NSE:INFY</text>
+      <text x="132" y="80" style="font-size:18px;font-weight:600;fill:#15212F">Infosys Ltd</text>
+      <rect x="132" y="96" width="208" height="1" fill="#DBD5CC"/>
+      <text x="132" y="120" class="muted">Op. margin</text><text x="340" y="120" text-anchor="end" class="fig" font-size="13" fill="#059669">21.3% ▲</text>
+      <text x="132" y="144" class="muted">Rev growth</text><text x="340" y="144" text-anchor="end" class="fig" font-size="13" fill="#DC2626">-1.2% ▼</text>
+      <rect x="132" y="168" width="208" height="64" rx="3" fill="#EEEAE2" stroke="#DBD5CC"/>
+      <text x="144" y="192" class="muted" font-size="11">chart surface</text>
+      <polyline points="144,220 176,208 208,214 240,196 272,202 304,188 328,192" fill="none" stroke="url(#signal)" stroke-width="2"/>
+
+      <!-- always-on AI companion (the risk) -->
+      <rect x="368" y="24" width="98" height="512" rx="4" fill="#F6F3EF" stroke="#DBD5CC" filter="url(#lift)"/>
+      <text x="382" y="50" class="label" fill="#0D8C82">AI · always on</text>
+      <circle cx="388" cy="72" r="4" fill="url(#signal)"/>
+      <rect x="382" y="86" width="70" height="8" rx="2" fill="#DBD5CC"/>
+      <rect x="382" y="100" width="60" height="8" rx="2" fill="#DBD5CC"/>
+      <rect x="382" y="120" width="70" height="8" rx="2" fill="#DBD5CC"/>
+
+      <text x="16" y="548" class="cap">Alive: excellent. Calm: at risk.</text>
+    </g>
+  </g>
+
+  <!-- ============ COLUMN C : STUDY (recommended) ============ -->
+  <g transform="translate(1144,220)">
+    <text class="label" y="0" fill="#0D8C82">Direction C · recommended</text>
+    <text class="h2" y="24">The Study</text>
+    <text class="cap" y="44">Editorial × spatial · read at a living desk</text>
+
+    <g transform="translate(0,60)">
+      <!-- recommended frame accent -->
+      <rect x="-4" y="-4" width="488" height="568" fill="none" stroke="url(#signal)" stroke-width="2"/>
+      <rect x="0" y="0" width="480" height="560" fill="#EEEAE2" stroke="#DBD5CC"/>
+
+      <!-- editorial reading core, flat paper -->
+      <text x="24" y="30" class="label">NSE:INFY · Company Research</text>
+      <line x1="24" y1="40" x2="456" y2="40" stroke="#DBD5CC"/>
+      <text x="24" y="76" style="font-size:22px;font-weight:600;fill:#15212F">Infosys Ltd</text>
+      <text x="24" y="104" class="muted">IT Services · Large Cap · summary before detail</text>
+
+      <text x="24" y="140" class="body">Editorial reading core on flat paper — the page leads.</text>
+      <text x="24" y="160" class="body">Depth, motion, and the AI companion are summoned</text>
+      <text x="24" y="180" class="body">only when they carry meaning, then recede.</text>
+
+      <!-- reserved elevation: a focused metric group -->
+      <rect x="24" y="204" width="432" height="96" rx="4" fill="#F6F3EF" stroke="#DBD5CC" filter="url(#lift)"/>
+      <text x="40" y="228" class="label">Key metrics · elevated on focus</text>
+      <text x="40" y="262" class="muted" font-size="11">Op. margin</text><text x="40" y="284" class="fig" font-size="16" fill="#059669">21.3% ▲</text>
+      <text x="180" y="262" class="muted" font-size="11">Revenue TTM</text><text x="180" y="284" class="fig" font-size="16">₹1.53L Cr</text>
+      <text x="330" y="262" class="muted" font-size="11">P/E</text><text x="330" y="284" class="fig" font-size="16">24.1×</text>
+
+      <!-- AI summoned in-context, evidence forward -->
+      <rect x="24" y="320" width="432" height="150" rx="4" fill="#F6F3EF" stroke="#DBD5CC"/>
+      <rect x="24" y="320" width="3" height="150" fill="url(#signal)"/>
+      <text x="40" y="344" class="label" fill="#0D8C82">AI · summoned in context</text>
+      <circle cx="46" cy="366" r="4" fill="url(#signal)"><animate attributeName="opacity" values="1;0.3;1" dur="1.4s" repeatCount="indefinite"/></circle>
+      <text x="60" y="370" class="body" font-size="12">Thinking → gathering evidence → streaming</text>
+      <text x="40" y="398" class="body">“Operating margin held at 21.3% despite wage</text>
+      <text x="40" y="416" class="body">inflation, aided by higher utilization.”</text>
+      <rect x="40" y="430" width="180" height="24" rx="3" fill="#EEEAE2" stroke="#DBD5CC"/>
+      <text x="52" y="446" class="body signaltx" font-size="11">↳ FY24 Annual Report, p.42</text>
+      <rect x="228" y="430" width="150" height="24" rx="3" fill="#EEEAE2" stroke="#DBD5CC"/>
+      <text x="240" y="446" class="body signaltx" font-size="11">↳ Q4 earnings call</text>
+
+      <text x="24" y="500" class="cap" fill="#0D8C82">Calm AND alive — holds both halves of the North Star.</text>
+    </g>
+  </g>
+
+  <!-- footer verdict -->
+  <text x="56" y="1004" class="muted">Recommendation → Direction C “The Study”. A wins calm but not life (fails Law 16); B wins life but risks calm and the standalone-chatbot anti-pattern (Law 5). C is the North Star sentence, intact.</text>
+</svg>

@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Document Status** | 📝 Draft |
-| **Version** | 0.1.0 |
+| **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | _Pending_ |
@@ -20,6 +20,7 @@ Interaction Patterns · Responsive Behavior · Accessibility · States · PRDs �
 | Version | Date | Author | Status | Description |
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial MVP screen inventory derived from the frozen Information Architecture and Navigation Structure. |
+| 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the approved Design Constitution (v1.1): added per-screen Experiential Profile (emotional goal, experience goal, AI presence, motion opportunities, continuity). No structural or scope change. |
 
 ---
 
@@ -27,7 +28,7 @@ Interaction Patterns · Responsive Behavior · Accessibility · States · PRDs �
 
 | Relationship | Documents |
 |--------------|-----------|
-| **Depends On** | [Information Architecture](03_Information_Architecture.md), [Navigation Structure](04_Navigation_Structure.md), [User Journeys](02_User_Journeys.md), [User Personas](01_User_Personas.md) |
+| **Depends On** | [Design Constitution](00_Design_Constitution.md), [Information Architecture](03_Information_Architecture.md), [Navigation Structure](04_Navigation_Structure.md), [User Journeys](02_User_Journeys.md), [User Personas](01_User_Personas.md) |
 | **Used By** | [UX Specifications](06_UX_Specifications.md), [Wireframes](07_Wireframes.md), [Component Inventory](09_Component_Inventory.md), [Responsive Behavior](11_Responsive_Behavior.md), [States](13_States.md), and PRDs. |
 | **Related Documents** | [Product Vision](../master-plan/02_Product_Vision.md), [Feature Roadmap](../master-plan/03_Feature_Roadmap.md), [Requirements Traceability Matrix](../governance/Requirements_Traceability_Matrix.md) |
 
@@ -49,6 +50,31 @@ The MVP consists of **eleven screens**. Where the IA defines content *levels* wi
 a domain (e.g. a company's Overview → Financials → Filings), those levels are
 **sections within a screen** reached by secondary navigation, not separate screens —
 consistent with the IA, which treats them as levels of one domain.
+
+Every screen inherits the [Design Constitution](00_Design_Constitution.md): it must feel
+calm, alive, premium, and collaborative — a living research workspace, never a static
+dashboard. The **Experiential Profile** below states, for each screen, the feeling it must
+create — not how to build it. It complements (does not replace) the structural attributes in
+each screen definition.
+
+## Experiential Profile (per screen)
+
+| Screen | Primary Emotional Goal | Experience Goal | AI Presence | Motion Opportunities | Continuity Expectations |
+|--------|------------------------|-----------------|-------------|----------------------|-------------------------|
+| SCR-01 Landing | Assured, intrigued | Understand the value calmly, without hype | — | Gentle entrance that guides the eye to the value and the way in | Carries a confident first impression into sign-in |
+| SCR-02 Authentication | Safe, unhurried | Getting in feels effortless and trustworthy | — | Feedback that acknowledges each input; smooth transition onward | Remembers intended destination; no restart on error |
+| SCR-03 Onboarding & AI Setup | Reassured, in control | Setup feels light; validation feels alive, not a spinner | Access validation reads as active checking, calmly | Progress that makes validation feel underway | Flows seamlessly into the workspace, ready to research |
+| SCR-04 Workspace Home | Focused, invited | A calm, ready starting point that invites the next question | — | Recent research reveals progressively; search responds instantly | Returning feels like resuming, not re-entering |
+| SCR-05 Search Results | Efficient, oriented | Finding feels fast and recall-driven | — | Results settle in without jarring; refine feels continuous | Selecting preserves the originating context |
+| SCR-06 Company Research | Confident, curious, calm | The core loop feels intelligent and effortless; evidence is always near | Summary, Copilot, Filing Analysis feel like a partner thinking and gathering evidence | Progressive reveal of content levels; AI thinking→streaming; source appears attached to insight | Section moves and AI never lose the company context |
+| SCR-07 Comparison | Decisive, clear-headed | Weighing candidates feels honest and comparable | AI explains differences as a collaborator | Members add/remove fluidly; comparison updates continuously | Members trace back to their research; comparison is preservable |
+| SCR-08 Learning | Encouraged, capable | Learning feels rewarding and unhurried | Learning assistance feels like a patient tutor thinking with the user | Explanations stream naturally; concepts reveal in context | Concept↔company↔source movement stays oriented |
+| SCR-09 Research Library | Reassured, in command | Prior work feels safe, retrievable, and alive | — | Lists reveal progressively; Resume Session feels like stepping back in | Resume Session restores full prior context |
+| SCR-10 Report View | Confident, satisfied | A grounded report that feels authoritative yet transparent | Presents grounded content with evidence felt | Report reveals in reading order; export confirms with quiet satisfaction | Sources and subject company remain one move away |
+| SCR-11 Settings | Calm, in control | Adjusting feels safe and considered | Access validation reads as active, calm checking | Changes confirm with proportionate, reassuring feedback | Changes never disrupt research in progress |
+
+These experiential goals are governed by the Constitution's Emotional Design (§5), Living
+Interface (§6), AI Experience (§9), Motion (§14), and Micro-interaction (§19) philosophies.
 
 ## Screen Set (at a glance)
 

@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Document Status** | 📝 Draft |
-| **Version** | 0.1.0 |
+| **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | _Pending_ |
@@ -20,6 +20,7 @@ Responsive Behavior · Accessibility · States · PRDs · QA Test Plans
 | Version | Date | Author | Status | Description |
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial behavioral UX specifications for the eleven MVP screens. |
+| 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added required Experiential Facets (emotional intention, perceived performance, interaction rhythm, responsiveness, confidence, continuity) applying to every screen; enriched core AI behaviour. No behavioral or scope change. |
 
 ---
 
@@ -27,7 +28,7 @@ Responsive Behavior · Accessibility · States · PRDs · QA Test Plans
 
 | Relationship | Documents |
 |--------------|-----------|
-| **Depends On** | [Screen Inventory](05_Screen_Inventory.md), [Navigation Structure](04_Navigation_Structure.md), [Information Architecture](03_Information_Architecture.md), [User Journeys](02_User_Journeys.md) |
+| **Depends On** | [Design Constitution](00_Design_Constitution.md), [Screen Inventory](05_Screen_Inventory.md), [Navigation Structure](04_Navigation_Structure.md), [Information Architecture](03_Information_Architecture.md), [User Journeys](02_User_Journeys.md) |
 | **Used By** | [Wireframes](07_Wireframes.md), [Interaction Patterns](10_Interaction_Patterns.md), [States](13_States.md), and PRDs. |
 | **Related Documents** | [User Personas](01_User_Personas.md), [Product Vision](../master-plan/02_Product_Vision.md) |
 
@@ -46,6 +47,34 @@ across a fixed set of behavioral facets. Cross-cutting behaviors (state definiti
 interaction patterns, accessibility rules) are defined once in their own documents and
 referenced here to avoid duplication. Universal rules that apply to every screen are
 stated once in *Global UX Rules* and not repeated per screen.
+
+---
+
+# Experiential Facets (apply to every screen)
+
+Per the [Design Constitution](00_Design_Constitution.md), every screen specification is
+evaluated not only on what it does but on how it *feels*. The following facets are required
+of every screen below, alongside the behavioral facets — they are stated once here rather
+than repeated per screen, and any review may reject a screen that satisfies function but
+fails experience.
+
+- **Emotional intention:** the feeling the screen must create (see the Experiential Profile
+  in [Screen Inventory](05_Screen_Inventory.md)) — calm, focused, rewarding, confident.
+- **Perceived performance:** the screen feels fast — immediate acknowledgment and
+  progressive reveal matter more than total completion time; waiting feels productive.
+- **Interaction rhythm:** actions and responses form a smooth, unhurried cadence; nothing
+  feels abrupt, stiff, or mechanical.
+- **Responsiveness:** every input is acknowledged instantly and proportionately; the screen
+  feels alive and attentive.
+- **Confidence:** the experience reinforces trust through responsiveness and transparency —
+  the user feels the product is working *with* them.
+- **Continuity:** moving into, within, and out of the screen preserves context; transitions
+  connect states so the experience feels like one continuous flow (never a jarring reset).
+
+These facets inherit the Constitution's Emotional Design (§5), Living Interface (§6), AI
+Experience (§9), Motion (§14), and Micro-interaction (§19) philosophies. Where a screen's
+behavior below has a distinctive experiential nuance, it is noted in that screen's *AI
+Behaviour*, *Loading*, or *Success* facets.
 
 ---
 
@@ -180,7 +209,7 @@ These apply to all screens and are assumed in every specification below.
 - **Primary Tasks:** Read the summary and metrics; move across content sections; ask the copilot; jump to source; add to comparison; save/export.
 - **User Flow:** Enter company → overview → business summary → metrics → statements → filings → AI insights → (compare / learn / save / export) (J-02, J-05).
 - **Information Hierarchy:** Follows the IA content hierarchy: Company → Overview → Business Summary → Financial Metrics → Financial Statements → SEC Filings → AI Insights → Export.
-- **AI Behaviour:** AI Summary presented first and grounded; Copilot answers in context and anchored to sources; Filing Analysis interprets primary sources; every insight offers *Jump to Source*. AI never presents a recommendation; it informs (Strategy).
+- **AI Behaviour:** AI Summary presented first and grounded; Copilot answers in context and anchored to sources; Filing Analysis interprets primary sources; every insight offers *Jump to Source*. AI never presents a recommendation; it informs (Strategy). **Experientially**, AI should feel like a research partner *thinking and visibly gathering evidence* — appearing to consider the question, then streaming its answer naturally with sources attaching as they resolve — never a blank spinner or a sudden monolithic block (Constitution §9).
 - **Interaction Rules:** Summary precedes figures; every metric carries its meaning; sources always reachable; adding to comparison carries the company into SCR-07.
 - **Validation Rules:** Copilot input is free-form; empty queries are ignored gracefully.
 - **Edge Cases:** Company not covered → Empty/No-coverage guidance with an alternative path (J-02 failure); a data source unavailable → Partial Failure showing what is available (Vision: best-effort sources).

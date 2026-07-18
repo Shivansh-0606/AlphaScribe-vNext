@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Document Status** | 📝 Draft |
-| **Version** | 0.1.0 |
+| **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | _Pending_ |
@@ -20,6 +20,7 @@ Behavior · Accessibility · Design Specifications · Frontend implementation
 | Version | Date | Author | Status | Description |
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial design system aligned to the established warm-light editorial-fintech theme. Dark Mode flagged for CTO review. |
+| 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added Motion & Interaction Token philosophy, Animation, Depth, Experience Consistency, and Craftsmanship principles; added `interaction.*` and `depth.*` token families. No implementation values defined; theme unchanged. |
 
 ---
 
@@ -27,7 +28,7 @@ Behavior · Accessibility · Design Specifications · Frontend implementation
 
 | Relationship | Documents |
 |--------------|-----------|
-| **Depends On** | [Product Vision](../master-plan/02_Product_Vision.md), [Product Strategy](../master-plan/01_Product_Strategy.md), [Wireframes](07_Wireframes.md), [Information Architecture](03_Information_Architecture.md) |
+| **Depends On** | [Design Constitution](00_Design_Constitution.md), [Product Vision](../master-plan/02_Product_Vision.md), [Product Strategy](../master-plan/01_Product_Strategy.md), [Wireframes](07_Wireframes.md), [Information Architecture](03_Information_Architecture.md) |
 | **Used By** | [Component Inventory](09_Component_Inventory.md), [Interaction Patterns](10_Interaction_Patterns.md), [Accessibility](12_Accessibility.md), [Responsive Behavior](11_Responsive_Behavior.md), Frontend implementation. |
 | **Related Documents** | [Navigation Structure](04_Navigation_Structure.md), [States](13_States.md) |
 
@@ -163,11 +164,63 @@ information they convey is also available as text.
 
 # Motion
 
-Motion is functional and restrained, defined by tokens (`motion.duration.*`,
-`motion.easing.*`). It communicates continuity (state changes, streaming AI, context
-transitions) rather than spectacle. All motion respects reduced-motion preferences
-(see *Motion Reduction* in [Accessibility](12_Accessibility.md)). AI streaming uses
-motion to signal progress without distracting from reading.
+Motion is functional and expressive within restraint, defined by tokens
+(`motion.duration.*`, `motion.easing.*`). Per the [Design Constitution](00_Design_Constitution.md)
+§14, motion must **communicate and must never distract from research**: it creates
+continuity, guides attention, reinforces hierarchy, improves perceived performance, and
+provides *subtle delight* that expresses craftsmanship. It is never ornament or spectacle.
+All motion respects reduced-motion preferences (see *Motion Reduction* in
+[Accessibility](12_Accessibility.md)). AI streaming uses motion to signal a partner *thinking
+and gathering evidence*, not a generic spinner.
+
+## Motion & Interaction Token Philosophy
+
+Tokens make the *feel* of the product consistent and craftsmanlike. This section defines the
+**philosophy and token families**, not implementation values (durations, curves, and
+distances are set downstream and tuned in build).
+
+- **Motion tokens** (`motion.duration.*`, `motion.easing.*`, `motion.distance.*`): a small,
+  shared scale so every transition shares one cadence. Short, calm durations by default;
+  natural easing that feels organic rather than mechanical. One vocabulary of motion across
+  the product creates emotional continuity.
+- **Interaction tokens** (`interaction.feedback.*`, `interaction.hover.*`,
+  `interaction.press.*`, `interaction.focus.*`): the standard responses to input, so every
+  component acknowledges the user in the same proportionate, refined way. Feedback is
+  immediate and never exaggerated.
+- **Depth tokens** (`depth.layer.*`, mapped to the semantic `elevation.*` scale): express
+  spatial layering — foreground work, contextual surfaces, transient overlays — as *meaning*,
+  not decoration. Depth communicates relationship and focus (Constitution §12), never applies
+  ornamental blur/shadow for its own sake.
+
+## Animation Philosophy
+
+Animation exists to serve understanding and confidence: to preserve continuity between
+states, to make AI feel alive, to reveal information progressively, and to reward interaction
+subtly. Test for each animation: if it can be removed without losing meaning, it is
+decoration and should be cut. Reduced-motion is always honored with no loss of information.
+
+## Depth Philosophy
+
+The interface is **spatial**: surfaces relate through layering and elevation so the user reads
+structure and focus at a glance. Depth is applied with restraint (*ambient polish*) — enough
+to give the workspace a sense of place, never enough to distract, reduce contrast, or
+compromise accessibility. Foreground carries the active research; supporting context sits
+behind without competing.
+
+## Experience Consistency
+
+One motion cadence, one interaction feel, one depth language — applied uniformly. The same
+action feels the same everywhere; the same kind of surface layers the same way everywhere.
+Consistency of *feel* is as much a part of the system as consistency of color and type, and is
+what makes the product read as one crafted whole.
+
+## Craftsmanship Principles
+
+Premium quality is built, not decorated. The system encodes craftsmanship as: proportionate
+feedback, refined and consistent motion, thoughtful spatial hierarchy, visual and temporal
+rhythm, restraint (emphasis is scarce and meaningful), and attention to every state and edge.
+A component is not "done" until its resting, hover, focus, loading, transition, and error
+moments all feel considered.
 
 ---
 
@@ -208,7 +261,7 @@ are expressed as properties, not new names. The canonical catalogue is
 
 Tokens are the single source of truth for design values, grouped by semantic role:
 `color.*`, `type.*`, `space.*`, `grid.*`, `elevation.*`, `radius.*`, `icon.*`,
-`motion.*`. Rules:
+`motion.*`, `interaction.*`, `depth.*` (see *Motion & Interaction Token Philosophy*). Rules:
 
 - Components consume **tokens**, never raw values.
 - One token set (light theme); no per-component overrides of token meaning.

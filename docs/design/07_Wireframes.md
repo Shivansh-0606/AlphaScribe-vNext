@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Document Status** | 📝 Draft |
-| **Version** | 0.1.0 |
+| **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | _Pending_ |
@@ -20,6 +20,7 @@ Behavior · Design Specifications · PRDs
 | Version | Date | Author | Status | Description |
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial low-fidelity, structured-text wireframes for the eleven MVP screens. |
+| 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added interaction-intent Experience Annotations (progressive reveal, AI thinking/streaming, evidence, continuity, depth) and applied them to the Company Research wireframe. Remains low-fidelity; no visual styling added. |
 
 ---
 
@@ -27,7 +28,7 @@ Behavior · Design Specifications · PRDs
 
 | Relationship | Documents |
 |--------------|-----------|
-| **Depends On** | [Screen Inventory](05_Screen_Inventory.md), [UX Specifications](06_UX_Specifications.md), [Navigation Structure](04_Navigation_Structure.md), [Information Architecture](03_Information_Architecture.md) |
+| **Depends On** | [Design Constitution](00_Design_Constitution.md), [Screen Inventory](05_Screen_Inventory.md), [UX Specifications](06_UX_Specifications.md), [Navigation Structure](04_Navigation_Structure.md), [Information Architecture](03_Information_Architecture.md) |
 | **Used By** | [Component Inventory](09_Component_Inventory.md), [Responsive Behavior](11_Responsive_Behavior.md), Design Specifications, PRDs. |
 | **Related Documents** | [User Journeys](02_User_Journeys.md), [Design System](08_Design_System.md) |
 
@@ -46,6 +47,25 @@ Behavior · Design Specifications · PRDs
   for completeness, specified once here.
 - `AI:` marks an AI-bearing region (embedded, per Vision — never a separate chatbot).
 - Order top-to-bottom reflects information priority, not pixel position.
+
+## Experience Annotations
+
+These wireframes remain low-fidelity and carry **no visual styling**. To align with the
+[Design Constitution](00_Design_Constitution.md), regions may be annotated with *interaction
+intent* — how the region should feel and behave over time — never with visual design. The
+following markers appear where relevant:
+
+- `↻ reveal` — content should **progressively reveal** rather than appear inert or all at once.
+- `⋯ thinking` — an AI region should read as **actively thinking** before output.
+- `≋ streaming` — AI output **streams naturally** as it resolves.
+- `⌖ evidence` — sources **visibly attach** to the insight as it resolves.
+- `→ continuity` — a transition into/out of this region should **preserve context** (no reset).
+- `↧ depth` — this region sits on a distinct **spatial layer** (foreground/background
+  relationship), per Spatial Design (§12) — depth of meaning, not a visual effect.
+
+Annotations describe *intended experience only*; the Design System and downstream UX own how
+they are realized. They inherit the Constitution's Living Interface (§6), AI Experience (§9),
+Motion (§14), and Spatial Design (§12) philosophies.
 
 **Shared frame (applies to all authenticated screens):**
 
@@ -164,13 +184,13 @@ Footer · Primary Actions · Secondary Actions.**
 │  Financial Statements (tables)                          │
 │  SEC Filings (viewer)                                   │
 ├─ AI Areas ────────────────────────────────────────────┤
-│  AI Summary (grounded, top of insights)                │
-│  AI: Copilot (contextual Q&A, embedded)                │
-│  AI: Filing Analysis (within Filings)                  │
+│  AI Summary (grounded, top of insights)   ⋯ thinking ≋ streaming ⌖ evidence │
+│  AI: Copilot (contextual Q&A, embedded)   ⋯ thinking ≋ streaming            │
+│  AI: Filing Analysis (within Filings)     ⌖ evidence                        │
 │  Every insight → [Jump to source]                      │
-├─ Side Panels ─────────────────────────────────────────┤
-│  Copilot panel (embedded, context = this company)      │
-│  Source references                                     │
+├─ Side Panels ────────────────────────────────  ↧ depth ┤
+│  Copilot panel (embedded, context = this company)  → continuity │
+│  Source references                             ⌖ evidence       │
 ```
 - **Header + Global Nav:** shared. **Secondary Navigation:** company content sections (IA levels).
 - **Main Content:** content hierarchy Overview→Filings. **AI Areas:** Summary, Copilot, Filing Analysis — all embedded and sourced.
