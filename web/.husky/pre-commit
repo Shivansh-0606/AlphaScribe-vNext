@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# The app lives in web/; hooks may be invoked from the repo root, so resolve
+# our own directory and run lint-staged scoped to the app.
+cd "$(dirname "$0")/.." || exit 1
+npx lint-staged
