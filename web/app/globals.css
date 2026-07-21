@@ -1,26 +1,63 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Indeterminate Progress (Family 07) sweep — a calm, continuous cadence
+   (05_Feedback_Status.md), not one of Tailwind's built-in animate-* utilities.
+   Honors prefers-reduced-motion via the global animation-duration override below. */
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Base layer — semantic tokens only, no raw values (04.2 AD-3 "tokens or
+   nothing"). Single warm-light theme; no dark-mode variant (04.3 AD-1). */
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    height: 100%;
+  }
+
+  body {
+    min-height: 100%;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "ss01", "ss02", "cv01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Visible focus indicator on every interactive element, never removed
+     (04.5 AD-3/AD-4 — accessibility Immutable Law). */
+  :focus-visible {
+    outline: var(--focus-ring-width) solid hsl(var(--focus-ring-color));
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Baseline interaction feedback (the frozen theme's established transition),
+     bound to motion tokens; honors reduced-motion below (04.6). */
+  a,
+  button {
+    transition:
+      background-color var(--motion-duration-base) var(--motion-ease-standard),
+      border-color var(--motion-duration-base) var(--motion-ease-standard),
+      color var(--motion-duration-base) var(--motion-ease-standard),
+      opacity var(--motion-duration-base) var(--motion-ease-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: var(--motion-duration-instant) !important;
+      transition-duration: var(--motion-duration-instant) !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

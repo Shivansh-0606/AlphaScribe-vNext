@@ -1,0 +1,252 @@
+/**
+ * AlphaScribe vNext — Design Token Layer.
+ *
+ * Tier 1 (raw values) + Tier 2 (semantic → Tailwind v4 @theme) per 04.2 Design
+ * Token Consumption Strategy. Every value below is sourced verbatim from the
+ * frozen Experience Design catalogue — this file declares nothing new:
+ *   - Color:       docs/experience_design/02_Color_System.md
+ *   - Typography:  docs/experience_design/03_Typography_System.md
+ *   - Spacing:     docs/experience_design/04_Spacing_System.md
+ *   - Elevation:   docs/experience_design/06_Elevation_Shadow_System.md
+ *   - Radius:      docs/experience_design/07_Shape_Radius_System.md
+ *   - Consolidated catalogue: docs/experience_design/10_Design_Tokens.md
+ *
+ * Single warm-light theme; no dark-mode block (04.3 AD-1 — frozen, no toggle).
+ * "Tokens or nothing" (04.2 AD-3): raw hex/px/ms/z-index values live ONLY here.
+ */
+
+:root {
+  /* ── Color: surfaces & text ─────────────────────────────────────────── */
+  --background: 38 27% 91%; /* #EEEAE2 warm parchment canvas */
+  --foreground: 215 40% 14%; /* #15212F ink navy */
+  --surface: 40 28% 95%; /* #F6F3EF raised content surfaces */
+  --surface-hover: 38 22% 89%; /* #E9E3DA */
+  --card: 40 28% 95%;
+  --card-foreground: 215 40% 14%;
+  --popover: 40 28% 95%;
+  --popover-foreground: 215 40% 14%;
+  --muted: 38 22% 90%; /* #ECE6DD */
+  --muted-foreground: 215 14% 40%; /* #59626F */
+  --border: 36 18% 83%; /* #DBD5CC */
+  --input: 36 18% 83%;
+  --input-bg: 42 30% 96%; /* #F8F5F0 */
+  --code-bg: 210 16% 92%; /* #E9ECEF */
+
+  /* ── Color: primary / secondary / accent ────────────────────────────── */
+  --primary: 215 40% 14%; /* ink navy */
+  --primary-foreground: 42 30% 96%;
+  --secondary: 38 20% 88%; /* #E7E0D6 */
+  --secondary-foreground: 215 40% 14%;
+  --accent: 162 36% 84%; /* #CFE7DD */
+  --accent-foreground: 162 84% 15%;
+  --destructive: 0 70% 46%; /* #C62D2D */
+  --destructive-foreground: 0 0% 100%;
+
+  /* ── Color: signature signal (emerald → teal) ───────────────────────── */
+  --brand-from: 162 88% 28%; /* #069169 */
+  --brand-to: 176 82% 29%; /* #0D8C82 */
+  --ring: 162 84% 28%; /* deep emerald focus ring */
+
+  /* ── Color: financial / semantic signal (reserved) ──────────────────── */
+  --raw-brand: #047857;
+  --raw-bullish: #059669;
+  --raw-bearish: #dc2626;
+  --raw-warning: #d97706;
+
+  /* ── Color: data-visualization ramp ──────────────────────────────────── */
+  --chart-1: 162 78% 34%;
+  --chart-2: 0 70% 48%;
+  --chart-3: 32 90% 42%;
+  --chart-4: 210 84% 44%;
+  --chart-5: 280 52% 50%;
+
+  /* ── Typography ──────────────────────────────────────────────────────── */
+  /* Raw (--raw- prefixed): Tailwind's theme namespace for these utilities
+     (--text-*, --font-weight-*, --tracking-*, --leading-*) is identically
+     named to the natural token name, so Tier 1 must use a distinct name here
+     — otherwise the Tier 2 @theme mapping below would self-reference (a
+     genuine CSS custom-property cycle, not just a style choice). */
+  --raw-text-2xs: 0.625rem; /* 10px */
+  --raw-text-xs: 0.75rem; /* 12px */
+  --raw-text-sm: 0.875rem; /* 14px */
+  --raw-text-base: 1rem; /* 16px */
+  --raw-text-lg: 1.125rem; /* 18px */
+  --raw-text-xl: 1.375rem; /* 22px */
+  --raw-text-2xl: 1.75rem; /* 28px */
+  --raw-text-3xl: 2.25rem; /* 36px */
+  --raw-text-display: 3rem; /* 48px */
+
+  --raw-font-weight-regular: 400;
+  --raw-font-weight-medium: 500;
+  --raw-font-weight-semibold: 600;
+  --raw-font-weight-bold: 700;
+
+  --raw-leading-tight: 1.15;
+  --raw-leading-snug: 1.3;
+  --raw-leading-normal: 1.55;
+  --raw-leading-relaxed: 1.7;
+
+  --raw-tracking-tight: -0.01em;
+  --raw-tracking-normal: 0em;
+  --raw-tracking-label: 0.22em;
+
+  /* ── Radius (07 Shape/Radius System) ─────────────────────────────────── */
+  --radius: 0px; /* base — mapped to Tailwind's `lg` key below */
+  --raw-radius-sm: 2px;
+  --raw-radius-md: 4px;
+  --raw-radius-pill: 9999px;
+
+  /* ── Grid / responsive layout (05 Grid System) ───────────────────────── */
+  /* Breakpoint px values are explicitly "tuned in build" per the frozen doc
+     (only the approximate bands + column counts are canonical) — Tailwind
+     v4's default scale (sm:640 md:768 lg:1024 xl:1280 2xl:1536) already sits
+     inside those bands, so it is adopted as-is rather than inventing a
+     parallel scale (YAGNI); `sm:`/`md:`/`lg:`/`xl:` utilities are the
+     realization of --bp-tablet/--bp-desktop/--bp-wide. */
+  --grid-gutter: 1rem; /* 16px, Tailwind's `4` spacing step; `6` (32px/1.5rem) on wide per-context */
+  --reading-max: 72ch; /* within the frozen ~68–75ch measure */
+
+  /* ── Border ──────────────────────────────────────────────────────────── */
+  --border-width: 1px;
+  --focus-ring-width: 2px;
+
+  /* ── Elevation: z-index layering (06, frozen exact) ─────────────────── */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-nav: 100;
+  --z-drawer: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+
+  /* Shadows: levels/intent are canonical (06); blur/opacity tuned in build
+     within that intent — soft, warm-neutral, low-opacity, never hard/colored.
+     --raw- prefixed: Tailwind's shadow namespace is also --shadow-*, so an
+     unprefixed name here would self-reference in the @theme mapping below. */
+  --raw-shadow-none: none;
+  --raw-shadow-sm: 0 1px 2px 0 hsl(var(--foreground) / 0.06);
+  --raw-shadow-md: 0 4px 12px -2px hsl(var(--foreground) / 0.1);
+  --raw-shadow-lg: 0 12px 32px -8px hsl(var(--foreground) / 0.16);
+
+  /* ── Opacity ─────────────────────────────────────────────────────────── */
+  --raw-opacity-disabled: 0.45;
+  --raw-opacity-muted: 0.65;
+  --raw-opacity-scrim: 0.55;
+
+  /* ── Motion (11, honors reduced-motion — see globals.css) ───────────── */
+  --motion-duration-instant: 0ms;
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 150ms;
+  --motion-duration-slow: 240ms;
+  --motion-ease-standard: ease;
+  --motion-ease-out: ease-out;
+  --motion-ease-in: ease-in;
+
+  /* ── Focus ring (accessibility-critical, always visible) ────────────── */
+  --focus-ring-color: var(--ring);
+  --focus-ring-offset: 2px;
+}
+
+/* Tier 2 — semantic → Tailwind v4 @theme mapping. Single-sourced from Tier 1
+   above; never hand-tuned independently (04.2 AD-1). shadcn's theme variables
+   bind to these same names once introduced (04.2 AD-2) — one palette. */
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-surface: hsl(var(--surface));
+  --color-surface-hover: hsl(var(--surface-hover));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-brand-from: hsl(var(--brand-from));
+  --color-brand-to: hsl(var(--brand-to));
+  --color-brand: var(--raw-brand);
+  --color-bullish: var(--raw-bullish);
+  --color-bearish: var(--raw-bearish);
+  --color-warning: var(--raw-warning);
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  --color-code-bg: hsl(var(--code-bg));
+  --color-input-bg: hsl(var(--input-bg));
+
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --text-2xs: var(--raw-text-2xs);
+  --text-xs: var(--raw-text-xs);
+  --text-sm: var(--raw-text-sm);
+  --text-base: var(--raw-text-base);
+  --text-lg: var(--raw-text-lg);
+  --text-xl: var(--raw-text-xl);
+  --text-2xl: var(--raw-text-2xl);
+  --text-3xl: var(--raw-text-3xl);
+  --text-display: var(--raw-text-display);
+
+  --font-weight-regular: var(--raw-font-weight-regular);
+  --font-weight-medium: var(--raw-font-weight-medium);
+  --font-weight-semibold: var(--raw-font-weight-semibold);
+  --font-weight-bold: var(--raw-font-weight-bold);
+
+  --leading-tight: var(--raw-leading-tight);
+  --leading-snug: var(--raw-leading-snug);
+  --leading-normal: var(--raw-leading-normal);
+  --leading-relaxed: var(--raw-leading-relaxed);
+
+  --tracking-tight: var(--raw-tracking-tight);
+  --tracking-normal: var(--raw-tracking-normal);
+  --tracking-label: var(--raw-tracking-label);
+
+  --radius-sm: var(--raw-radius-sm);
+  --radius-md: var(--raw-radius-md);
+  --radius-lg: var(--radius);
+  --radius-pill: var(--raw-radius-pill);
+
+  --opacity-disabled: var(--raw-opacity-disabled);
+  --opacity-muted: var(--raw-opacity-muted);
+  --opacity-scrim: var(--raw-opacity-scrim);
+
+  /* Named distinctly from Tailwind's own default --ease-out/--ease-in (a
+     different curve) to avoid silently redefining them app-wide. */
+  --ease-standard: var(--motion-ease-standard);
+  --ease-motion-out: var(--motion-ease-out);
+  --ease-motion-in: var(--motion-ease-in);
+
+  /* No duration-named entries: verified (compiled-CSS check) that Tailwind
+     v4 does not generate duration utility classes from a custom @theme
+     namespace the way it does for ease, opacity, and color tokens. Consume a
+     duration with the arbitrary-value form instead:
+     `duration-[var(--motion-duration-fast)]` (still token-sourced, just not
+     a named utility). Re-verify against compiled CSS before assuming
+     otherwise on a future Tailwind upgrade. */
+
+  /* No --shadow-none mapping: Tailwind's own built-in `shadow-none` utility
+     (`box-shadow: 0 0 #0000`) already produces the same "no shadow" visual
+     result and takes precedence regardless; mapping it is a no-op. */
+  --shadow-sm: var(--raw-shadow-sm);
+  --shadow-md: var(--raw-shadow-md);
+  --shadow-lg: var(--raw-shadow-lg);
+
+  /* No z-index-named entries: verified (compiled-CSS check, including a
+     scratch `z-nav-test` candidate that produced NOTHING — not even as an
+     unresolved candidate) that Tailwind v4 does not support a custom
+     z-index theme namespace at all, unlike ease, opacity, shadow, and color.
+     Consume z-index tokens with the arbitrary-value form only:
+     `z-[var(--z-nav)]`. */
+}
