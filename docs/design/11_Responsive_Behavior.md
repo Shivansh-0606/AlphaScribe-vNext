@@ -2,13 +2,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
-| **Approved By** | _Pending_ |
-| **Last Updated** | 2026-07-18 |
-| **Source of Truth** | For responsive behavior (pending approval) |
+| **Approved By** | CTO |
+| **Last Updated** | 2026-07-21 |
+| **Source of Truth** | For responsive behavior |
 
 **Downstream Dependencies:** Accessibility · Frontend implementation · PRDs · QA Test Plans
 
@@ -20,6 +20,7 @@
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial responsive behavior specification across desktop, tablet, and mobile. |
 | 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added the Responsive Experience Principle (behavior adapts, experience does not — the same premium, living, AI-native product at every size). Structure unchanged. |
+| 0.1.1 | 2026-07-21 | CTO | 🧊 Frozen | CTO confirms Product Design approved and frozen (Governance Recovery Execution, Phase 0 evidence for GRA-006). No content change. |
 
 ---
 

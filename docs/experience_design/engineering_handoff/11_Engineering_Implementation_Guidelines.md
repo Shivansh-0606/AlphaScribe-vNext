@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Doc** | M3 · Engineering Implementation Guidelines (11) |
 | **Owner** | Experience Design Department (for Engineering) |
 | **Last Updated** | 2026-07-18 |

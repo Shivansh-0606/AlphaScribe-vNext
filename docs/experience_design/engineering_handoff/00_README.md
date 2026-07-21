@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone** | M3 — Engineering Handoff & Design-to-Code Readiness |
 | **Owner** | Experience Design Department |
 | **Audience** | Frontend Architecture & Engineering Department |
-| **Approved By** | _Pending CTO Review_ |
+| **Approved By** | CTO |
 | **Last Updated** | 2026-07-18 |
 | **Source of Truth** | Yes — the index and entry point for the engineering handoff package |
 

@@ -7,7 +7,7 @@
 | **Department** | Frontend Architecture |
 | **Milestone** | M1 — Architecture Foundations |
 | **Owner** | Frontend Architecture |
-| **Approved By** | _Pending CTO Review_ |
+| **Approved By** | CTO |
 | **Last Updated** | 2026-07-19 |
 | **Source of Truth** | Yes — the governing architectural artifact for all frontend engineering |
 

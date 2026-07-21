@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Doc** | M3 · Handoff Guide (01) |
 | **Owner** | Experience Design → Frontend Architecture & Engineering |
 | **Last Updated** | 2026-07-18 |

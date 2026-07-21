@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Version** | 0.1.0 |
 | **Milestone** | M1 — Visual Foundation |
 | **Owner** | Experience Design Department |

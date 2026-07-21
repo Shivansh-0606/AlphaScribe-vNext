@@ -92,7 +92,10 @@ export function Button({
       {loading && (
         <CircleNotch className="size-4 shrink-0 animate-spin" weight="bold" aria-hidden="true" />
       )}
-      {children}
+      {/* `Slottable` marks which child Slot.Root should merge props onto when `asChild` —
+          without it, Slot.Root sees two children (the conditional spinner + this) and throws
+          "Expected a single React element child". A no-op passthrough when not `asChild`. */}
+      <Slot.Slottable>{children}</Slot.Slottable>
     </Comp>
   );
 }

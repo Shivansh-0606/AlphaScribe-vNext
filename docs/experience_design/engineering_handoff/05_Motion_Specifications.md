@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Doc** | M3 · Motion Specifications (05) |
 | **Owner** | Experience Design Department |
 | **Design source (frozen)** | Constitution §14 · [Motion tokens](../10_Design_Tokens.md#11-motion-tokens) · [Interaction Patterns](../../design/10_Interaction_Patterns.md) |

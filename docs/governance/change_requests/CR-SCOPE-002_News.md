@@ -4,12 +4,12 @@
 |-------|-------|
 | **CR ID** | CR-SCOPE-002 |
 | **Title** | Company news capability (surfaced via "News Card" component) |
-| **Status** | 🟡 Open — Awaiting CTO decision |
+| **Status** | 🟢 Resolved — Deferred to V1.1 |
 | **Raised By** | Experience Design Department (Milestone 2, Phase 2) |
 | **Raised On** | 2026-07-18 |
 | **Type** | Product scope change (adds capability beyond frozen MVP baseline) |
 | **Affects** | Component Inventory · Screen Inventory · IA · Feature Roadmap |
-| **Decision** | ☐ Approve ☐ Reject ☐ Defer — _pending_ |
+| **Decision** | ☐ Approve ☑ Defer ☐ Reject — **Defer to V1.1**, decided by CTO, 2026-07-21 |
 
 > Raised because Milestone 2's component brief lists a **News Card**, but the frozen MVP sources only
 > primary filings/statements, and "News Intelligence" is roadmapped to a later release. No news design

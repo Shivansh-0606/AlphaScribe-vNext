@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Doc** | M3 · Accessibility Implementation Guide (06) |
 | **Owner** | Experience Design Department |
 | **Design source (frozen)** | [Accessibility](../../design/12_Accessibility.md) · Constitution §17 (Immutable Law 10) |

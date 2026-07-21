@@ -2,13 +2,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
-| **Approved By** | _Pending_ |
+| **Approved By** | CTO |
 | **Last Updated** | 2026-07-18 |
-| **Source of Truth** | For the MVP screen set (pending approval) |
+| **Source of Truth** | For the MVP screen set |
 
 **Downstream Dependencies:** UX Specifications · Wireframes · Component Inventory ·
 Interaction Patterns · Responsive Behavior · Accessibility · States · PRDs · QA Test Plans

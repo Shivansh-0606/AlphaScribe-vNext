@@ -4,12 +4,12 @@
 |-------|-------|
 | **CR ID** | CR-SCOPE-003 |
 | **Title** | Research Timeline (presentation of Research History) |
-| **Status** | 🟡 Open — Awaiting CTO decision |
+| **Status** | 🟢 Resolved — Approved, bounded to Interpretation A |
 | **Raised By** | Experience Design Department (Milestone 2, Phase 2) |
 | **Raised On** | 2026-07-18 |
 | **Type** | Presentation clarification (potential no-op vs. minor scope) |
 | **Affects** | Component Inventory · Screen Inventory · Research Library (IA domain) |
-| **Decision** | ☐ Approve ☐ Reject ☐ Defer — _pending_ |
+| **Decision** | ☑ Approve (bounded to Interpretation A) ☐ Reject ☐ Defer — decided by CTO, 2026-07-21. Interpretation B (new activity/audit-tracking capability) is **rejected** for MVP. |
 
 > Raised because Milestone 2's component brief lists a **Research Timeline**, and it must be confirmed
 > whether this is (a) an alternate *presentation* of the already-MVP **Research History** capability —

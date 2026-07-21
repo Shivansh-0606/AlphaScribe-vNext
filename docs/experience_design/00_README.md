@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Version** | 0.1.0 |
 | **Milestone** | M1 — Visual Foundation |
 | **Owner** | Experience Design Department |
-| **Approved By** | _Pending CTO Review_ |
+| **Approved By** | CTO |
 | **Last Updated** | 2026-07-18 |
 | **Source of Truth** | Yes — for the AlphaScribe visual design system |
 

@@ -65,11 +65,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </Link>
             </div>
           </header>
-          <main
-            id="main-content"
-            tabIndex={-1}
-            className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 focus:outline-none sm:px-6 lg:px-8"
-          >
+          {/* Container width/padding now lives in each template layout (PublicTemplate/
+              WorkspaceTemplate) — the root shell owns only chrome placement (02.4 AD-4/AD-5). */}
+          <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col focus:outline-none">
             {children}
           </main>
         </AppProviders>

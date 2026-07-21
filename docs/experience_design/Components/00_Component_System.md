@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Version** | 0.1.0 |
 | **Milestone** | M2 — Production Design System |
 | **Phase** | Phase 2 — Core Component Design |

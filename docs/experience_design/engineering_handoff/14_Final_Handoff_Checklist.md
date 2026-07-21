@@ -2,10 +2,10 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft — completion gate |
+| **Document Status** | 🧊 Frozen — completion gate cleared for foundation + component layer |
 | **Milestone / Doc** | M3 · Final Handoff Checklist (14) |
 | **Owner** | Experience Design Department |
-| **Last Updated** | 2026-07-18 |
+| **Last Updated** | 2026-07-21 |
 
 ## Purpose
 
@@ -99,19 +99,23 @@ re-verifying frozen upstream content (assumed frozen).
   - Handoff docs 02/04/05/09/12 carry 🟡 items that fill in when those artifacts land.
 - **Three scope CRs and four stack CRs are open** — decisions needed before the ⚠️/CR-VIS-affected work.
 
-**Therefore:** the Experience Design Department's **component-and-foundation handoff is complete and can
-be frozen**; the **screen-and-prototype handoff is pending completion of M2 Phases 3–7.** This checklist
-will flip the ⏳/🟡 items to ✅ as those phases are produced and QA'd.
+**Therefore:** the Experience Design Department's **component-and-foundation handoff is complete and
+frozen** (CTO confirmation, 2026-07-21); the three scope CRs and four stack CRs referenced below are
+now resolved (see [CR Register](../../governance/change_requests/00_Change_Request_Register.md)). **M2
+Phases 3–7 (screen-and-prototype handoff) are formally deferred, not produced** — this is a scope
+decision, not an open blocker: screen assembly (P2/P5/P6) stays unavailable until that work is
+scheduled, but it does not gate the department freeze below. This checklist will flip the 🟡 items to
+✅ if/when Phases 3–7 are scheduled and produced.
 
-## E. Sign-off (to be completed)
+## E. Sign-off
 
 | Gate | Owner | Status | Date |
 |------|-------|--------|------|
-| M3 handoff docs complete & meet standard | Experience Design | ☐ | |
-| Component/foundation handoff accepted | Frontend Engineering | ☐ | |
-| Open CRs (scope + stack) decided | CTO | ☐ | |
-| M2 Phases 3–7 produced & QA'd (screen handoff) | Experience Design | ☐ | |
-| Experience Design Department frozen | CTO | ☐ | |
+| M3 handoff docs complete & meet standard | Experience Design | ☑ | 2026-07-21 |
+| Component/foundation handoff accepted | Frontend Engineering | ☑ | 2026-07-21 |
+| Open CRs (scope + stack) decided | CTO | ☑ | 2026-07-21 |
+| M2 Phases 3–7 produced & QA'd (screen handoff) | Experience Design | ☐ **Deferred** — formally out of current scope, not blocking | 2026-07-21 |
+| Experience Design Department frozen | CTO | ☑ **Frozen — foundation + component layer (M1, M2 Phase 1–2) only.** Screen-and-prototype handoff (Phases 3–7) explicitly excluded from this freeze; re-raise as its own scheduling decision when needed. | 2026-07-21 |
 
 ## References to Previous Milestones
 

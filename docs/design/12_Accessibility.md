@@ -2,13 +2,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
-| **Approved By** | _Pending_ |
-| **Last Updated** | 2026-07-18 |
-| **Source of Truth** | For accessibility requirements (pending approval) |
+| **Approved By** | CTO |
+| **Last Updated** | 2026-07-21 |
+| **Source of Truth** | For accessibility requirements |
 
 **Downstream Dependencies:** Frontend implementation · QA Test Plans · PRDs · Acceptance Criteria
 
@@ -20,6 +20,7 @@
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial WCAG 2.1 AA accessibility specification for the MVP. |
 | 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added the "experience never at the cost of accessibility" principle governing liveness, motion, spatial depth, and AI streaming. Requirements unchanged. |
+| 0.1.1 | 2026-07-21 | CTO | 🧊 Frozen | CTO confirms Product Design approved and frozen (Governance Recovery Execution, Phase 0 evidence for GRA-006). No content change. |
 
 ---
 

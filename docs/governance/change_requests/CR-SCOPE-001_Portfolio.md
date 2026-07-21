@@ -4,12 +4,12 @@
 |-------|-------|
 | **CR ID** | CR-SCOPE-001 |
 | **Title** | Portfolio capability (surfaced via "Portfolio Card" component) |
-| **Status** | 🟡 Open — Awaiting CTO decision |
+| **Status** | 🟢 Resolved — Deferred to V2.0 |
 | **Raised By** | Experience Design Department (Milestone 2, Phase 2) |
 | **Raised On** | 2026-07-18 |
 | **Type** | Product scope change (adds capability beyond frozen MVP baseline) |
 | **Affects** | Component Inventory · Screen Inventory · IA · Navigation · Feature Roadmap |
-| **Decision** | ☐ Approve ☐ Reject ☐ Defer — _pending_ |
+| **Decision** | ☐ Approve ☑ Defer ☐ Reject — **Defer to V2.0**, decided by CTO, 2026-07-21 |
 
 > Raised because Milestone 2's component brief lists a **Portfolio Card**, but the frozen baseline
 > places Portfolio outside the MVP. Per governance, the Experience Design Department does not add or

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Phase** | M2 · Phase 2 — Core Components |
 | **Owner** | Experience Design Department |
 | **Last Updated** | 2026-07-18 |
@@ -273,13 +273,12 @@ Per AI Response Card; **precedes figures**; readable linearly; sources reachable
 
 ---
 
-## News Card ⟶ composes: `Card` + `SourceReference`   ⚠ SCOPE
+## News Card ⟶ composes: `Card` + `SourceReference`   🟢 DEFERRED (CR-SCOPE-002 → V1.1)
 
 ### Purpose
-Present a relevant news/filing-adjacent item with its source. **⚠ Trace to baseline:** confirm "news"
-is within the frozen [Screen Inventory](../../design/05_Screen_Inventory.md)/IA scope; if AlphaScribe
-sources only primary filings, "news" may be out of scope — documented here as a presentation pattern
-pending CR confirmation.
+Present a relevant news/filing-adjacent item with its source. **Resolved:** [CR-SCOPE-002](../../governance/change_requests/CR-SCOPE-002_News.md)
+deferred News to V1.1 — out of MVP scope. Documented here as a presentation pattern for the V1.1
+News Intelligence design effort, not for MVP implementation.
 
 ### Anatomy
 `[ headline ] · [ source · date ] · [ optional snippet ] · [ SourceReference to primary source ]`.
@@ -294,7 +293,7 @@ descriptive and reachable; reflows to list on mobile; hover/focus lift; reduced 
 ### Usage guidelines / Anti-patterns
 - **Do** attach a primary source; keep neutral, non-hype framing (§15).
 - ✗ Unsourced items; ✗ marketing/hype tone; ✗ presenting news as AI insight without provenance.
-  **✗ Do not ship until scope confirmed.**
+  **✗ Deferred to V1.1 (CR-SCOPE-002) — do not implement in MVP.**
 
 ---
 
@@ -414,13 +413,13 @@ Calm, minimal — progressive reveal of sections on load; export success = quiet
 
 ---
 
-## Research Timeline ⟶ composes: `ListItem` sequence   ⚠ SCOPE
+## Research Timeline ⟶ composes: `ListItem` sequence   🟢 APPROVED (CR-SCOPE-003, bounded)
 
 ### Purpose
 Show the sequence of a user's research activity / a company's research history to support **Resume
-Session** and continuity (J-06). **⚠ Trace to baseline:** confirm a "timeline" view exists in the
-frozen Screen Inventory (vs. the Research Library list); documented as a presentation pattern over the
-existing Research Sessions capability, pending CR confirmation.
+Session** and continuity (J-06). **Resolved:** [CR-SCOPE-003](../../governance/change_requests/CR-SCOPE-003_Research_Timeline.md)
+approved this strictly as a presentation of the existing **Research History** capability — no new
+data or scope. A new activity/audit-tracking capability (interpretation B) remains rejected for MVP.
 
 ### Anatomy
 A vertical sequence of research events/sessions (subject · timestamp · resume action), grouped by
@@ -445,8 +444,8 @@ Progressive reveal of items `--motion-duration-base` (continuity). Reduced motio
 
 ### Usage guidelines / Anti-patterns
 - **Do** expose Resume Session on session items; use the frozen "Research Session" vocabulary.
-- ✗ Inventing a new activity-tracking capability (**scope — CR required**); ✗ decorative timeline
-  ornament without function.
+- ✗ Inventing a new activity-tracking capability (**rejected by CR-SCOPE-003 for MVP**); ✗ decorative
+  timeline ornament without function.
 
 ---
 
@@ -485,14 +484,12 @@ Reduced motion → instant.
 
 ---
 
-## Portfolio Card ⟶ composes: `Card` + `MetricStat`   ⚠ SCOPE
+## Portfolio Card ⟶ composes: `Card` + `MetricStat`   🟢 DEFERRED (CR-SCOPE-001 → V2.0)
 
 ### Purpose
-Summarize a grouping of companies/holdings the user tracks. **⚠ Trace to baseline:** "Portfolio" as a
-capability (holdings, weights, valuation) is **not clearly in the frozen Screen Inventory/IA** — this
-is documented as a presentation pattern only and **must not be built until a Change Request confirms
-the capability.** If out of scope, it is dropped; if a watchlist-grouping only, it reduces to a
-titled group of Watchlist Items.
+Summarize a grouping of companies/holdings the user tracks. **Resolved:** [CR-SCOPE-001](../../governance/change_requests/CR-SCOPE-001_Portfolio.md)
+deferred Portfolio to V2.0 — out of MVP scope. Documented here as a presentation pattern for the
+V2.0 Portfolio Workspace design effort, not for MVP implementation.
 
 ### Anatomy (pattern, pending scope)
 `[ portfolio/group name ] · [ member count ] · [ optional aggregate figures with meaning + source ] ·
@@ -503,25 +500,26 @@ Per Card + MetricStat + ListItem patterns; figures paired with meaning and sourc
 reflows to list on mobile.
 
 ### Usage guidelines / Anti-patterns
-- **⚠ Do not implement without a CR** confirming Portfolio scope and its data sources.
+- **✗ Deferred to V2.0 (CR-SCOPE-001) — do not implement in MVP.**
 - ✗ Inventing holdings/valuation capability in design; ✗ any aggregate that implies performance
   advice (Law 4); ✗ figures without source/meaning.
 
 ---
 
-## Scope-flag summary (for CTO review)
+## Scope-flag summary (resolved — CTO decisions recorded 2026-07-21)
 
-| Component | Status | Action needed |
+| Component | Status | Disposition |
 |-----------|--------|---------------|
 | Company Header, Company Card, Financial Metric Card, KPI Tiles, Financial Tables, Chart Container, Analyst Summary Card, Comparison Card, Filing Viewer, Report Viewer, Watchlist Item | ✅ Traces to frozen baseline | Proceed |
-| **News Card** | ⚠ SCOPE | [CR-SCOPE-002](../../governance/change_requests/CR-SCOPE-002_News.md) — recommend Defer → V1.1 |
-| **Research Timeline** | ⚠ SCOPE | [CR-SCOPE-003](../../governance/change_requests/CR-SCOPE-003_Research_Timeline.md) — recommend Approve (bounded to Research History) |
-| **Portfolio Card** | ⚠ SCOPE | [CR-SCOPE-001](../../governance/change_requests/CR-SCOPE-001_Portfolio.md) — recommend Defer → V2.0 |
+| **News Card** | 🟢 Deferred | [CR-SCOPE-002](../../governance/change_requests/CR-SCOPE-002_News.md) — Defer → V1.1. Not built in MVP. |
+| **Research Timeline** | 🟢 Approved (bounded) | [CR-SCOPE-003](../../governance/change_requests/CR-SCOPE-003_Research_Timeline.md) — Approved as a presentation of Research History; no new scope. Proceeds in MVP. |
+| **Portfolio Card** | 🟢 Deferred | [CR-SCOPE-001](../../governance/change_requests/CR-SCOPE-001_Portfolio.md) — Defer → V2.0. Not built in MVP. |
 
-> The three ⚠ SCOPE items are formally raised as Change Requests in the
-> [Change Request Register](../../governance/change_requests/00_Change_Request_Register.md). Per
-> governance, they remain **presentation patterns only** and are **not designed or built** until the
-> CTO records a decision. The frozen baseline stays authoritative.
+> All three items are resolved in the
+> [Change Request Register](../../governance/change_requests/00_Change_Request_Register.md). News
+> Card and Portfolio Card remain **not designed or built** for MVP (deferred to V1.1/V2.0
+> respectively). Research Timeline may proceed, strictly bounded to presenting existing Research
+> History — no new data, capability, or destination.
 
 ## Family cross-references
 - Primitives: Families [01](01_Buttons.md)–[07](07_Feedback_Status.md); AI: [08](08_AI_Components.md).

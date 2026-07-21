@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Phase** | M2 · Phase 2 — Core Components |
 | **Owner** | Experience Design Department |
 | **Last Updated** | 2026-07-18 |

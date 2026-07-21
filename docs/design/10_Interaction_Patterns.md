@@ -2,13 +2,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Version** | 0.1.1 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
-| **Approved By** | _Pending_ |
+| **Approved By** | CTO |
 | **Last Updated** | 2026-07-18 |
-| **Source of Truth** | For reusable interaction behavior (pending approval) |
+| **Source of Truth** | For reusable interaction behavior |
 
 **Downstream Dependencies:** Responsive Behavior · Accessibility · States · Frontend
 implementation · PRDs · QA Test Plans

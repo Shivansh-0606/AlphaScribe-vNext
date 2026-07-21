@@ -43,6 +43,25 @@ describe("Button", () => {
     expect(button.className).toContain("bg-transparent");
   });
 
+  it("composes with asChild onto a single child element without crashing (regression: Slot requires exactly one child)", () => {
+    renderWithProviders(
+      <Button asChild>
+        <a href="/signup">Get started</a>
+      </Button>,
+    );
+    const link = screen.getByRole("link", { name: "Get started" });
+    expect(link).toHaveAttribute("href", "/signup");
+  });
+
+  it("composes asChild with loading (spinner and child render together, not just one)", () => {
+    renderWithProviders(
+      <Button asChild loading>
+        <a href="/signup">Get started</a>
+      </Button>,
+    );
+    expect(screen.getByRole("link", { name: "Get started" })).toBeInTheDocument();
+  });
+
   it("has no detectable accessibility violations across variants", async () => {
     const { container } = renderWithProviders(
       <div>

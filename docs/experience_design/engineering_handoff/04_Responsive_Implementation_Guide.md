@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Doc** | M3 · Responsive Implementation Guide (04) |
 | **Owner** | Experience Design Department |
 | **Design source (frozen)** | [Responsive Behavior](../../design/11_Responsive_Behavior.md) · [Grid](../05_Grid_System.md) · Constitution §18 |

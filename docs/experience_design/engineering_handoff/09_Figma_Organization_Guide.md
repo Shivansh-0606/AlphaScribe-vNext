@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Doc** | M3 · Figma Organization Guide (09) |
 | **Owner** | Experience Design Department |
 | **Last Updated** | 2026-07-18 |

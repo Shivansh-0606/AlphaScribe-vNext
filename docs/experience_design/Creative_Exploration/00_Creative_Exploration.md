@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | ✅ Approved — Direction C "The Study" selected (2026-07-18). Phase 1 gate cleared. |
+| **Document Status** | 🧊 Frozen — Direction C "The Study" selected (2026-07-18). Phase 1 gate cleared. |
 | **Version** | 0.1.0 |
 | **Milestone** | M2 — Production Design System & High-Fidelity Experience |
 | **Phase** | Phase 1 — Creative Exploration |

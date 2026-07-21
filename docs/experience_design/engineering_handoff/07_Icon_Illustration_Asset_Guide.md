@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft |
+| **Document Status** | 🧊 Frozen |
 | **Milestone / Doc** | M3 · Icon & Illustration Asset Guide (07) |
 | **Owner** | Experience Design Department |
 | **Design source (frozen)** | [Iconography](../08_Iconography_Guidelines.md) · [Illustration](../09_Illustration_Guidelines.md) |

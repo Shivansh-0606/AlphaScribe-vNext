@@ -66,6 +66,8 @@ export interface SearchFieldProps {
   onSelect: (suggestion: SearchFieldSuggestion) => void;
   /** Enter with no suggestion highlighted. */
   onSubmit?: (value: string) => void;
+  /** Focus lands here on arrival (e.g. SCR-04 Workspace Home's "search is the primary focus"). */
+  autoFocus?: boolean;
   className?: string;
 }
 
@@ -85,6 +87,7 @@ export function SearchField({
   emptyMessage = "No results — try a different term.",
   onSelect,
   onSubmit,
+  autoFocus = false,
   className,
 }: SearchFieldProps) {
   const [open, setOpen] = useState(false);
@@ -108,6 +111,7 @@ export function SearchField({
           >
             <MagnifyingGlass className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
             <CommandPrimitive.Input
+              autoFocus={autoFocus}
               placeholder={placeholder}
               value={value}
               onValueChange={(next) => {

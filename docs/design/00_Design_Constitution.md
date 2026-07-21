@@ -2,12 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 📝 Draft — Proposed Governing Baseline |
+| **Document Status** | 🧊 Frozen — Governing Baseline |
 | **Version** | 1.1 |
 | **Phase** | Design (governing artifact) |
 | **Owner** | Product & Design |
-| **Approved By** | _Pending CTO Review_ |
-| **Last Updated** | 2026-07-18 |
+| **Approved By** | CTO |
+| **Last Updated** | 2026-07-21 |
 | **Source of Truth** | Yes — highest-level governing artifact for all Product & Design work |
 
 **Downstream Dependencies:** Screen Inventory · UX Specifications · Wireframes · Design
@@ -28,6 +28,7 @@ States · and every future Product & Design artifact.
 |---------|------|--------|--------|-------------|
 | 1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial Design Constitution: the governing principles for all Product & Design decisions. Pending CTO approval to freeze. |
 | 1.1 | 2026-07-18 | Product & Design | 📝 Draft | Post-CTO-review-1 experiential evolution: expanded North Star, Personality, Visual, Interaction, Motion, Micro-interaction, Anti-Patterns, Review Framework, and Immutable Laws; added Emotional Design (§5), Living Interface (§6), AI Experience (§9), and Spatial Design (§12). Raises experiential ambition (alive, premium, crafted) with no change to trust-first philosophy, features, IA, or Navigation. |
+| 1.1 | 2026-07-21 | CTO | 🧊 Frozen | CTO confirms Product Design approved and frozen (Governance Recovery Execution, Phase 0 evidence for GRA-006). No content change. |
 
 ---
 
