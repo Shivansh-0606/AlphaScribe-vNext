@@ -30,7 +30,12 @@ into grounded research briefs, served by FastAPI to a Next.js UI.
   docs in `docs/frontend_architecture/` — an implementation need that
   conflicts with one of them is a stop-and-raise-a-CR situation, not a
   silent judgment call. The legacy Create React App (`frontend/`, craco,
-  React Router) has been retired; do not resurrect it or point tooling at it.
+  React Router) is a **frozen, read-only reference implementation** — do not
+  add features to it, do not point tooling at it, and touch it only for a
+  critical bug fix if absolutely necessary. It stays in the repo until
+  `docs/governance/Feature_Parity_Tracker.md` reaches 100% migrated and a
+  CTO-approved Legacy Frontend Removal Plan authorizes deleting it — do not
+  delete `frontend/` on your own initiative.
 
 ## Conventions
 
