@@ -40,7 +40,7 @@ draft if anything is unsupported.
 
 ```
                          ┌──────────────────────────────────────────┐
-   React (CRA + shadcn)  │              FastAPI backend             │
+   Next.js 15 (App Router)│              FastAPI backend             │
    ────────────────────► │                                          │
      REST + SSE          │   LangGraph pipeline                     │
                          │                                          │
@@ -74,7 +74,7 @@ draft if anything is unsupported.
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React 19, React Router, shadcn/ui, Tailwind, Recharts, Framer Motion |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui primitives (wrapped by a foundation design-system layer), TanStack Query, Zustand, Motion |
 | Backend | FastAPI, LangGraph, Pydantic, Motor (async MongoDB) |
 | AI / ML | Pluggable LLM provider — Gemini, OpenAI, Anthropic, Groq, OpenRouter, DeepSeek, Mistral, or any OpenAI-compatible endpoint (each with sensible light/heavy model defaults); hybrid RAG: `rank-bm25` + `fastembed` dense embeddings + cross-encoder re-ranking |
 | Data | MongoDB, SEC EDGAR |
@@ -104,13 +104,13 @@ the launcher downloads a portable copy into the project.
    Any **OpenAI-compatible** endpoint (aipipe, a local Ollama/LM Studio server, …)
    also works via the **Custom** provider — no key cost at all if you self-host.
    Google's Gemini free tier is the simplest zero-cost option to start.
-2. **Start everything** — double-click **`run.bat`** (Windows) or run:
+2. **Start everything** — double-click **`scripts/run.bat`** (Windows) or run:
    ```bash
-   python run.py
+   python scripts/run.py
    ```
    The first run sets up a Python virtualenv, downloads a portable MongoDB, and
    installs frontend dependencies (a few minutes). Later runs start in seconds.
-3. Open **http://localhost:3000**.
+3. Open **http://localhost:3001**.
 4. On the **Ingest** page, click **Load samples** (or
    `curl -X POST http://localhost:8001/api/ingest/samples`), then pick a company
    on the Dashboard and generate a report.
@@ -131,10 +131,11 @@ backend/
     llm.py               multi-provider LLM wrapper (Gemini / OpenAI / Anthropic / Groq / …)
     scoring.py           RAGAS-style quality scorecard
     ingest.py            SEC EDGAR fetch + document chunking
-frontend/
-  src/pages/             Dashboard, ReportView, Ingest, Compare
-  src/components/        Scorecard, FinancialsTable, ToneGauge, PipelineLog, …
-run.py / run.bat         one-command local launcher
+web/
+  app/                    Next.js App Router — route composition
+  components/             foundation (design-system) + feature-presentational components
+  features/               account-setup, workspace-home, company-research, comparison, …
+scripts/run.py / run.bat  one-command local launcher
 ```
 
 ---

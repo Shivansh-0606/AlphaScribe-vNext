@@ -1,7 +1,7 @@
 # AlphaScribe — project guide for Claude
 
 AI equity-research assistant: a LangGraph agent pipeline turns SEC/BSE filings
-into grounded research briefs, served by FastAPI to a React UI.
+into grounded research briefs, served by FastAPI to a Next.js UI.
 
 ## Architecture
 
@@ -21,35 +21,53 @@ into grounded research briefs, served by FastAPI to a React UI.
   keys via a `contextvar`. Do not call provider SDKs directly from nodes.
 - **Retrieval** (`agents/retrieval.py`): hybrid BM25 (`rank-bm25`) + dense
   (`fastembed`) with a reranker. Data in MongoDB via `motor` (async).
-- **Frontend** (`frontend/`): Create React App via **craco**, React 19,
-  react-router. Pages in `src/pages/`, shared UI in `src/components/`.
+- **Frontend** (`web/`): Next.js 15 (App Router), React 19, TypeScript strict.
+  Routes/composition in `app/`, presentational components in `components/`
+  (`foundation/` design-system wrappers + `ai/`, `research/`, `layouts/`),
+  one module per IA domain in `features/` (`ui/application/integration/internal`
+  + a sanctioned `index.ts` public surface — never import a feature's
+  internals from outside it), shared code in `lib/`. Governed by the frozen
+  docs in `docs/frontend_architecture/` — an implementation need that
+  conflicts with one of them is a stop-and-raise-a-CR situation, not a
+  silent judgment call. The legacy Create React App (`frontend/`, craco,
+  React Router) has been retired; do not resurrect it or point tooling at it.
 
 ## Conventions
 
-- **Package manager is npm**, not yarn. Lockfile is `package-lock.json`;
-  there is no `yarn.lock`. `run.py` installs with `npm install
-  --legacy-peer-deps`. Never add a `yarn.lock`.
+- **Package manager is npm**, not yarn. Lockfile is `web/package-lock.json`;
+  there is no `yarn.lock`. `scripts/run.py` installs with plain `npm install`.
+  Never add a `yarn.lock`.
 - **Frontend imports use the `@/` alias** (`@/lib/...`, `@/components/...`),
-  configured in `craco.config.js` and `jsconfig.json`.
-- **Toasts use `sonner` directly** (`import { toast } from "sonner"`). This repo
-  does **not** use shadcn/ui — there is no `src/components/ui/` folder and no
-  `cn()` helper. Do not reintroduce them or their Radix/CVA dependencies.
+  configured in `web/tsconfig.json`.
+- **Toasts use `sonner` directly** (`import { toast } from "sonner"`).
+- **This repo now uses shadcn/ui primitives** (`web/components/ui/`, Radix +
+  `class-variance-authority`, plus the `cn()` helper in
+  `web/lib/utils/cn.ts`) — this reverses the old CRA-era "no shadcn" rule,
+  which only applied to the retired `frontend/` app. Per
+  `web/README.md`/`docs/frontend_architecture`, `components/ui` is the raw
+  primitive layer and must **never** be imported outside
+  `components/foundation`; features and pages import only `foundation/`
+  wrappers. Do not import `components/ui` directly from a feature.
 - **Icons**: `@phosphor-icons/react`. **Charts**: `recharts`. **Markdown**:
-  `react-markdown`. Reach for these before adding anything new.
-- **Test IDs** live in `src/constants/testIds/alphascribe.js` and are applied
-  via `data-testid`. Add new IDs there, not inline string literals.
-- **Client persistence**: `usePersistedState` (sessionStorage) and the
-  watchlist store (`lib/watchlist.js`, `useSyncExternalStore`). Reuse these.
+  `react-markdown`. Reach for these before adding anything new — neither is
+  installed in `web/` yet since no chart/markdown-rendering feature has been
+  built there; add them when one is.
+- **Test IDs**: the CRA-era convention lived at
+  `frontend/src/constants/testIds/alphascribe.js`; `web/` has no product
+  features yet, so no equivalent exists — establish one (e.g.
+  `web/lib/constants/testIds.ts`, applied via `data-testid`) when the first
+  feature screen is built, rather than inline string literals.
+- **Client persistence**: the CRA-era `usePersistedState` (sessionStorage)
+  and watchlist store (`useSyncExternalStore`) have no `web/` port yet —
+  re-establish an equivalent under `web/lib/state/` when the first feature
+  that needs it is built, consistent with the state-ownership rules in
+  `docs/frontend_architecture/03_Data_and_State_Architecture.md`.
 - **Single light theme.** The app uses a warm-light / editorial-fintech theme:
   a cream paper canvas, ink-navy type, and an emerald→teal signature accent.
-  `index.css` defines exactly one token set (`:root`) — there is deliberately
-  no theme toggle and no second (dark) token set. Semantic colors are CSS
-  variables consumed via `hsl(var(--x))`; the `brand`/`bullish`/`bearish`/
-  `warning` accents are hex in `tailwind.config.js`. The emerald signature
-  gradient uses `--brand-from`/`--brand-to`. Keep new UI on these tokens — no
-  raw hex in JSX except the marketing `Landing.jsx`/`Docs.jsx` (which hardcode
-  their own aligned palette) and the serif PDF-export template in
-  `ReportView.jsx`. Do not add a theme toggle or a second token set.
+  `web/styles/tokens.css` defines exactly one token set — there is
+  deliberately no theme toggle and no second (dark) token set. Keep new UI on
+  these tokens — no raw hex in components. Do not add a theme toggle or a
+  second token set.
 
 ## Dependencies
 
@@ -76,9 +94,9 @@ Password-reset OTP email goes through the existing `httpx` dep to Resend
 
 ## Running & testing
 
-- One command: `python run.py` (sets up venv + portable MongoDB + deps, then
-  starts all three services). Ports: backend `8001`, frontend `3001`,
-  MongoDB `27017`.
+- One command: `python scripts/run.py` (sets up venv + portable MongoDB +
+  deps, then starts all three services). Ports: backend `8001`, frontend
+  `3001`, MongoDB `27017`.
 - Backend tests (`backend/tests/`) are live HTTP tests against a running
   server, run with pytest-xdist. **Do not change `pytest.ini`'s `addopts`**
   (`-n 2 --dist loadscope`) — the suites assume that layout.

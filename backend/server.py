@@ -1119,10 +1119,11 @@ async def _validation_error_handler(request: Request, exc: RequestValidationErro
 
 app.add_middleware(
     CORSMiddleware,
-    # Cookie-based sessions cross-origin (dev is frontend :3001 / backend
-    # :8001) require credentials allowed AND an explicit origin — "*" is
-    # invalid with credentials. Every tool route is gated behind the login
-    # wall (Phase 4), so this is load-bearing, not just for manual testing.
+    # Cookie-based sessions cross-origin (dev is the web/ Next.js frontend on
+    # :3001 / backend :8001) require credentials allowed AND an explicit
+    # origin — "*" is invalid with credentials. Every tool route is gated
+    # behind the login wall (Phase 4), so this is load-bearing, not just for
+    # manual testing.
     allow_credentials=True,
     allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3001").split(","),
     allow_methods=["*"],

@@ -1,16 +1,16 @@
 # Running AlphaScribe locally
 
 AlphaScribe is a multi-agent equity-research app: a **FastAPI** backend, a
-**React** frontend, and a **MongoDB** database. This guide gets all three
+**Next.js** frontend, and a **MongoDB** database. This guide gets all three
 running on your own machine with a single click — no manual installs.
 
 ---
 
 ## TL;DR
 
-1. Make sure **Python 3.11+** and **Node.js 18+** are installed.
-2. **Double-click `run.bat`** (Windows) — or run `python run.py` (any OS).
-3. Wait for the first-run setup to finish, then open **http://localhost:3000**.
+1. Make sure **Python 3.11+** and **Node.js 20.11+** are installed.
+2. **Double-click `scripts/run.bat`** (Windows) — or run `python scripts/run.py` (any OS).
+3. Wait for the first-run setup to finish, then open **http://localhost:3001**.
 4. Load demo data: open the **Ingest** page in the UI and click *Load samples*
    (or run `curl -X POST http://localhost:8001/api/ingest/samples`).
 
@@ -26,7 +26,7 @@ already be on your system:
 | Tool | Version | Check | Get it |
 |------|---------|-------|--------|
 | Python | 3.11+ | `python --version` | https://www.python.org/downloads/ (tick **"Add Python to PATH"**) |
-| Node.js | 18+ | `node --version` | https://nodejs.org/ (LTS) — includes `npm` |
+| Node.js | 20.11+ | `node --version` | https://nodejs.org/ (LTS) — includes `npm` |
 
 You do **not** need to install MongoDB, `yarn`, or any Python/Node packages by
 hand — the launcher handles all of that.
@@ -36,20 +36,20 @@ hand — the launcher handles all of that.
 ## How to run it
 
 ### Windows — the easy way
-Double-click **`run.bat`** in the project folder. A console window opens and
+Double-click **`scripts/run.bat`** in the project folder. A console window opens and
 does everything. When you see the "AlphaScribe is starting" banner, open your
-browser to **http://localhost:3000**.
+browser to **http://localhost:3001**.
 
 ### Any OS — the terminal way
 From the project root:
 ```bash
-python run.py
+python scripts/run.py
 ```
 
 ### Useful variants
 ```bash
-python run.py --setup    # install/download everything but don't start the app
-python run.py --clean    # delete .venv, .mongo, node_modules, .env.local
+python scripts/run.py --setup    # install/download everything but don't start the app
+python scripts/run.py --clean    # delete .venv, .mongo, node_modules, .env.local
 ```
 
 ---
@@ -64,8 +64,8 @@ installed system-wide:
 |----------------|------------|
 | `.venv/` | Python virtual environment with the backend dependencies |
 | `.mongo/` | A portable MongoDB (~250 MB, downloaded once) **and its data** |
-| `frontend/node_modules/` | Frontend JavaScript dependencies |
-| `frontend/.env.local` | Points the UI at your local backend (auto-generated) |
+| `web/node_modules/` | Frontend JavaScript dependencies |
+| `web/.env.local` | Points the UI at your local backend (auto-generated) |
 
 Subsequent runs skip all of this and start in **seconds**.
 
@@ -76,7 +76,7 @@ log prefixes:
 |--------|---------|-----|
 | `[mongo]` | MongoDB database | `mongodb://localhost:27017` |
 | `[api]` | FastAPI backend | http://localhost:8001/api/health |
-| `[web]` | React frontend | http://localhost:3000 |
+| `[web]` | Next.js frontend | http://localhost:3001 |
 
 ---
 
@@ -130,7 +130,7 @@ OTP_PEPPER=                             # secret for hashing OTPs; set a random 
 
 **"Python was not found"**
 Install Python 3.11+ and re-check *Add Python to PATH* during setup, then
-re-run `run.bat`.
+re-run `scripts/run.bat`.
 
 **Frontend won't start / `npm not found`**
 Install Node.js LTS from https://nodejs.org/ (it includes `npm`), then re-run.
@@ -140,7 +140,7 @@ Make sure `GEMINI_API_KEY` is set in `backend/.env` (free key at
 [aistudio.google.com/apikey](https://aistudio.google.com/apikey)). Restart the
 backend after adding it.
 
-**`port 8001 (backend)` or `port 3000 (frontend)` is already in use**
+**`port 8001 (backend)` or `port 3001 (frontend)` is already in use**
 Another program (or a previous run that didn't shut down) is holding the port.
 Close it, or restart your PC, then re-run.
 
@@ -150,7 +150,7 @@ the local download, then re-run.
 
 **Want a totally clean slate**
 ```bash
-python run.py --clean
+python scripts/run.py --clean
 ```
 This removes `.venv`, `.mongo` (including its data), `node_modules`, and
 `.env.local`. The next run rebuilds everything from scratch.

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """AlphaScribe one-command local launcher.
 
-Run everything (MongoDB + FastAPI backend + React frontend) from a single
+Run everything (MongoDB + FastAPI backend + Next.js frontend) from a single
 terminal. Everything it installs is kept inside the project:
 
   .venv/        Python virtual environment (backend deps)
   .mongo/       portable MongoDB binary + data files
-  frontend/node_modules/   frontend deps
+  web/node_modules/   frontend deps
 
 Usage:
-    python run.py            # set up (first run) and start all services
-    python run.py --setup    # only install/download, don't start
-    python run.py --clean    # remove .venv, .mongo, node_modules and exit
+    python scripts/run.py            # set up (first run) and start all services
+    python scripts/run.py --setup    # only install/download, don't start
+    python scripts/run.py --clean    # remove .venv, .mongo, node_modules and exit
 
 First run downloads a portable MongoDB (~250 MB) and installs deps, so it
 takes a few minutes. Subsequent runs start in seconds. Press Ctrl+C to stop.
@@ -36,9 +36,9 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Paths / config
 # ---------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 BACKEND = ROOT / "backend"
-FRONTEND = ROOT / "frontend"
+WEB = ROOT / "web"
 VENV = ROOT / ".venv"
 MONGO_DIR = ROOT / ".mongo"
 MONGO_DATA = MONGO_DIR / "data"
@@ -155,37 +155,35 @@ def check_gemini_key() -> None:
         log("         https://aistudio.google.com/apikey")
 
 
-def ensure_frontend_env() -> None:
+def ensure_web_env() -> None:
     """Point the UI at the local backend without touching the committed .env.
-    CRA loads .env.local at higher priority than .env."""
-    (FRONTEND / ".env.local").write_text(
-        f"REACT_APP_BACKEND_URL=http://localhost:{BACKEND_PORT}\n"
-        f"WDS_SOCKET_PORT={FRONTEND_PORT}\n"
+    Next.js loads .env.local at higher priority than .env."""
+    (WEB / ".env.local").write_text(
+        f'NEXT_PUBLIC_APP_URL="http://localhost:{FRONTEND_PORT}"\n'
+        f'NEXT_PUBLIC_API_BASE_URL="http://localhost:{BACKEND_PORT}"\n'
     )
 
 
-def _frontend_deps_ok() -> bool:
+def _web_deps_ok() -> bool:
     """True only if node_modules looks usable *on this OS*. A node_modules that
     was installed elsewhere (e.g. with yarn on macOS and shipped in the zip)
-    lacks the Windows .cmd shims, so `npm start` -> `craco` fails."""
-    craco = FRONTEND / "node_modules" / ".bin" / ("craco.cmd" if IS_WIN else "craco")
-    return craco.exists()
+    lacks the Windows .cmd shims, so the `next` binary fails to launch."""
+    next_bin = WEB / "node_modules" / ".bin" / ("next.cmd" if IS_WIN else "next")
+    return next_bin.exists()
 
 
-def ensure_frontend_deps() -> None:
-    if _frontend_deps_ok():
+def ensure_web_deps() -> None:
+    if _web_deps_ok():
         return
     npm = shutil.which("npm") or ("npm.cmd" if IS_WIN else "npm")
     if not shutil.which("npm"):
         die("npm not found on PATH. Install Node.js (which includes npm) first.")
-    nm = FRONTEND / "node_modules"
+    nm = WEB / "node_modules"
     if nm.exists():
-        log("frontend node_modules is incomplete/foreign — reinstalling cleanly ...")
+        log("web node_modules is incomplete/foreign — reinstalling cleanly ...")
         shutil.rmtree(nm, ignore_errors=True)
-    # --legacy-peer-deps: the project was authored with yarn and has a known
-    # react-day-picker/date-fns peer conflict that npm otherwise refuses.
-    log("installing frontend dependencies (npm install — first run, a few minutes) ...")
-    run([npm, "install", "--legacy-peer-deps"], cwd=FRONTEND)
+    log("installing web dependencies (npm install — first run, a few minutes) ...")
+    run([npm, "install"], cwd=WEB)
 
 
 # ---------------------------------------------------------------------------
@@ -301,7 +299,7 @@ def shutdown() -> None:
 
 
 def clean() -> None:
-    for path in (VENV, MONGO_DIR, FRONTEND / "node_modules", FRONTEND / ".env.local"):
+    for path in (VENV, MONGO_DIR, WEB / "node_modules", WEB / ".env.local", WEB / ".next"):
         if path.exists():
             log(f"removing {path.relative_to(ROOT)} ...")
             if path.is_dir():
@@ -326,13 +324,13 @@ def main() -> None:
     # --- setup (idempotent) ---
     ensure_venv()
     ensure_backend_deps()
-    ensure_frontend_env()
-    ensure_frontend_deps()
+    ensure_web_env()
+    ensure_web_deps()
     check_gemini_key()
     mongod = ensure_mongo()
 
     if "--setup" in args:
-        log("setup complete. Run `python run.py` to start.")
+        log("setup complete. Run `python scripts/run.py` to start.")
         return
 
     for port, what in ((BACKEND_PORT, "backend"), (FRONTEND_PORT, "frontend")):
@@ -354,9 +352,9 @@ def main() -> None:
                   "--host", "127.0.0.1", "--port", str(BACKEND_PORT)],
           BACKEND, env={**os.environ})
 
-    web_env = {**os.environ, "BROWSER": "none", "PORT": str(FRONTEND_PORT)}
-    npm = shutil.which("npm") or ("npm.cmd" if IS_WIN else "npm")
-    spawn("web", [npm, "start"], FRONTEND, env=web_env)
+    web_env = {**os.environ, "BROWSER": "none"}
+    next_bin = WEB / "node_modules" / ".bin" / ("next.cmd" if IS_WIN else "next")
+    spawn("web", [str(next_bin), "dev", "-p", str(FRONTEND_PORT)], WEB, env=web_env)
 
     log("")
     log("AlphaScribe is starting. Once compiled:")
