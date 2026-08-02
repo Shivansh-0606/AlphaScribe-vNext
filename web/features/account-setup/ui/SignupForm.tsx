@@ -25,8 +25,10 @@ export function SignupForm() {
   });
 
   const onSubmit = handleSubmit((values) => {
+    // New account -> Onboarding & AI Setup (SCR-02 UX spec: "proceed to SCR-03
+    // (new) or SCR-04 (returning)"); LoginForm's success path is unchanged.
     signup.mutate(values, {
-      onSuccess: () => router.replace("/workspace"),
+      onSuccess: () => router.replace("/setup"),
     });
   });
 

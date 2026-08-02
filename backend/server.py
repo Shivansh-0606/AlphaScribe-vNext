@@ -799,6 +799,44 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
         await q.put(None)  # sentinel
 
 
+class ValidateLlmKeyRequest(BaseModel):
+    provider: str
+    api_key: str = Field(min_length=1, max_length=512)
+    base_url: str | None = None
+    model: str | None = None
+
+
+@api.post("/llm/validate")
+async def validate_llm_key(req: ValidateLlmKeyRequest, user: dict = Depends(current_user)):
+    """Live-checks a BYOK key with one trivial completion call — the frontend's
+    Onboarding & AI Setup step needs this to satisfy the frozen UX spec's
+    "validity checked before continue" requirement. Never persists the key,
+    never generates real content. Same admin/SSRF restriction as
+    `/reports/generate`'s custom-provider path, since this is the same probe
+    surface (a client-supplied base_url the server fetches)."""
+    provider = req.provider.strip().lower()
+    if provider == "custom":
+        if not auth.is_admin(user):
+            raise HTTPException(
+                status_code=403,
+                detail="The Custom LLM provider is restricted to admin accounts.",
+            )
+        if req.base_url:
+            from agents.llm import assert_public_url
+            try:
+                assert_public_url(req.base_url)
+            except ValueError as e:
+                return {"valid": False, "error": str(e)}
+
+    from agents.llm import redact_key_from_error, validate_key
+    try:
+        await validate_key(provider, req.api_key, req.base_url, req.model)
+        return {"valid": True}
+    except Exception as e:  # noqa: BLE001
+        logger.warning("LLM key validation failed for provider=%s: %s", provider, e)
+        return {"valid": False, "error": redact_key_from_error(e, req.api_key)}
+
+
 @api.post("/reports/generate")
 async def generate_report(req: GenerateRequest, user: dict = Depends(current_user)):
     ticker = req.ticker.strip().upper()
@@ -938,14 +976,24 @@ async def stream_report(job_id: str, user: dict = Depends(current_user)):
     job = JOBS[job_id]
 
     async def event_source():
-        # replay any already-emitted events
-        for ev in list(job["events"]):
+        # replay any already-emitted events. `push()` appends every event to
+        # `job["events"]` *and* `q` in lockstep, so anything already in
+        # `job["events"]` at connect time is also still sitting unconsumed in
+        # `q` (this is the first read of `q`, whether it's the original
+        # connection or a reconnect) — without skipping, each of those events
+        # would be delivered twice: once from the replay, once live.
+        already = list(job["events"])
+        for ev in already:
             yield f"data: {json.dumps(ev)}\n\n"
+        to_skip = len(already)
         while True:
             try:
                 item = await asyncio.wait_for(q.get(), timeout=120.0)
             except asyncio.TimeoutError:
                 yield ": keepalive\n\n"
+                continue
+            if to_skip > 0:
+                to_skip -= 1
                 continue
             if item is None:
                 # send final snapshot

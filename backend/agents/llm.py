@@ -252,6 +252,53 @@ def _generate_sync(system: str, user: str, model: str) -> str:
     raise RuntimeError(f"Unknown LLM provider: {provider}")
 
 
+async def validate_key(provider: str, api_key: str, base_url: str | None = None,
+                        model: str | None = None) -> None:
+    """Live-validate a BYOK key with a single trivial completion call — no retry
+    loop (unlike `chat_text`; a bad key should fail once, not four times with
+    backoff), no persistence, no real content generated. Raises on failure
+    (invalid key, unreachable provider, unknown provider); returns normally on
+    success. Callers turn the raised exception into a `{"valid": False, ...}`
+    response rather than an HTTP error — an invalid key is an expected outcome
+    of validation, not a server failure.
+    """
+    provider = (provider or "").strip().lower()
+    if not api_key or not api_key.strip():
+        raise ValueError("API key is required.")
+    d_light, _ = PROVIDER_DEFAULTS.get(provider, PROVIDER_DEFAULTS["gemini"])
+    real_model = model or d_light
+    resolved_base_url = base_url or PROVIDER_BASE_URL.get(provider)
+    system, user = "You validate API connectivity.", "Reply with exactly one word: OK"
+
+    def _run() -> str:
+        if provider == "gemini":
+            return _gen_gemini(system, user, real_model, api_key)
+        if provider == "anthropic":
+            return _gen_anthropic(system, user, real_model, api_key)
+        if provider in ("openai", "groq", "openrouter", "deepseek", "mistral", "custom"):
+            return _gen_openai_compatible(system, user, real_model, api_key, resolved_base_url)
+        raise ValueError(f"Unknown LLM provider: {provider}")
+
+    await asyncio.wait_for(asyncio.to_thread(_run), timeout=_REQUEST_TIMEOUT)
+
+
+_KEY_PARAM_RE = re.compile(r"(?i)([?&]key=)[^&\s'\"]+")
+
+
+def redact_key_from_error(err: Exception, api_key: str) -> str:
+    """Provider SDK exceptions can embed the raw key (Gemini passes it as a
+    `?key=...` URL query param — see server.py's pipeline error handler for the
+    same concern). A validation failure message is shown back to the very user
+    who submitted the key, but it must never round-trip the key verbatim
+    through a response body (or anywhere a log/browser history could capture
+    it) — belt-and-suspenders: redact both the literal key substring and any
+    `key=...` URL param shape."""
+    text = str(err)
+    if api_key:
+        text = text.replace(api_key, "***REDACTED***")
+    return _KEY_PARAM_RE.sub(r"\1***REDACTED***", text)
+
+
 def _retry_after_seconds(err: Exception) -> float | None:
     m = re.search(r"retry_delay\s*\{\s*seconds:\s*(\d+)", str(err))
     if m:

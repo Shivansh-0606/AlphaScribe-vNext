@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders, screen, waitFor } from "@/tests/setup/render";
 import { AppError } from "@/lib/errors/app-error";
+import { useAiAccessStore } from "@/lib/state/aiAccess";
 import { SettingsPanel } from "./SettingsPanel";
 
 const replace = vi.fn();
@@ -38,6 +39,7 @@ const CURRENT_USER = { id: "u1", email: "a@b.com", created_at: "now", verified: 
 
 describe("SettingsPanel", () => {
   beforeEach(() => {
+    useAiAccessStore.getState().clear();
     replace.mockClear();
     toastSuccess.mockClear();
     toastError.mockClear();
@@ -51,6 +53,12 @@ describe("SettingsPanel", () => {
   it("shows the signed-in account's email", async () => {
     renderWithProviders(<SettingsPanel />);
     expect(await screen.findByText("Signed in as a@b.com")).toBeInTheDocument();
+  });
+
+  it("includes the AI Access section (SCR-11 also uses AIAccessSelector)", async () => {
+    renderWithProviders(<SettingsPanel />);
+    expect(await screen.findByText("AI access")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Managed AI/ })).toBeChecked();
   });
 
   describe("change password", () => {

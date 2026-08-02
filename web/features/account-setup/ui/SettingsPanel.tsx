@@ -32,12 +32,9 @@ import {
   type ChangePasswordFormValues,
   type DeleteAccountFormValues,
 } from "../application/form-schemas";
+import { AIAccessSelector } from "./AIAccessSelector";
 
-/**
- * SCR-11 Settings, account section only. AI access (Managed/BYOK) is a
- * separate authorization concern (03.7) — its key-management UI is not built
- * here; Feature Parity Tracker keeps that row as its own line item.
- */
+/** SCR-11 Settings — account section plus the AI Access section (same `AIAccessSelector` as SCR-03). */
 export function SettingsPanel() {
   const router = useRouter();
   const identity = useIdentity();
@@ -186,6 +183,15 @@ export function SettingsPanel() {
           >
             Sign out everywhere
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>AI access</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AIAccessSelector variant="settings" />
         </CardContent>
       </Card>
 

@@ -13,6 +13,7 @@ export const userSchema = z.object({
   email: z.string(),
   created_at: z.string(),
   verified: z.boolean(),
+  is_admin: z.boolean().default(false),
 });
 export type User = z.infer<typeof userSchema>;
 

@@ -51,7 +51,7 @@ describe("SignupForm", () => {
     expect(register).not.toHaveBeenCalled();
   });
 
-  it("submits and redirects to /workspace on success", async () => {
+  it("submits and redirects to /setup on success (new accounts go through Onboarding & AI Setup)", async () => {
     register.mockResolvedValueOnce({
       id: "u1",
       email: "a@b.com",
@@ -65,7 +65,7 @@ describe("SignupForm", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => expect(register).toHaveBeenCalledOnce());
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/workspace"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/setup"));
   });
 
   it("shows exactly one failure message on a rejected submission — a Banner, never also a toast", async () => {
@@ -105,6 +105,6 @@ describe("SignupForm", () => {
 
     expect(button).toBeDisabled();
     resolveRegister({ id: "u1", email: "a@b.com", created_at: "now", verified: false });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/workspace"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/setup"));
   });
 });

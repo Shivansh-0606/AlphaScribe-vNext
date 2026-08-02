@@ -11,4 +11,6 @@ export { LoginForm } from "./ui/LoginForm";
 export { SignupForm } from "./ui/SignupForm";
 export { ForgotPasswordForm } from "./ui/ForgotPasswordForm";
 export { SettingsPanel } from "./ui/SettingsPanel";
+export { AIAccessSelector } from "./ui/AIAccessSelector";
 export { useAuthStatus, useIdentity } from "./application/useAuth";
+export { useAiAccessStatus } from "./application/useAiAccess";
