@@ -7,3 +7,4 @@
  * (02.7 AD-2).
  */
 export { ReportViewScreen } from "./ui/ReportViewScreen";
+export { LibraryScreen } from "./ui/LibraryScreen";

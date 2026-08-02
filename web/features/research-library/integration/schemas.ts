@@ -43,3 +43,25 @@ export const reportStatusResponseSchema = z.object({
   report: reportDocSchema.optional(),
 });
 export type ReportStatusResponse = z.infer<typeof reportStatusResponseSchema>;
+
+/**
+ * `GET /reports` (`list_reports`, backend/server.py ~line 1040) — the
+ * `LibraryList` row shape (09_Component_Inventory.md's `ListItem`: "title,
+ * subtitle/date, primary action"). Deliberately its own, lighter schema
+ * rather than `reportDocSchema` — the endpoint projects out `events`/
+ * `source_documents` server-side, and a list row never needs the full
+ * `draft_report`/scorecard either.
+ */
+export const reportListItemSchema = z.object({
+  id: z.string(),
+  ticker: z.string(),
+  query: z.string(),
+  created_at: z.string(),
+  company_name: z.string().nullable().optional(),
+  is_sample: z.boolean().optional(),
+});
+export type ReportListItem = z.infer<typeof reportListItemSchema>;
+
+export const reportsListResponseSchema = z.object({
+  reports: z.array(reportListItemSchema),
+});
