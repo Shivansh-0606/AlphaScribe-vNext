@@ -8,6 +8,7 @@ import { Banner } from "@/components/foundation/Banner";
 import { Button } from "@/components/foundation/Button";
 import { Card, CardContent } from "@/components/foundation/Card";
 import { FormField } from "@/components/foundation/FormField";
+import { Link } from "@/components/foundation/Link";
 import { Loader } from "@/components/foundation/Loader";
 import { Text } from "@/components/foundation/Text";
 import { Textarea } from "@/components/foundation/Textarea";
@@ -240,5 +241,19 @@ export function OverviewSection({
     );
   }
 
-  return <AIResponseCard report={report.data} onRetry={retryAfterIngest} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <AIResponseCard report={report.data} onRetry={retryAfterIngest} />
+      {/* Frozen entry point (05_Screen_Inventory.md SCR-06/SCR-08): "Company
+          Research (SCR-06, 'Explain This')" into Learning, grounded in this
+          report. Phase 8 scope: Learning itself is built; the backend
+          capability it calls is a proposed contract, not live yet. */}
+      <Link
+        href={`/learning?ticker=${ticker}&job=${report.data.id}` as Route}
+        className="self-start"
+      >
+        Explain a concept from this report
+      </Link>
+    </div>
+  );
 }

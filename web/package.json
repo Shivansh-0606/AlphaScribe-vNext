@@ -4,7 +4,7 @@
   "private": true,
   "description": "AlphaScribe vNext frontend — greenfield Next.js 15 foundation implementing the frozen Frontend Architecture.",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

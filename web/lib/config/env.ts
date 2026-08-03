@@ -15,7 +15,7 @@ import { z } from "zod";
  */
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
+  NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3001"),
   NEXT_PUBLIC_API_BASE_URL: z.url().default("http://localhost:8001"),
 });
 

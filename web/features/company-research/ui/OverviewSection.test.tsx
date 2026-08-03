@@ -147,6 +147,22 @@ describe("OverviewSection", () => {
     expect(screen.queryByText(/87%/)).not.toBeInTheDocument();
   });
 
+  // Frozen entry point (05_Screen_Inventory.md): Company Research → Learning
+  // ("Explain This"), grounded in the report just generated.
+  it("offers an Explain This link into Learning, grounded in the finished report", async () => {
+    generateReport.mockResolvedValueOnce({ job_id: "job-1" });
+    const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+    await startResearch(user);
+    await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+
+    lastStreamHandlers().onEvent({ node: "final", status: "ok", report: REPORT });
+    lastStreamHandlers().onEnd();
+
+    expect(
+      await screen.findByRole("link", { name: "Explain a concept from this report" }),
+    ).toHaveAttribute("href", "/learning?ticker=AAPL&job=job-1");
+  });
+
   it("renders citation markers as clickable anchors into the source list", async () => {
     generateReport.mockResolvedValueOnce({ job_id: "job-1" });
     const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);

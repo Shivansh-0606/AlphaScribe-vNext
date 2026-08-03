@@ -6,14 +6,14 @@ import { defineConfig, devices } from "@playwright/test";
  * this config plus one smoke test establish the harness so a journey test
  * only needs to be written, not scaffolded, when a feature lands.
  *
- * Runs on a dedicated, non-default port (not 3000) with
+ * Runs on a dedicated, non-default port (not 3001) with
  * `reuseExistingServer: false` always — this app is frequently run via
- * `npm run dev` on 3000 in parallel (including by other sessions on this
+ * `npm run dev` on 3001 in parallel (including by other sessions on this
  * machine), and reusing whatever happens to already be listening there
  * silently tests the WRONG server, producing confusing false failures
- * (confirmed firsthand: a stale/foreign server on 3000 was reused and
- * returned non-token colors). Isolation costs one full build+start per run;
- * that's worth never getting a misleading result again.
+ * (confirmed firsthand: a stale/foreign server on the dev port was reused
+ * and returned non-token colors). Isolation costs one full build+start per
+ * run; that's worth never getting a misleading result again.
  */
 const PORT = 4300;
 
