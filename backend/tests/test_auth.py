@@ -18,6 +18,10 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from agents.auth import COOKIE_NAME
 
+# 06 §5.1 Ph0 / 05 T-1: needs a live server (+ Mongo, + for some suites a
+# live LLM/network). Excluded from the hermetic CI job via `-m "not live"`.
+pytestmark = pytest.mark.live
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001").rstrip("/")
 API = f"{BASE_URL}/api"
 

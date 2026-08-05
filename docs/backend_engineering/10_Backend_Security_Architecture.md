@@ -1,6 +1,6 @@
 # Backend Security Architecture
 
-**Status:** 🔒 **FROZEN** — `v1.0`, ratified 2026-08-03 · amendments only (§16)
+**Status:** 🔒 **FROZEN** — `v1.1`, ratified 2026-08-03 · amendments only (§16)
 **Milestone:** Backend Engineering M1 (post-audit) · **Date:** 2026-08-03
 **Baseline:** `Shivansh-0606/AlphaScribe-vNext` · branch `main` · commit `7404b67`
 **Depends on:** [`06`](06_Clean_Architecture_Migration_Plan.md)–[`09`](09_Redis_Architecture.md)
@@ -12,11 +12,12 @@
 
 | Version | Date | Change |
 |---|---|---|
-| **v1.0** | **2026-08-03** | **FROZEN.** Final consistency pass: cross-references, ID uniqueness, inter-document contradictions, ratification/register sync, diagram fidelity, and API-contract invariance all verified. |
+| **v1.1** | **2026-08-05** | **Amendment (M6).** Added §4.5 — promotes the cache-hit authorization fix from [`18` §1.2](18_M5_EQ3_Authorization_Cutover_Report.md#12-a-necessary-in-scope-addition-the-cache-hit-lookup-in-post-reportsgenerate) from a one-off M5 bug fix into a permanent, binding Security Invariant (`SI-1`). No other section changed. |
+| v1.0 | 2026-08-03 | **FROZEN.** Final consistency pass: cross-references, ID uniqueness, inter-document contradictions, ratification/register sync, diagram fidelity, and API-contract invariance all verified. |
 | v1.0-rc1 | 2026-08-03 | Added §8 (secret rotation) and §12 (incident response); added §1.1 data-classification diagram and §8.1 secret-lifecycle diagram; corrected 7 internal section cross-references; freeze-ready |
 | v0.9 | 2026-08-03 | Initial proposal |
 
-> **ID prefixing.** IDs defined here use `TB-`, `T-`, `SD-`, `SR-`, `SQ-`, `IR-`.
+> **ID prefixing.** IDs defined here use `TB-`, `T-`, `SD-`, `SR-`, `SQ-`, `IR-`, `SI-`.
 > References to IDs owned by another document carry that document's number —
 > e.g. `01 D-2`, `06 C-3`.
 
@@ -246,6 +247,44 @@ handler **cannot forget it** — the repository exposes no unscoped read method.
 | `POST /reports/compare` | **owned** (+samples) | **EQ-3 change** |
 | `POST /reports/rescore` | **admin** | **EQ-2 change** |
 | `POST /llm/validate` | authenticated | admin gate on custom provider |
+
+### 4.5 Security Invariant: cache-hit lookups are a disguised read
+
+> **SI-1.** Any cache-hit, memoization, or dedup lookup that can return a
+> reference to another request's result (a `job_id`, resource id, or content
+> payload) is, functionally, a **read of that resource** — and MUST carry the
+> exact same authorization scoping (§4.2's Owned/Shared/Admin predicate) as
+> the endpoint that would serve it on a genuine cache miss. It is not exempt
+> from §4 merely because the code path looks like an optimization rather
+> than a query.
+
+**Origin.** Discovered during M5's EQ-3 live-suite verification: `POST
+/reports/generate`'s `(ticker, query)` cache lookup returned `{"job_id": <any
+matching job, any tenant>, "cached": true}` — unscoped, even after the *read*
+side (`GET /reports/{id}`, `/stream`, `/compare`) was scoped by the same
+milestone. Before EQ-3, this was a **silent cross-tenant content leak** (the
+exact risk EQ-3 exists to close); after EQ-3's read-side scoping landed
+first, it downgraded to an inconsistency (a `job_id` the caller could be
+handed but could never subsequently read) rather than disappearing, because
+the cache lookup itself was never touched. One query predicate — the same
+`$or` used everywhere else in the cutover — fixed it. Full incident detail:
+[`18` §1.2](18_M5_EQ3_Authorization_Cutover_Report.md#12-a-necessary-in-scope-addition-the-cache-hit-lookup-in-post-reportsgenerate).
+
+**Why this is promoted, not just fixed.** §4's target model (§4.2) defines
+authorization as "a property of the data-access port," implemented so "a new
+handler cannot forget it." That guarantee only holds for *reads* shaped as
+reads. A cache/memoization layer is exactly the kind of code a future
+handler adds without recognizing it as a read path — it returns a
+pre-computed value, not a fresh query, and reviewers instinctively check
+authorization on the query, not the cache. SI-1 exists so that gap is a
+named, binding review item rather than a class of bug that has to be
+independently rediscovered per feature (Learning's explain cache, any future
+memoized endpoint, etc.).
+
+**Applies to:** any current or future cache/memoization/dedup layer reading
+from `db.jobs`, `db.reports`, or any other owned-or-shared collection
+(§1.1). Shared-corpus caches (filings, chunks, companies — §1.1 "SHARED
+CORPUS") are unaffected; they carry no owner scoping to begin with.
 
 ---
 
@@ -891,6 +930,7 @@ approver, and treat subsequent changes as numbered amendments.
 | `07` LR-5 | [`07_LangGraph_Architecture.md`](07_LangGraph_Architecture.md) §10 |
 | `08` RI-2, RI-5, I-1, §9, §12.2 | [`08_MongoDB_Data_Architecture.md`](08_MongoDB_Data_Architecture.md) |
 | `09` RA-0, RA-4, §7, §7.3, §8.1, §11 | [`09_Redis_Architecture.md`](09_Redis_Architecture.md) |
+| `18` §1.2 | [`18_M5_EQ3_Authorization_Cutover_Report.md`](18_M5_EQ3_Authorization_Cutover_Report.md) — origin of `SI-1` (§4.5) |
 
 ---
 

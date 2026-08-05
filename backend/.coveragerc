@@ -1,0 +1,18 @@
+[run]
+source =
+    agents
+    server
+    app
+    domain
+    application
+    infrastructure
+omit =
+    */tests/*
+    */__init__.py
+
+[report]
+precision = 1
+skip_empty = true
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

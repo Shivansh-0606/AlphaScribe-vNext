@@ -332,6 +332,11 @@ ADR-0NN` and add the new ADR. Never silently edit a frozen decision.
 - **Consequences** — ⚠️ **Behavior change** on live endpoints: cross-tenant read
   → 404, non-admin rescore → 403. No path, method, or shape changes, and no
   `web/` call site performs a cross-tenant read.
+- **M6 amendment (2026-08-05, no new ADR):** the cache-hit lookup fix this
+  decision's own M5 rollout required (`18` §1.2) is promoted to a standing
+  Security Invariant — `10` §4.5, `SI-1`: any cache/memoization/dedup lookup
+  that can hand back a reference to another request's result is a disguised
+  read and inherits this ADR's scoping rule.
 
 ### ADR-025
 **Cookie sessions require a same-registrable-domain deployment** · `10` SD-1

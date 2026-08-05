@@ -1,0 +1,114 @@
+"""Contract test: the backend's route surface must exactly match the 31
+approved routes enumerated in 02_API_Coverage_Audit.md's API Parity Matrix,
+PLUS the 2 additive M2 Phase 1 routes below (GET /health/ready, GET /metrics)
+— both were pre-anticipated as approved additions in
+docs/backend_engineering/11_ADR_Index.md's "API-contract impact of the whole
+set" table (04 §5.3, 10 §4.4), have no frontend consumer, and modify no
+existing route — PLUS the 4 Learning routes (M2 Phase L), the one addition
+the Implementation Charter's W-4 explicitly anticipates: "only Phase L may
+regenerate [this] (4 additive routes)". Every field/path/status shape is
+transcribed verbatim from the frozen frontend contract
+(web/features/learning/integration/schemas.ts) — see
+03_Learning_Backend_Design.md §1.
+
+This is the automated guard on 06 C-1 ("no approved API contract may change")
+— it is deliberately an exact-set assertion, not a fuzzy/partial one: adding,
+removing, or renaming a route is a contract change and must fail this test
+loudly, with the offending path in the diff, rather than pass silently. It
+caught exactly this addition during Phase 1's own development — see
+docs/backend_engineering/14_M2_Phase1_Implementation_Report.md.
+
+Deterministic, not a snapshot: the expected set is a literal, reviewable list
+transcribed from the approved contract — not a serialized blob that breaks on
+any incidental OpenAPI metadata change.
+
+    python -m pytest backend/tests/contract/test_route_inventory.py -v
+"""
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+os.environ.setdefault("MONGO_URL", "mongodb://localhost:27017")
+os.environ.setdefault("DB_NAME", "alphascribe_contract_test")
+
+import server  # noqa: E402
+
+# Transcribed verbatim from 02_API_Coverage_Audit.md §3 (31 routes), plus the
+# 2 approved-additive M2 Phase 1 routes (see the module docstring).
+APPROVED_ROUTES = {
+    ("GET", "/api/"),
+    ("GET", "/api/health"),
+    ("GET", "/api/health/ready"),   # M2 Phase 1 — additive, 11's impact table
+    ("GET", "/api/metrics"),        # M2 Phase 1 — additive, 11's impact table
+    ("POST", "/api/auth/register"),
+    ("POST", "/api/auth/login"),
+    ("POST", "/api/auth/logout"),
+    ("POST", "/api/auth/logout-all"),
+    ("GET", "/api/auth/me"),
+    ("DELETE", "/api/auth/me"),
+    ("POST", "/api/auth/password"),
+    ("POST", "/api/auth/forgot-password"),
+    ("POST", "/api/auth/reset-password"),
+    ("POST", "/api/llm/validate"),
+    ("POST", "/api/ingest/text"),
+    ("POST", "/api/ingest/edgar"),
+    ("POST", "/api/ingest/samples"),
+    ("POST", "/api/ingest/audio"),
+    ("POST", "/api/ingest/pdf"),
+    ("GET", "/api/companies"),
+    ("GET", "/api/companies/search"),
+    ("POST", "/api/companies/ensure"),
+    ("GET", "/api/companies/trending"),
+    ("GET", "/api/filings"),
+    ("GET", "/api/tickers"),
+    ("POST", "/api/reports/generate"),
+    ("GET", "/api/reports/{job_id}/stream"),
+    ("GET", "/api/reports/{job_id}"),
+    ("POST", "/api/reports/{job_id}/cancel"),
+    ("GET", "/api/reports"),
+    ("DELETE", "/api/reports/{report_id}"),
+    ("POST", "/api/reports/rescore"),
+    ("POST", "/api/reports/compare"),
+    ("POST", "/api/learning/explain"),        # M2 Phase L — additive
+    ("GET", "/api/learning/{id}/stream"),     # M2 Phase L — additive
+    ("GET", "/api/learning/{id}"),            # M2 Phase L — additive
+    ("POST", "/api/learning/{id}/cancel"),    # M2 Phase L — additive
+}
+
+_HTTP_METHODS = {"get", "post", "put", "delete", "patch"}
+
+
+def _actual_routes() -> set[tuple[str, str]]:
+    schema = server.app.openapi()
+    return {
+        (method.upper(), path)
+        for path, methods in schema["paths"].items()
+        for method in methods
+        if method.lower() in _HTTP_METHODS
+    }
+
+
+def test_route_count_matches_the_approved_contract():
+    # 31 approved (02) + 2 additive M2 Phase 1 (health/ready, metrics) + 4
+    # additive M2 Phase L (Learning).
+    assert len(APPROVED_ROUTES) == 37
+
+
+def test_no_routes_were_added_removed_or_renamed():
+    actual = _actual_routes()
+    missing = APPROVED_ROUTES - actual
+    added = actual - APPROVED_ROUTES
+    assert not missing, f"approved routes missing from the live app: {sorted(missing)}"
+    assert not added, (
+        f"undocumented routes found — either update 02_API_Coverage_Audit.md's "
+        f"Parity Matrix (if this is an approved, reviewed addition) or revert "
+        f"the change: {sorted(added)}"
+    )
+
+
+if __name__ == "__main__":
+    test_route_count_matches_the_approved_contract()
+    test_no_routes_were_added_removed_or_renamed()
+    print("ok: live route surface matches the 31 approved + 2 additive M2 Phase 1 "
+          "+ 4 additive M2 Phase L (Learning) routes exactly")

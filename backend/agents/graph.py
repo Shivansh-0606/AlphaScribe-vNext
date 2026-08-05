@@ -2,6 +2,7 @@
 from __future__ import annotations
 from functools import partial
 from langgraph.graph import StateGraph, START, END
+from infrastructure.observability.tracing import instrument_node
 from .state import AgentState
 from .nodes import (
     retriever_node,
@@ -12,15 +13,17 @@ from .nodes import (
     fact_check_router,
 )
 
+_GRAPH = "research"
+
 
 def build_graph(db):
     g = StateGraph(AgentState)
 
-    g.add_node("retriever", partial(retriever_node, db=db))
-    g.add_node("extractor", financial_extractor_node)
-    g.add_node("tone", tone_risk_node)
-    g.add_node("synthesizer", synthesizer_node)
-    g.add_node("fact_checker", fact_checker_node)
+    g.add_node("retriever", instrument_node(_GRAPH, "retriever", partial(retriever_node, db=db)))
+    g.add_node("extractor", instrument_node(_GRAPH, "extractor", financial_extractor_node))
+    g.add_node("tone", instrument_node(_GRAPH, "tone", tone_risk_node))
+    g.add_node("synthesizer", instrument_node(_GRAPH, "synthesizer", synthesizer_node))
+    g.add_node("fact_checker", instrument_node(_GRAPH, "fact_checker", fact_checker_node))
 
     # Retrieval → parallel Extractor + Tone
     g.add_edge(START, "retriever")

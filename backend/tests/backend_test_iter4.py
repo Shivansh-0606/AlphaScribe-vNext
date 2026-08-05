@@ -6,6 +6,10 @@ from dotenv import load_dotenv
 
 from conftest import login
 
+# 06 §5.1 Ph0 / 05 T-1: needs a live server (+ Mongo, + for some suites a
+# live LLM/network). Excluded from the hermetic CI job via `-m "not live"`.
+pytestmark = pytest.mark.live
+
 load_dotenv("/app/backend/.env")
 load_dotenv("/app/frontend/.env")
 

@@ -1,0 +1,110 @@
+name: Backend CI
+
+# M2 Phase 0 (docs/backend_engineering/06_Clean_Architecture_Migration_Plan.md
+# §5.1, §7.1; 12_M2_Implementation_Charter.md). Two jobs:
+#   hermetic — no secrets, no live Mongo/LLM/network. Runs on every push/PR.
+#   live     — needs a real Mongo + LLM key; gated to main only, never a fork
+#              PR (10 SD-12: the only job holding API keys must never run on
+#              untrusted PR code). Present as a skeleton; the maintainer adds
+#              the required secrets (see the job's `env:` block) to enable it.
+#
+# Deliberately minimal (M2 charter: "do not introduce unnecessary tooling") —
+# no lint/format/type-check job, since none is configured for backend/ today.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  hermetic:
+    name: Hermetic tests (unit + contract + security)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Dummy values only — no real Mongo/Redis is started or reachable here.
+      # `import server` succeeds without one because motor/pymongo clients
+      # connect lazily (see tests/contract/conftest.py's docstring).
+      MONGO_URL: mongodb://localhost:27017
+      DB_NAME: alphascribe_ci_hermetic
+      # Deliberately unset — a developer's local backend/.env may set this
+      # (see tests/test_ssrf_guard.py's M2 Ph0 finding); CI must not load it.
+      LLM_ALLOW_PRIVATE_BASE_URL: ""
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run hermetic suite with coverage
+        run: >
+          python -m pytest -n 2 --dist loadscope -m "not live"
+          --cov --cov-report=term-missing:skip-covered --cov-report=xml
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+          retention-days: 14
+
+  live:
+    name: Live integration suite (main only, real Mongo + LLM)
+    runs-on: ubuntu-latest
+    # 10 SD-12 — never on a fork PR; this is the only job with API-key access.
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      github.repository == 'Shivansh-0606/AlphaScribe-vNext'
+    needs: hermetic
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Populate these repo secrets to enable this job — until then it is a
+      # documented skeleton, not a silently-broken pipeline (it never runs
+      # without them: no MongoDB service is declared below either).
+      MONGO_URL: ${{ secrets.CI_MONGO_URL }}
+      DB_NAME: alphascribe_ci_live
+      GEMINI_API_KEY: ${{ secrets.CI_GEMINI_API_KEY }}
+    steps:
+      - name: Skip until CI Mongo + LLM secrets are configured
+        if: ${{ env.MONGO_URL == '' }}
+        run: |
+          echo "::notice::Live job skipped — CI_MONGO_URL / CI_GEMINI_API_KEY not configured. See .github/workflows/backend-ci.yml."
+          exit 0
+
+      - uses: actions/checkout@v4
+        if: ${{ env.MONGO_URL != '' }}
+
+      - uses: actions/setup-python@v5
+        if: ${{ env.MONGO_URL != '' }}
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        if: ${{ env.MONGO_URL != '' }}
+        run: python -m pip install -r requirements.txt
+
+      - name: Start the backend
+        if: ${{ env.MONGO_URL != '' }}
+        run: |
+          python -m uvicorn server:app --port 8001 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8001/api/health && break; sleep 1; done
+
+      - name: Run live suite
+        if: ${{ env.MONGO_URL != '' }}
+        run: python -m pytest -n 2 --dist loadscope -m live

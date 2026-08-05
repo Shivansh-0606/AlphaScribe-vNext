@@ -198,7 +198,11 @@ def _bse_pdf_url(scripcode: str, val: str) -> str | None:
     v = val.strip()
     if v.lower().startswith("http") and v.lower().endswith(".pdf"):
         # Only trust BSE's own host — don't fetch an arbitrary URL from the feed.
-        return v if urlparse(v).hostname and urlparse(v).hostname.endswith("bseindia.com") else None
+        # Phase 0 fix (10 T-19): match the exact host or a subdomain of it, not
+        # just a string suffix — `.endswith("bseindia.com")` alone also matches
+        # an attacker-registered "evilbseindia.com".
+        host = urlparse(v).hostname
+        return v if host and (host == "bseindia.com" or host.endswith(".bseindia.com")) else None
     if v.lower().endswith(".pdf"):
         return f"https://www.bseindia.com/bseplus/AnnualReport/{scripcode}/{v}"
     return None

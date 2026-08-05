@@ -21,6 +21,14 @@ from typing import Type, TypeVar, get_origin, get_args
 from urllib.parse import urlparse
 from pydantic import BaseModel, ValidationError
 
+# M2 Phase 1 (01 D-3 fix, ADR pending): the one place a provider name maps to
+# a call, and the one base_url resolution rule — both _generate_sync and
+# validate_key delegate to this instead of each carrying their own duplicated
+# if/elif chain. See infrastructure/llm/registry.py's module docstring.
+from infrastructure.llm.registry import dispatch as _dispatch_provider
+from infrastructure.llm.registry import resolve_base_url as _resolve_base_url
+from infrastructure.observability.metrics import llm_calls_total
+
 T = TypeVar("T", bound=BaseModel)
 
 # Per-request LLM credentials. Set by the API layer from request headers; falls
@@ -241,15 +249,18 @@ def _generate_sync(system: str, user: str, model: str) -> str:
             "paste a key in the app (Settings)."
         )
     real_model = _resolve_model(model, cfg)
-    if provider == "gemini":
-        return _gen_gemini(system, user, real_model, key)
-    if provider == "anthropic":
-        return _gen_anthropic(system, user, real_model, key)
-    # openai / groq / openrouter / deepseek / mistral / custom all use the
-    # OpenAI-compatible chat API. base_url distinguishes them.
-    if provider in ("openai", "groq", "openrouter", "deepseek", "mistral", "custom"):
-        return _gen_openai_compatible(system, user, real_model, key, cfg["base_url"])
-    raise RuntimeError(f"Unknown LLM provider: {provider}")
+    try:
+        return _dispatch_provider(
+            provider, system, user, real_model, key, cfg["base_url"],
+            gen_gemini=_gen_gemini, gen_anthropic=_gen_anthropic,
+            gen_openai_compatible=_gen_openai_compatible,
+        )
+    except ValueError as e:
+        # dispatch() raises ValueError for an unknown provider; this call
+        # site's existing contract is RuntimeError (validate_key's contract
+        # is ValueError — see below). Preserved so no caller's except clause
+        # needs to change.
+        raise RuntimeError(str(e)) from e
 
 
 async def validate_key(provider: str, api_key: str, base_url: str | None = None,
@@ -267,17 +278,20 @@ async def validate_key(provider: str, api_key: str, base_url: str | None = None,
         raise ValueError("API key is required.")
     d_light, _ = PROVIDER_DEFAULTS.get(provider, PROVIDER_DEFAULTS["gemini"])
     real_model = model or d_light
-    resolved_base_url = base_url or PROVIDER_BASE_URL.get(provider)
+    # M2 Phase 1 (01 D-3 fix): previously `base_url or PROVIDER_BASE_URL.get(...)`
+    # — did not consult LLM_BASE_URL, unlike _generate_sync's resolution via
+    # _active(). A key validated against PROVIDER_BASE_URL could then
+    # generate against a different endpoint (LLM_BASE_URL) silently. Both
+    # call sites now share the exact same resolution function.
+    resolved_base_url = _resolve_base_url(provider, base_url, PROVIDER_BASE_URL)
     system, user = "You validate API connectivity.", "Reply with exactly one word: OK"
 
     def _run() -> str:
-        if provider == "gemini":
-            return _gen_gemini(system, user, real_model, api_key)
-        if provider == "anthropic":
-            return _gen_anthropic(system, user, real_model, api_key)
-        if provider in ("openai", "groq", "openrouter", "deepseek", "mistral", "custom"):
-            return _gen_openai_compatible(system, user, real_model, api_key, resolved_base_url)
-        raise ValueError(f"Unknown LLM provider: {provider}")
+        return _dispatch_provider(
+            provider, system, user, real_model, api_key, resolved_base_url,
+            gen_gemini=_gen_gemini, gen_anthropic=_gen_anthropic,
+            gen_openai_compatible=_gen_openai_compatible,
+        )
 
     await asyncio.wait_for(asyncio.to_thread(_run), timeout=_REQUEST_TIMEOUT)
 
@@ -307,14 +321,27 @@ def _retry_after_seconds(err: Exception) -> float | None:
     return float(m.group(1)) if m else None
 
 
+_TIER_LABELS = {DEFAULT_LIGHT_MODEL: "light", DEFAULT_HEAVY_MODEL: "heavy"}
+
+
 async def chat_text(system: str, user: str, *, model: str = DEFAULT_HEAVY_MODEL) -> str:
+    # The one shared call site behind every node's chat_text/chat_json call
+    # (chat_json delegates to this) — instrumenting here covers both graphs
+    # (report + Learning) without a per-node metrics call.
+    cfg = _active()
+    labels = {"provider": cfg["provider"], "model": _resolve_model(model, cfg),
+              "tier": _TIER_LABELS.get(model, "explicit")}
     last_err: Exception | None = None
     for attempt in range(4):
         try:
-            return await asyncio.to_thread(_generate_sync, system, user, model)
+            result = await asyncio.to_thread(_generate_sync, system, user, model)
+            llm_calls_total.labels(**labels, outcome="success").inc()
+            return result
         except NonRetryableLLMError:
+            llm_calls_total.labels(**labels, outcome="error").inc()
             raise  # deterministic — retrying wastes calls + backoff
         except Exception as e:  # noqa: BLE001
+            llm_calls_total.labels(**labels, outcome="error").inc()  # one per failed attempt, retries visible
             last_err = e
             if attempt == 3:
                 break

@@ -30,15 +30,29 @@ ALLOWED = [
 
 
 def test_ssrf_guard():
-    for url in BLOCKED:
-        try:
-            assert_public_url(url)
-        except ValueError:
-            continue
-        raise AssertionError(f"should have blocked: {url}")
+    # M2 Ph0 finding: `import server` (elsewhere in the same hermetic-suite
+    # process — e.g. tests/contract/*, tests/unit/test_server_helpers.py) runs
+    # load_dotenv(), which sets LLM_ALLOW_PRIVATE_BASE_URL from a developer's
+    # local backend/.env into this process's os.environ — the escape hatch
+    # documented in llm.py's assert_public_url docstring ("only set for a
+    # single-user/local instance"). That is correct behavior for `server.py`;
+    # it should not make this security regression test order-dependent on
+    # what else happened to import server first in the same worker. Force the
+    # guard active for the duration of this test, regardless of environment.
+    real = os.environ.pop("LLM_ALLOW_PRIVATE_BASE_URL", None)
+    try:
+        for url in BLOCKED:
+            try:
+                assert_public_url(url)
+            except ValueError:
+                continue
+            raise AssertionError(f"should have blocked: {url}")
 
-    for url in ALLOWED:
-        assert_public_url(url)  # must not raise
+        for url in ALLOWED:
+            assert_public_url(url)  # must not raise
+    finally:
+        if real is not None:
+            os.environ["LLM_ALLOW_PRIVATE_BASE_URL"] = real
 
 
 if __name__ == "__main__":

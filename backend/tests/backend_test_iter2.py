@@ -11,6 +11,10 @@ from dotenv import load_dotenv
 
 from conftest import login
 
+# 06 §5.1 Ph0 / 05 T-1: needs a live server (+ Mongo, + for some suites a
+# live LLM/network). Excluded from the hermetic CI job via `-m "not live"`.
+pytestmark = pytest.mark.live
+
 # load backend .env to reach mongo
 load_dotenv("/app/backend/.env")
 
@@ -127,12 +131,16 @@ def test_get_report_has_scorecard(client, new_job):
 
 
 # --- Rescore ---
-def test_rescore_reports(client):
+def test_rescore_reports_requires_admin(client):
+    # EQ-2 (02 §4.5 / 00_README ratification register): admin-gated as of the
+    # Company Research findings pass — a regular authenticated user could
+    # previously trigger a full-collection cross-tenant scorecard rewrite.
+    # The admin-success path is covered hermetically instead
+    # (tests/unit/test_server_helpers.py) rather than live, since live-testing
+    # it would need this server's real ADMIN_EMAILS account, which a shared
+    # dev database shouldn't have test suites logging into.
     r = client.post(f"{API}/reports/rescore")
-    assert r.status_code == 200
-    j = r.json()
-    assert "updated" in j
-    assert isinstance(j["updated"], int) and j["updated"] >= 1
+    assert r.status_code == 403
 
 
 # --- Compare ---

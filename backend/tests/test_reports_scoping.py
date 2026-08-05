@@ -15,6 +15,10 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from agents.auth import COOKIE_NAME
 
+# 06 §5.1 Ph0 / 05 T-1: needs a live server (+ Mongo, + for some suites a
+# live LLM/network). Excluded from the hermetic CI job via `-m "not live"`.
+pytestmark = pytest.mark.live
+
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001").rstrip("/")
 API = f"{BASE_URL}/api"
 
@@ -109,6 +113,58 @@ def test_list_scopes_to_caller(user_cookie, authed_job_id):
     assert r.status_code == 200, r.text
     ids = [x["id"] for x in r.json()["reports"]]
     assert authed_job_id in ids
+
+
+def test_owner_can_still_get_and_stream_own_report(user_cookie, authed_job_id):
+    """EQ-3 (M5): the ownership check must not also block the owner —
+    covers the positive branch of the new scoping added to get_report/
+    stream_report, not just the denial branches below."""
+    r = requests.get(f"{API}/reports/{authed_job_id}", cookies=user_cookie)
+    assert r.status_code == 200
+
+    with requests.get(f"{API}/reports/{authed_job_id}/stream", cookies=user_cookie,
+                       stream=True, timeout=30) as s:
+        assert s.status_code == 200
+
+
+def test_owner_can_still_cancel_own_report(user_cookie, authed_job_id):
+    # The report is already completed by this point in the module, so this
+    # exercises the idempotent "already finished" branch — still proves the
+    # new ownership check (M5) doesn't block the owner from reaching it.
+    r = requests.post(f"{API}/reports/{authed_job_id}/cancel", cookies=user_cookie)
+    assert r.status_code == 200
+    assert r.json().get("note") == "already finished"
+
+
+def test_other_user_cannot_get_my_report(other_user_cookie, authed_job_id):
+    """EQ-3 (01 D-5, M5): report reads are now owner+sample scoped — a
+    cross-tenant caller with the UUID gets 404, not the report."""
+    r = requests.get(f"{API}/reports/{authed_job_id}", cookies=other_user_cookie)
+    assert r.status_code == 404
+
+
+def test_other_user_cannot_stream_my_report(other_user_cookie, authed_job_id):
+    r = requests.get(f"{API}/reports/{authed_job_id}/stream", cookies=other_user_cookie)
+    assert r.status_code == 404
+
+
+def test_other_user_cannot_cancel_my_report(user_cookie, other_user_cookie, authed_job_id):
+    r = requests.post(f"{API}/reports/{authed_job_id}/cancel", cookies=other_user_cookie)
+    assert r.status_code == 404
+    # not clobbered by the denied attempt — still completed for the owner
+    r2 = requests.get(f"{API}/reports/{authed_job_id}", cookies=user_cookie)
+    assert r2.status_code == 200
+    assert r2.json()["status"] == "completed"
+
+
+def test_compare_excludes_a_report_not_visible_to_the_caller(other_user_cookie, authed_job_id):
+    """EQ-3 (M5): compare is scoped at the query — a report the caller
+    doesn't own/share simply isn't in the result set, same as if it never
+    existed, which trips the existing "fewer than 2 reports found" guard."""
+    r = requests.post(f"{API}/reports/compare",
+                       json={"report_ids": [authed_job_id, authed_job_id]},
+                       cookies=other_user_cookie)
+    assert r.status_code == 404
 
 
 def test_other_user_does_not_see_my_report(other_user_cookie, authed_job_id):

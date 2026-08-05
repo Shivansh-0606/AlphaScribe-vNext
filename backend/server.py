@@ -23,6 +23,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 from agents import auth, notify
 from agents.graph import build_graph
+from agents.learning_graph import build_learning_graph
 from agents.ingest import (
     extract_pdf_text,
     fetch_bse_annual_report,
@@ -34,6 +35,33 @@ from agents.sample_data import SAMPLES
 from agents.scoring import compute_scorecard
 from agents.retrieval import retrieval_status
 from agents import company_index
+
+# M2 Phase 1 shared infrastructure — additive; see
+# docs/backend_engineering/14_M2_Phase1_Implementation_Report.md for exactly
+# what each import below is wired into, and what stays built-and-tested-
+# standalone (not yet cut over) this phase.
+from app.api.errors import domain_error_handler
+from app.container import build_container
+from app.settings import load_settings
+from domain.errors import DomainError
+from domain.models import JobKind
+from infrastructure.mongo.client import ping as mongo_ping
+from infrastructure.mongo.indexes import ensure_indexes as ensure_mongo_indexes
+from infrastructure.observability.logging import install_correlation_filter, set_correlation_id
+from infrastructure.observability.metrics import (
+    auth_failures_total,
+    authz_denied_total,
+    deadline_exceeded_total,
+    http_request_duration_seconds,
+    http_requests_total,
+    jobs_active,
+    pipeline_duration_seconds,
+    pipeline_runs_total,
+    render_latest as render_metrics,
+)
+from infrastructure.observability.tracing import setup_tracing
+from infrastructure.security.authorization import require_admin
+from infrastructure.streaming.sse import sse_response
 
 # ---------------------------------------------------------------------------
 # DB / App setup
@@ -47,34 +75,25 @@ db = mongo_client[DB_NAME]
 app = FastAPI(title="AlphaScribe", version="0.1.0")
 api = APIRouter(prefix="/api")
 
-# In-memory task registry for report generation. Each entry:
-#   {"id", "ticker", "query", "status", "created_at", "state", "events"}
-JOBS: dict[str, dict[str, Any]] = {}
-JOB_QUEUES: dict[str, asyncio.Queue] = {}
+# M2 Phase 4 cutover (06 §7; 14's readiness condition 3): job bookkeeping and
+# SSE fan-out go through the shared application/jobs.py::JobLifecycle +
+# EventBus infrastructure (fixes 01 D-1 — two concurrent SSE readers used to
+# split one job's events) instead of the old JOBS/JOB_QUEUES dicts. One
+# shared MAX_ACTIVE_JOBS budget now covers both research and Learning jobs
+# (JobKind.RESEARCH / JobKind.LEARNING), per 03's design.
+#
+# RUNNING_TASKS is the one thing this infrastructure deliberately doesn't
+# track (a JobStore entry isn't a live asyncio.Task) — needed so a cancel
+# request can actually interrupt an in-flight graph run, same role the old
+# JOBS[job_id]["task"] played.
+settings = load_settings()
+container = build_container(settings)
+RUNNING_TASKS: dict[str, asyncio.Task] = {}
+_tracing_started = False
 
-# Bound the registry: cap concurrent pipelines (each burns LLM quota + CPU) and
-# evict finished entries so JOBS/JOB_QUEUES don't grow forever (delete_report
-# only removes the Mongo docs).
-MAX_ACTIVE_JOBS = int(os.environ.get("MAX_ACTIVE_JOBS", "8"))
-MAX_JOB_HISTORY = int(os.environ.get("MAX_JOB_HISTORY", "200"))
-_DONE_STATES = ("completed", "failed", "cancelled")
-
-
-def _reap_jobs() -> None:
-    """Drop the oldest finished jobs once the registry exceeds MAX_JOB_HISTORY.
-    Only finished jobs are evicted, so active ones are never dropped."""
-    if len(JOBS) <= MAX_JOB_HISTORY:
-        return
-    finished = sorted(
-        (j for j in JOBS.values() if j.get("status") in _DONE_STATES),
-        key=lambda j: j.get("created_at", ""),
-    )
-    for j in finished[: len(JOBS) - MAX_JOB_HISTORY]:
-        JOBS.pop(j["id"], None)
-        JOB_QUEUES.pop(j["id"], None)
-
-# Compile graph once at startup.
+# Compile graphs once at startup.
 graph = build_graph(db)
+learning_graph = build_learning_graph(db)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("alphascribe")
@@ -113,6 +132,17 @@ class GenerateRequest(BaseModel):
     llm_base_url: Optional[str] = None        # for custom OpenAI-compatible endpoints
     llm_model: Optional[str] = None           # optional model override
     no_cache: bool = False                    # force a fresh run, skip cache
+
+
+class ExplainRequest(BaseModel):
+    ticker: str = Field(max_length=20)
+    concept: str = Field(max_length=500)
+    context_report_id: Optional[str] = None   # SCR-06 "Explain This" — grounds
+                                              # the explanation in that report's figures
+    llm_provider: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    llm_model: Optional[str] = None
 
 
 class JobSummary(BaseModel):
@@ -175,6 +205,18 @@ async def current_user(request: Request) -> dict:
     return user
 
 
+def _deny_cross_tenant(user_id: str, resource_id: str, *, resource_kind: str) -> HTTPException:
+    """EQ-3 cutover (00_README.md ratification register: "Scope (404 cross-tenant)";
+    01 D-5). A denial is logged for security monitoring (M5 scope: "audit logging
+    for authorization decisions") but the response stays a generic 404 — same
+    status a genuinely nonexistent id gets, so a caller probing UUIDs can't use
+    the response to distinguish "not yours" from "doesn't exist" (mirrors
+    agents/learning_nodes.py's identical owner-scoped 404 pattern, shipped M2)."""
+    logger.warning("cross-tenant %s access denied: user=%s id=%s", resource_kind, user_id, resource_id)
+    authz_denied_total.labels(endpoint=resource_kind, **{"class": "owner_scoped"}).inc()
+    return HTTPException(status_code=404, detail=f"{resource_kind} not found")
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -186,9 +228,15 @@ async def root():
 
 @api.get("/health")
 async def health():
-    llm_key = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
-    docs = await db.filings.count_documents({})
-    chunks = await db.filing_chunks.count_documents({})
+    # M6 — O-12/O-13 fixed without changing the response shape (no contract
+    # change, 04 O-16 confirms nothing consumes it): `estimated_document_count`
+    # is a metadata read (O(1)), not the full collection scan
+    # `count_documents({})` was; `_active()` resolves whichever provider is
+    # actually configured (LLM_PROVIDER), not a hardcoded Gemini-only check —
+    # the same function server.py's own startup log line already trusts.
+    llm_key = bool(_active().get("api_key"))
+    docs = await db.filings.estimated_document_count()
+    chunks = await db.filing_chunks.estimated_document_count()
     return {
         "ok": True,
         "llm_key_configured": llm_key,
@@ -196,6 +244,36 @@ async def health():
         "chunks": chunks,
         "retrieval": retrieval_status(),
     }
+
+
+@api.get("/health/ready")
+async def health_ready():
+    """M2 Phase 1 — additive readiness probe (04 §5.3, 10 §4.4; anticipated
+    in 11_ADR_Index.md's "API-contract impact" table as an approved
+    addition). A TRUE liveness/dependency check, not `/health`'s document
+    counts (04 O-12): `mongo_ping` is a metadata round-trip
+    (`{"ping": 1}`), not a collection scan. No frontend consumer — this is
+    an operator/orchestrator probe, same posture as `/health`."""
+    try:
+        await mongo_ping(db)
+        mongo_ok = True
+    except Exception:  # noqa: BLE001 — readiness must report, never 500
+        mongo_ok = False
+    ready = mongo_ok
+    return JSONResponse(
+        status_code=200 if ready else 503,
+        content={"ready": ready, "mongo": mongo_ok, "retrieval": retrieval_status()},
+    )
+
+
+@api.get("/metrics")
+async def metrics():
+    """M2 Phase 1 — additive Prometheus scrape endpoint (04 §3.3, 07 §7.2,
+    09 §12, 10 §13 catalogs). Public, matching `/health`'s posture — a real
+    deployment scrapes this from a private network (10 SD-5), which is an
+    operational concern, not a code one."""
+    body, content_type = render_metrics()
+    return Response(content=body, media_type=content_type)
 
 
 @api.post("/auth/register")
@@ -222,10 +300,12 @@ async def login(req: LoginRequest, response: Response):
     # slip past the cap together; clear_hits undoes it on success.
     key = f"login:{req.email.strip().lower()}"
     if auth.is_rate_limited(key):
+        auth_failures_total.labels(reason="rate_limited").inc()
         raise HTTPException(status_code=429, detail="Too many attempts. Try again later.")
     auth.record_hit(key)
     user = await auth.authenticate(db, req.email, req.password)
     if not user:
+        auth_failures_total.labels(reason="bad_credentials").inc()
         raise HTTPException(status_code=401, detail="Invalid email or password")
     auth.clear_hits(key)
     token, _ = await auth.create_session(db, user["id"], remember=req.remember)
@@ -324,8 +404,7 @@ async def delete_account(req: DeleteAccountRequest, response: Response,
     if report_ids:
         await db.jobs.delete_many({"id": {"$in": report_ids}})
         for rid in report_ids:
-            JOBS.pop(rid, None)
-            JOB_QUEUES.pop(rid, None)
+            RUNNING_TASKS.pop(rid, None)
     await auth.delete_all_sessions(db, user["id"])
     await db.users.delete_one({"id": user["id"]})
     response.delete_cookie(
@@ -688,25 +767,21 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
                         light_model=llm_model, heavy_model=llm_model, base_url=llm_base_url)
         if (llm_provider or llm_api_key) else None
     )
-    q = JOB_QUEUES[job_id]
-    job = JOBS[job_id]
-    job["status"] = "running"
-    await db.jobs.update_one(
-        {"id": job_id}, {"$set": {"status": "running"}}, upsert=True
-    )
+    started = asyncio.get_event_loop().time()
+    await container.job_lifecycle.mark_running(job_id)
+    await db.jobs.update_one({"id": job_id}, {"$set": {"status": "running"}}, upsert=True)
 
     async def push(ev: dict) -> None:
-        job["events"].append(ev)
-        await q.put(ev)
-        # also mirror event to Mongo so a reconnecting client can resume
+        # JobLifecycle.publish fans the event out to every SSE subscriber
+        # (EventBus, fixes 01 D-1); the Mongo mirror lets a reconnecting
+        # client's GET /reports/{id} see trace history even if the
+        # in-memory EventBus lost it (e.g. after a restart).
+        await container.job_lifecycle.publish(job_id, ev)
         await db.jobs.update_one(
             {"id": job_id},
             {"$push": {"events": ev}, "$set": {"updated_at": ev.get("ts", "")}}
         )
 
-    await push({"node": "pipeline", "status": "start",
-                "message": f"Starting AlphaScribe pipeline for {ticker}",
-                "ts": datetime.now(timezone.utc).isoformat()})
     try:
         initial: dict = {
             "ticker": ticker.upper(),
@@ -717,21 +792,32 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
         if prior_brief:
             initial["prior_brief"] = prior_brief
         final_state: dict = {}
+        last_node_name = "unknown"
         async for event in graph.astream(initial, {"recursion_limit": 25}):
             # event is {node_name: node_return_value}
             for _node_name, node_state in event.items():
+                last_node_name = _node_name
                 if not isinstance(node_state, dict):
                     continue
                 final_state.update(node_state)
                 for t in node_state.get("trace", []):
                     await push(t)
+            # 07 §5.4/LG-11: deadline is checked at node boundaries (between
+            # yielded graph events), not preemptively mid-node — the coarsest
+            # granularity that still bounds a pathological job to roughly its
+            # deadline instead of the ~57-minute unbounded worst case.
+            if await container.job_lifecycle.is_past_deadline(job_id):
+                deadline_exceeded_total.labels(graph="research", node=last_node_name).inc()
+                raise TimeoutError(f"job exceeded its {settings.job_deadline_s['research']}s deadline")
 
         # Persist final state (strip trace for storage cleanliness)
+        completed_at = datetime.now(timezone.utc).isoformat()
         report_doc = {
             "id": job_id,
             "ticker": ticker.upper(),
             "query": query,
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "completed_at": completed_at,
             "draft_report": final_state.get("draft_report", ""),
             "extracted_data": final_state.get("extracted_data", {}),
             "sentiment_analysis": final_state.get("sentiment_analysis", {}),
@@ -740,7 +826,7 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
             "validation_errors": final_state.get("validation_errors", []),
             "verified_claims": final_state.get("verified_claims", []),
             "retry_count": int(final_state.get("retry_count", 0)),
-            "events": job["events"],
+            "events": await container.events.history(job_id),
             "user_id": user_id,
         }
         report_doc["scorecard"] = compute_scorecard(report_doc)
@@ -753,50 +839,54 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
             {"$set": {"status": "completed",
                       "report_id": job_id,
                       "fact_check_status": report_doc["fact_check_status"],
-                      "retry_count": report_doc["retry_count"]}}
+                      "retry_count": report_doc["retry_count"],
+                      "completed_at": completed_at}}
         )
-        job["report"] = report_doc
-        job["status"] = "completed"
-        await push({
-            "node": "pipeline",
-            "status": "ok",
-            "message": "Pipeline complete",
-            "fact_check_status": report_doc["fact_check_status"],
-            "retry_count": report_doc["retry_count"],
-            "ts": datetime.now(timezone.utc).isoformat(),
-        })
+        await container.job_lifecycle.complete(job_id)
+        pipeline_runs_total.labels(graph="research", status="completed").inc()
     except asyncio.CancelledError:
-        job["status"] = "cancelled"
+        completed_at = datetime.now(timezone.utc).isoformat()
         await db.jobs.update_one(
-            {"id": job_id}, {"$set": {"status": "cancelled"}}
+            {"id": job_id}, {"$set": {"status": "cancelled", "completed_at": completed_at}}
         )
-        await push({
-            "node": "pipeline",
-            "status": "warn",
-            "message": "Analysis cancelled by user",
-            "ts": datetime.now(timezone.utc).isoformat(),
-        })
+        # Idempotent — cancel_report already calls job_lifecycle.cancel() to
+        # publish the warn event before interrupting this task; this call is
+        # a no-op in that case (job already terminal) and a safety net if
+        # cancellation is ever triggered another way.
+        await container.job_lifecycle.cancel(job_id)
+        pipeline_runs_total.labels(graph="research", status="cancelled").inc()
+    except TimeoutError as e:
+        # LG-11: a pathological job (retry loops, a slow provider) is bounded
+        # to its deadline instead of running unbounded — no raw exception
+        # detail to redact here, unlike the generic branch below.
+        logger.warning("pipeline %s: %s", job_id, e)
+        err = "Analysis exceeded its time budget and was stopped."
+        completed_at = datetime.now(timezone.utc).isoformat()
+        await db.jobs.update_one(
+            {"id": job_id}, {"$set": {"status": "failed", "error": err, "completed_at": completed_at}}
+        )
+        await container.job_lifecycle.fail(job_id, err)
+        pipeline_runs_total.labels(graph="research", status="failed").inc()
     except Exception:
         # Don't persist/stream the raw error: provider SDK exceptions can embed
         # the API key (Gemini passes it as a ?key=... URL param), and this text
         # is written to Mongo and pushed to the client. Full detail is logged.
         logger.exception("pipeline failed")
         err = "Analysis failed. See server logs for details."
-        job["status"] = "failed"
-        job["error"] = err
+        completed_at = datetime.now(timezone.utc).isoformat()
         await db.jobs.update_one(
-            {"id": job_id}, {"$set": {"status": "failed", "error": err}}
+            {"id": job_id}, {"$set": {"status": "failed", "error": err, "completed_at": completed_at}}
         )
-        await push({
-            "node": "pipeline",
-            "status": "error",
-            "message": f"Pipeline failed: {err}",
-            "ts": datetime.now(timezone.utc).isoformat(),
-        })
+        await container.job_lifecycle.fail(job_id, err)
+        pipeline_runs_total.labels(graph="research", status="failed").inc()
     finally:
         if _tok is not None:
             reset_llm_context(_tok)
-        await q.put(None)  # sentinel
+        RUNNING_TASKS.pop(job_id, None)
+        jobs_active.labels(kind="research").dec()
+        pipeline_duration_seconds.labels(graph="research").observe(
+            asyncio.get_event_loop().time() - started
+        )
 
 
 class ValidateLlmKeyRequest(BaseModel):
@@ -816,11 +906,11 @@ async def validate_llm_key(req: ValidateLlmKeyRequest, user: dict = Depends(curr
     surface (a client-supplied base_url the server fetches)."""
     provider = req.provider.strip().lower()
     if provider == "custom":
-        if not auth.is_admin(user):
-            raise HTTPException(
-                status_code=403,
-                detail="The Custom LLM provider is restricted to admin accounts.",
-            )
+        # M2 Phase 1 cutover (10 §4.2/ADR-024): was an inline
+        # `if not auth.is_admin(user): raise HTTPException(403, ...)` —
+        # same condition, same status code, same message (verified in
+        # tests/unit/test_authorization.py and by the full contract suite).
+        require_admin(user)
         if req.base_url:
             from agents.llm import assert_public_url
             try:
@@ -846,11 +936,11 @@ async def generate_report(req: GenerateRequest, user: dict = Depends(current_use
     # Custom provider (bring-your-own OpenAI-compatible endpoint) is admin-only
     # — it's the only path that accepts a client-supplied base_url at all, so
     # gating it here also gates the SSRF surface below to a trusted operator.
-    if (req.llm_provider == "custom" or req.llm_base_url) and not auth.is_admin(user):
-        raise HTTPException(
-            status_code=403,
-            detail="The Custom LLM provider is restricted to admin accounts.",
-        )
+    # M2 Phase 1 cutover (10 §4.2/ADR-024) — same condition, restructured
+    # from a single condensed `if X and not Y: raise` into `if X:
+    # require_admin(user)`; behaviorally identical.
+    if req.llm_provider == "custom" or req.llm_base_url:
+        require_admin(user)
 
     # SSRF guard: the custom LLM endpoint is client-supplied and fetched by the
     # server, so it must not point at internal/loopback addresses.
@@ -886,8 +976,16 @@ async def generate_report(req: GenerateRequest, user: dict = Depends(current_use
         latest_filing = await db.filings.find_one(
             {"ticker": ticker}, {"created_at": 1, "_id": 0}, sort=[("created_at", -1)]
         )
+        # EQ-3 (M5): scoped to owner+sample — an unscoped cache lookup could
+        # hand a caller a job_id for another tenant's report, which now (with
+        # get_report/stream_report/cancel_report all owner-scoped) would 200
+        # here and then 404 on every subsequent read. Same predicate as
+        # list_reports; this is "backward-compatible migration behavior" for
+        # the read-scoping cutover, not new report-generation scope — a
+        # cache hit is a disguised read.
         cached = await db.reports.find_one(
-            {"ticker": ticker, "query": req.query.strip()},
+            {"ticker": ticker, "query": req.query.strip(),
+             "$or": [{"user_id": user["id"]}, {"is_sample": True}]},
             {"id": 1, "created_at": 1, "fact_check_status": 1, "user_id": 1, "is_sample": 1, "_id": 0},
             sort=[("created_at", -1)],
         )
@@ -906,16 +1004,10 @@ async def generate_report(req: GenerateRequest, user: dict = Depends(current_use
                 )
             return {"job_id": cached["id"], "cached": True}
 
-    # Cap concurrency (any signed-in user can still spin up unbounded pipelines
-    # one at a time; this bounds the server-wide total) and prune finished jobs.
-    active = sum(1 for j in JOBS.values() if j.get("status") in ("queued", "running"))
-    if active >= MAX_ACTIVE_JOBS:
-        raise HTTPException(
-            status_code=429,
-            detail="Too many analyses in progress. Retry in a moment.",
-        )
-    _reap_jobs()
-
+    # Cap concurrency (shared budget across research + Learning jobs, 03's
+    # design) — enforced by JobLifecycle.start() below, which raises
+    # RateLimitedError (-> 429 via domain_error_handler) once
+    # settings.max_active_jobs is hit.
     job_id = str(uuid.uuid4())
     prior_brief = ""
     if req.context_report_id:
@@ -924,26 +1016,23 @@ async def generate_report(req: GenerateRequest, user: dict = Depends(current_use
         )
         if prior:
             prior_brief = prior.get("draft_report", "") or ""
-    JOBS[job_id] = {
-        "id": job_id,
-        "ticker": ticker,
-        "query": req.query,
-        "status": "queued",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "events": [],
-        "context_report_id": req.context_report_id,
-    }
+    await container.job_lifecycle.start(
+        job_id, JobKind.RESEARCH, user["id"], ticker=ticker,
+        deadline_s=settings.job_deadline_s["research"],
+    )
+    jobs_active.labels(kind="research").inc()
+    created_at = datetime.now(timezone.utc).isoformat()
     await db.jobs.insert_one({
         "id": job_id,
         "ticker": ticker,
         "query": req.query,
         "status": "queued",
-        "created_at": JOBS[job_id]["created_at"],
+        "created_at": created_at,
         "context_report_id": req.context_report_id,
+        "user_id": user["id"],  # EQ-3 cutover — needed for get_report's restart-mirror tier
         "events": [],
     })
-    JOB_QUEUES[job_id] = asyncio.Queue()
-    JOBS[job_id]["task"] = asyncio.create_task(
+    RUNNING_TASKS[job_id] = asyncio.create_task(
         _run_pipeline(job_id, ticker, req.query, prior_brief=prior_brief,
                       llm_provider=req.llm_provider, llm_api_key=req.llm_api_key,
                       llm_base_url=req.llm_base_url, llm_model=req.llm_model,
@@ -954,77 +1043,74 @@ async def generate_report(req: GenerateRequest, user: dict = Depends(current_use
 
 @api.post("/reports/{job_id}/cancel")
 async def cancel_report(job_id: str, user: dict = Depends(current_user)):
-    job = JOBS.get(job_id)
-    if not job:
+    job = await container.job_lifecycle.get(job_id)
+    if job is None:
         raise HTTPException(status_code=404, detail="job not found")
-    if job.get("status") in ("completed", "failed", "cancelled"):
-        return {"job_id": job_id, "status": job["status"], "note": "already finished"}
-    task = job.get("task")
+    if job.user_id != user["id"]:
+        # EQ-3 (01 D-5): a job is never a shared sample — only a completed
+        # report can be — so ownership is the whole check here.
+        raise _deny_cross_tenant(user["id"], job_id, resource_kind="job")
+    if job.is_terminal():
+        return {"job_id": job_id, "status": job.status.value, "note": "already finished"}
+    task = RUNNING_TASKS.get(job_id)
     if task and not task.done():
         task.cancel()
-    job["status"] = "cancelled"
+    await container.job_lifecycle.cancel(job_id)
     await db.jobs.update_one({"id": job_id}, {"$set": {"status": "cancelled"}})
     return {"job_id": job_id, "status": "cancelled"}
 
 
+async def _report_stream_events(job_id: str, user_id: str):
+    """Wraps the shared EventBus subscription (infrastructure/streaming/sse.py
+    frames whatever this yields) to inject the completed-report snapshot as a
+    `final` event right after the terminal `pipeline/ok` — exactly the order
+    the existing frontend contract expects (company-research/internal/
+    streamStages.ts:39-40: "the final report snapshot arrives right after the
+    pipeline/ok event that already set completed — must not regress").
+
+    `user_id` re-scopes the final-report fetch (EQ-3) — belt-and-suspenders
+    with stream_report's own ownership check below, mirroring
+    _learning_stream_events' identical double-check."""
+    async for ev in container.events.subscribe(job_id):
+        yield ev
+        if ev.get("node") == "pipeline" and ev.get("status") == "ok":
+            doc = await db.reports.find_one(
+                {"id": job_id, "$or": [{"user_id": user_id}, {"is_sample": True}]},
+                {"_id": 0},
+            )
+            if doc:
+                yield {"node": "final", "status": "ok", "report": doc}
+
+
 @api.get("/reports/{job_id}/stream")
 async def stream_report(job_id: str, user: dict = Depends(current_user)):
-    if job_id not in JOB_QUEUES:
+    job = await container.job_lifecycle.get(job_id)
+    if job is None:
         raise HTTPException(status_code=404, detail="job not found")
-
-    q = JOB_QUEUES[job_id]
-    job = JOBS[job_id]
-
-    async def event_source():
-        # replay any already-emitted events. `push()` appends every event to
-        # `job["events"]` *and* `q` in lockstep, so anything already in
-        # `job["events"]` at connect time is also still sitting unconsumed in
-        # `q` (this is the first read of `q`, whether it's the original
-        # connection or a reconnect) — without skipping, each of those events
-        # would be delivered twice: once from the replay, once live.
-        already = list(job["events"])
-        for ev in already:
-            yield f"data: {json.dumps(ev)}\n\n"
-        to_skip = len(already)
-        while True:
-            try:
-                item = await asyncio.wait_for(q.get(), timeout=120.0)
-            except asyncio.TimeoutError:
-                yield ": keepalive\n\n"
-                continue
-            if to_skip > 0:
-                to_skip -= 1
-                continue
-            if item is None:
-                # send final snapshot
-                if job.get("report"):
-                    payload = {"node": "final", "status": "ok",
-                               "report": job["report"]}
-                    yield f"data: {json.dumps(payload, default=str)}\n\n"
-                yield "event: end\ndata: {}\n\n"
-                break
-            yield f"data: {json.dumps(item, default=str)}\n\n"
-
-    return StreamingResponse(
-        event_source(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-            "Connection": "keep-alive",
-        },
-    )
+    if job.user_id != user["id"]:
+        raise _deny_cross_tenant(user["id"], job_id, resource_kind="job")
+    return sse_response(_report_stream_events(job_id, user["id"]), stream_name="report")
 
 
 @api.get("/reports/{job_id}")
 async def get_report(job_id: str, user: dict = Depends(current_user)):
-    doc = await db.reports.find_one({"id": job_id}, {"_id": 0})
+    # EQ-3 (01 D-5): every tier scoped to owner+sample. A cross-tenant id at
+    # any tier falls through to the next exactly like a nonexistent one would
+    # — the caller can't tell "not yours" from "doesn't exist" (§ _deny_cross_tenant).
+    doc = await db.reports.find_one(
+        {"id": job_id, "$or": [{"user_id": user["id"]}, {"is_sample": True}]},
+        {"_id": 0},
+    )
     if not doc:
-        # maybe still running — return job snapshot (in-memory or persisted)
-        job = JOBS.get(job_id)
+        # maybe still running — return job snapshot (in-memory/Redis, or the
+        # persisted Mongo mirror if the in-process one is gone, e.g. restart)
+        job = await container.job_lifecycle.get(job_id)
         if job:
-            return {"status": job["status"], "id": job_id, "events": job["events"]}
-        job_doc = await db.jobs.find_one({"id": job_id}, {"_id": 0})
+            if job.user_id != user["id"]:
+                raise _deny_cross_tenant(user["id"], job_id, resource_kind="report")
+            return {"status": job.status.value, "id": job_id,
+                     "events": await container.events.history(job_id)}
+        job_doc = await db.jobs.find_one({"id": job_id, "user_id": user["id"]}, {"_id": 0})
         if job_doc:
             return {"status": job_doc.get("status", "unknown"),
                     "id": job_id,
@@ -1066,12 +1152,279 @@ async def delete_report(report_id: str, user: dict = Depends(current_user)):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="report not found")
     await db.jobs.delete_one({"id": report_id})
-    # Also evict the in-memory job entry — get_report falls back to JOBS when
-    # the Mongo doc is missing, so without this a deleted report still 200s
-    # (as "completed") until the process restarts or _reap_jobs() evicts it.
-    JOBS.pop(report_id, None)
-    JOB_QUEUES.pop(report_id, None)
+    # Also evict the in-process task handle — RUNNING_TASKS/JobStore entries
+    # are irrelevant once a report is deleted, but leaving a dangling task
+    # reference around serves no purpose.
+    RUNNING_TASKS.pop(report_id, None)
     return {"deleted": report_id}
+
+
+# ---------------------------------------------------------------------------
+# Learning (03_Learning_Backend_Design.md) — Backend Engineering M2 Phase L.
+# Built on the same JobLifecycle/EventBus infrastructure as reports (Part A
+# cutover above), sharing one MAX_ACTIVE_JOBS budget via JobKind.LEARNING.
+# Response shapes use "id", never "job_id" (02 F-1 — the frontend contract's
+# most likely implementation mistake).
+# ---------------------------------------------------------------------------
+
+async def _run_explanation(job_id: str, ticker: str, concept: str, query: str,
+                           company_name: str | None,
+                           prior_brief: str = "",
+                           prior_financials: dict | None = None,
+                           llm_provider: str | None = None,
+                           llm_api_key: str | None = None,
+                           llm_base_url: str | None = None,
+                           llm_model: str | None = None,
+                           user_id: str | None = None) -> None:
+    from agents.llm import set_llm_context, reset_llm_context
+    _tok = (
+        set_llm_context(llm_provider, llm_api_key,
+                        light_model=llm_model, heavy_model=llm_model, base_url=llm_base_url)
+        if (llm_provider or llm_api_key) else None
+    )
+    started = asyncio.get_event_loop().time()
+    await container.job_lifecycle.mark_running(job_id)
+    await db.explanation_jobs.update_one({"id": job_id}, {"$set": {"status": "running"}})
+
+    async def push(ev: dict) -> None:
+        await container.job_lifecycle.publish(job_id, ev)
+        await db.explanation_jobs.update_one(
+            {"id": job_id},
+            {"$push": {"events": ev}, "$set": {"updated_at": ev.get("ts", "")}}
+        )
+
+    try:
+        initial: dict = {"ticker": ticker.upper(), "query": query, "concept": concept, "trace": []}
+        if company_name:
+            initial["company_name"] = company_name
+        if prior_brief:
+            initial["prior_brief"] = prior_brief
+        if prior_financials:
+            initial["prior_financials"] = prior_financials
+        final_state: dict = {}
+        last_node_name = "unknown"
+        async for event in learning_graph.astream(initial, {"recursion_limit": 10}):
+            for _node_name, node_state in event.items():
+                last_node_name = _node_name
+                if not isinstance(node_state, dict):
+                    continue
+                final_state.update(node_state)
+                for t in node_state.get("trace", []):
+                    await push(t)
+            if await container.job_lifecycle.is_past_deadline(job_id):  # 07 §5.4/LG-11
+                deadline_exceeded_total.labels(graph="learning", node=last_node_name).inc()
+                raise TimeoutError(f"job exceeded its {settings.job_deadline_s['learning']}s deadline")
+
+        explanation_text = final_state.get("explanation", "")
+        if not explanation_text:
+            # explainer_node already pushed an "explainer"/"error" trace event
+            # (LLM failure or Law 3's zero-citation reject, 03 §5.2) — fail the
+            # job rather than persisting an ungrounded/empty explanation.
+            completed_at = datetime.now(timezone.utc).isoformat()
+            err = "The explanation could not be grounded in the retrieved filings."
+            await db.explanation_jobs.update_one(
+                {"id": job_id}, {"$set": {"status": "failed", "error": err, "completed_at": completed_at}}
+            )
+            await container.job_lifecycle.fail(job_id, err)
+            pipeline_runs_total.labels(graph="learning", status="failed").inc()
+            return
+
+        completed_at = datetime.now(timezone.utc).isoformat()
+        explanation_doc = {
+            "id": job_id,
+            "ticker": ticker.upper(),
+            "concept": concept,
+            "explanation": explanation_text,
+            "source_documents": final_state.get("source_documents", []),
+            "company_name": company_name,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "completed_at": completed_at,
+            "user_id": user_id,
+            "cited_sources": final_state.get("cited_sources", []),
+        }
+        await db.explanations.insert_one(explanation_doc)
+        await db.explanation_jobs.update_one(
+            {"id": job_id},
+            {"$set": {"status": "completed", "explanation_id": job_id, "completed_at": completed_at}}
+        )
+        await container.job_lifecycle.complete(job_id)
+        pipeline_runs_total.labels(graph="learning", status="completed").inc()
+    except asyncio.CancelledError:
+        completed_at = datetime.now(timezone.utc).isoformat()
+        await db.explanation_jobs.update_one(
+            {"id": job_id}, {"$set": {"status": "cancelled", "completed_at": completed_at}}
+        )
+        await container.job_lifecycle.cancel(job_id)  # idempotent — see _run_pipeline's identical note
+        pipeline_runs_total.labels(graph="learning", status="cancelled").inc()
+    except TimeoutError as e:
+        logger.warning("learning pipeline %s: %s", job_id, e)
+        err = "The explanation exceeded its time budget and was stopped."
+        completed_at = datetime.now(timezone.utc).isoformat()
+        await db.explanation_jobs.update_one(
+            {"id": job_id}, {"$set": {"status": "failed", "error": err, "completed_at": completed_at}}
+        )
+        await container.job_lifecycle.fail(job_id, err)
+        pipeline_runs_total.labels(graph="learning", status="failed").inc()
+    except Exception:
+        # Never echo the raw exception — provider SDK errors can embed the API
+        # key (mirrors _run_pipeline's identical redaction).
+        logger.exception("learning pipeline failed")
+        err = "Explanation failed. See server logs for details."
+        completed_at = datetime.now(timezone.utc).isoformat()
+        await db.explanation_jobs.update_one(
+            {"id": job_id}, {"$set": {"status": "failed", "error": err, "completed_at": completed_at}}
+        )
+        await container.job_lifecycle.fail(job_id, err)
+        pipeline_runs_total.labels(graph="learning", status="failed").inc()
+    finally:
+        if _tok is not None:
+            reset_llm_context(_tok)
+        RUNNING_TASKS.pop(job_id, None)
+        jobs_active.labels(kind="learning").dec()
+        pipeline_duration_seconds.labels(graph="learning").observe(
+            asyncio.get_event_loop().time() - started
+        )
+
+
+@api.post("/learning/explain")
+async def explain_concept(req: ExplainRequest, user: dict = Depends(current_user)):
+    ticker = req.ticker.strip().upper()
+    concept = req.concept.strip()
+    if not ticker or not concept:
+        raise HTTPException(status_code=400, detail="ticker and concept are required")
+
+    # Same admin/SSRF gate as /reports/generate (03 §4.3) — llm_base_url is a
+    # new server-side-fetch surface here too and must not reopen the SSRF
+    # hole the report path already closed.
+    if req.llm_provider == "custom" or req.llm_base_url:
+        require_admin(user)
+    if req.llm_base_url:
+        from agents.llm import assert_public_url
+        try:
+            assert_public_url(req.llm_base_url)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Custom LLM base URL must be a publicly reachable http(s) "
+                    "address — the server calls it directly, so localhost and "
+                    "private-network addresses aren't allowed."
+                ),
+            )
+
+    # Fail fast, before a job exists (03 §2 empty-corpus behavior) — cheaper
+    # than the streamed backstop for the common case of an un-ingested ticker.
+    has_data = await db.filing_chunks.count_documents({"ticker": ticker}) > 0
+    if not has_data:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No filings ingested for {ticker}. Ingest a filing first "
+                   f"(POST /api/ingest/samples for demo data).",
+        )
+
+    comp = await db.companies.find_one({"ticker": ticker}, {"_id": 0})
+    company_name = comp.get("name") if comp else None
+
+    # R-1: expanded retrieval query — concept + company + (optional) the
+    # context report's own question — composed at the call site only; no
+    # change to agents/retrieval.py.
+    query = f"{concept} {company_name or ticker}"
+    prior_brief = ""
+    prior_financials: dict = {}
+    if req.context_report_id:
+        prior = await db.reports.find_one(
+            {"id": req.context_report_id},
+            {"draft_report": 1, "extracted_data": 1, "query": 1, "_id": 0},
+        )
+        if prior:
+            prior_brief = prior.get("draft_report", "") or ""
+            prior_financials = prior.get("extracted_data") or {}
+            if prior.get("query"):
+                query += f" {prior['query']}"
+
+    job_id = str(uuid.uuid4())
+    await container.job_lifecycle.start(
+        job_id, JobKind.LEARNING, user["id"], ticker=ticker,
+        deadline_s=settings.job_deadline_s["learning"],
+    )
+    jobs_active.labels(kind="learning").inc()
+    await db.explanation_jobs.insert_one({
+        "id": job_id,
+        "ticker": ticker,
+        "concept": concept,
+        "status": "queued",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "context_report_id": req.context_report_id,
+        "user_id": user["id"],
+        "events": [],
+    })
+    RUNNING_TASKS[job_id] = asyncio.create_task(
+        _run_explanation(job_id, ticker, concept, query, company_name,
+                         prior_brief=prior_brief, prior_financials=prior_financials,
+                         llm_provider=req.llm_provider, llm_api_key=req.llm_api_key,
+                         llm_base_url=req.llm_base_url, llm_model=req.llm_model,
+                         user_id=user["id"])
+    )
+    return {"id": job_id}
+
+
+@api.post("/learning/{id}/cancel")
+async def cancel_explanation(id: str, user: dict = Depends(current_user)):
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="job not found")
+    if job.is_terminal():
+        return {"id": id, "status": job.status.value}
+    task = RUNNING_TASKS.get(id)
+    if task and not task.done():
+        task.cancel()
+    await container.job_lifecycle.cancel(id)
+    await db.explanation_jobs.update_one({"id": id}, {"$set": {"status": "cancelled"}})
+    return {"id": id, "status": "cancelled"}
+
+
+async def _learning_stream_events(job_id: str, user_id: str):
+    """Mirrors _report_stream_events: injects the completed ExplanationDoc as
+    a `final` event right after the terminal `pipeline/ok` (03 §1.2 — the
+    `final` event is what useExplanationJob.ts:81-83 writes into the
+    react-query cache)."""
+    async for ev in container.events.subscribe(job_id):
+        yield ev
+        if ev.get("node") == "pipeline" and ev.get("status") == "ok":
+            doc = await db.explanations.find_one(
+                {"id": job_id, "user_id": user_id},
+                {"_id": 0, "user_id": 0, "cited_sources": 0},
+            )
+            if doc:
+                yield {"node": "final", "status": "ok", "explanation": doc}
+
+
+@api.get("/learning/{id}/stream")
+async def stream_explanation(id: str, user: dict = Depends(current_user)):
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="job not found")
+    return sse_response(_learning_stream_events(id, user["id"]), stream_name="learning")
+
+
+@api.get("/learning/{id}")
+async def get_explanation(id: str, user: dict = Depends(current_user)):
+    # EQ-3 (03 §7.3, §10): Learning reads are scoped to the owner — unlike
+    # GET /reports/{id}'s accepted-risk unscoped posture, scoping a *new*
+    # surface costs one query predicate.
+    doc = await db.explanations.find_one(
+        {"id": id, "user_id": user["id"]},
+        {"_id": 0, "user_id": 0, "cited_sources": 0},
+    )
+    if doc:
+        return {"status": "completed", "id": id, "explanation": doc}
+    job = await container.job_lifecycle.get(id)
+    if job and job.user_id == user["id"]:
+        return {"status": job.status.value, "id": id}
+    job_doc = await db.explanation_jobs.find_one({"id": id, "user_id": user["id"]}, {"_id": 0})
+    if job_doc:
+        return {"status": job_doc.get("status", "unknown"), "id": id}
+    raise HTTPException(status_code=404, detail="explanation not found")
 
 
 @api.get("/companies/trending")
@@ -1118,7 +1471,16 @@ async def rescore_reports(user: dict = Depends(current_user)):
     """Recompute scorecards for all reports using full source_documents.
 
     Useful after upgrading the scoring logic; safe to re-run.
+
+    Admin-gated (EQ-2, 02 §4.5 / 00_README ratification register, 10 §4.3):
+    this rewrites every tenant's `scorecard` in one unbounded, synchronous
+    loop with no frontend consumer — any authenticated caller could
+    previously trigger a full-collection cross-tenant rewrite. Same
+    `require_admin` helper `generate_report`'s custom-provider path and
+    `/llm/validate` already use, with its own message (the default is
+    LLM-provider-specific and doesn't apply here).
     """
+    require_admin(user, message="This action is restricted to admin accounts.")
     cursor = db.reports.find({}, {"_id": 0})
     updated = 0
     async for doc in cursor:
@@ -1135,13 +1497,24 @@ class CompareRequest(BaseModel):
 @api.post("/reports/compare")
 async def compare_reports(req: CompareRequest, user: dict = Depends(current_user)):
     """Load 2-4 reports side by side for portfolio comparison."""
+    # EQ-3 (01 D-5): scoped at the query, same predicate as list_reports —
+    # a requested id belonging to another tenant simply isn't in `rows`,
+    # naturally excluded rather than special-cased.
     rows = await db.reports.find(
-        {"id": {"$in": req.report_ids}},
+        {"id": {"$in": req.report_ids}, "$or": [{"user_id": user["id"]}, {"is_sample": True}]},
         {"_id": 0, "events": 0, "source_documents": 0},
     ).to_list(len(req.report_ids))
     # preserve requested order
     by_id = {r["id"]: r for r in rows}
     ordered = [by_id[i] for i in req.report_ids if i in by_id]
+    excluded = set(req.report_ids) - set(by_id)
+    if excluded:
+        # Not necessarily cross-tenant — a typo'd/deleted id looks identical
+        # here (query-level filtering can't distinguish "not yours" from
+        # "doesn't exist" without a second, unscoped query). Logged as a
+        # visibility exclusion, not asserted as a denied access attempt.
+        logger.warning("compare: requested report(s) not visible to caller: user=%s ids=%s",
+                        user["id"], sorted(excluded))
     if len(ordered) < 2:
         raise HTTPException(status_code=404, detail="fewer than 2 reports found")
     return {"reports": ordered}
@@ -1165,6 +1538,39 @@ async def _validation_error_handler(request: Request, exc: RequestValidationErro
     return JSONResponse(status_code=422, content={"detail": errors})
 
 
+# M2 Phase 1 — additive (app/api/errors.py). No existing route currently
+# raises a DomainError, so this changes zero existing responses; it is new
+# capability for new code (starting with infrastructure/security/
+# authorization.py's require_admin, cut over above).
+app.add_exception_handler(DomainError, domain_error_handler)
+
+
+@app.middleware("http")
+async def _correlation_id_and_metrics(request: Request, call_next):
+    """M2 Phase 1 — additive request-timing + correlation-id middleware
+    (04 O-1: "no correlation identifier... a stack trace in the log is
+    unattributable with concurrent jobs"; 10 §11's http_requests_total /
+    http_request_duration_seconds). Every request gets a correlation id
+    (reused from the client's X-Request-ID if present, so a request can be
+    traced end-to-end from a load balancer through this process's logs).
+    """
+    request_id = request.headers.get("x-request-id") or uuid.uuid4().hex
+    set_correlation_id(request_id)
+    start = asyncio.get_event_loop().time()
+    try:
+        response = await call_next(request)
+    finally:
+        set_correlation_id(None)
+    duration = asyncio.get_event_loop().time() - start
+    route_path = request.scope.get("route").path if request.scope.get("route") else request.url.path
+    http_requests_total.labels(
+        method=request.method, path=route_path, status=str(response.status_code)
+    ).inc()
+    http_request_duration_seconds.labels(method=request.method, path=route_path).observe(duration)
+    response.headers["x-request-id"] = request_id
+    return response
+
+
 app.add_middleware(
     CORSMiddleware,
     # Cookie-based sessions cross-origin (dev is the web/ Next.js frontend on
@@ -1183,7 +1589,45 @@ app.add_middleware(
 async def _warmup():
     """Preload embedding + rerank models in the background so the first pipeline
     run does not incur ~30-40s of cold-start model download / ONNX load."""
-    await auth.ensure_indexes(db)
+    install_correlation_filter()  # M2 Phase 1 — 04 O-1
+    # M2 Phase 4 — activates the tracing infra Phase 1 built and proved safe
+    # but left uncalled (14 §4 R-3: "a future 'just call setup_tracing()'
+    # change is one line"). Safe with no collector configured (spans are
+    # created, not exported — see the module docstring); this is what makes
+    # Learning requests carry real spans end-to-end. Guarded so re-entering
+    # the startup event (e.g. a test opening multiple TestClient(app)
+    # contexts against this same module-level app) doesn't re-instrument an
+    # already-instrumented app object.
+    global _tracing_started
+    if not _tracing_started:
+        setup_tracing(app, otel_exporter_endpoint=settings.otel_exporter_endpoint)
+        _tracing_started = True
+    # M2 Phase 1: infrastructure/mongo/indexes.py's ensure_indexes supersedes
+    # agents/auth.py's (08 §5.1's full 25-index set — the original 5 auth
+    # indexes plus 20 more, incl. the users.id and filing_chunks.ticker
+    # indexes that fixed 08 §1's headline finding: every hot-path query was
+    # a full collection scan). agents.auth.ensure_indexes is unchanged and
+    # still correct on its own — this call simply supersedes it, matching
+    # infrastructure/mongo/indexes.py's own module docstring.
+    created = await ensure_mongo_indexes(db)
+    logger.info("MongoDB indexes ensured: %d across %d collections",
+                sum(len(v) for v in created.values()), len(created))
+
+    # M2 Phase 4 restart-recovery sweep (01 D-6, design doc 03 §7.2): any job
+    # still `queued`/`running` in Mongo when this process starts was orphaned
+    # by the previous process dying — there is no producer left for it, and
+    # without this it would report "running" forever to a polling client.
+    # Covers both `jobs` (research) and `explanation_jobs` (Learning).
+    now_iso = datetime.now(timezone.utc).isoformat()
+    for coll_name in ("jobs", "explanation_jobs"):
+        result = await db[coll_name].update_many(
+            {"status": {"$in": ["queued", "running"]}},
+            {"$set": {"status": "failed", "error": "Server restarted mid-run.",
+                      "completed_at": now_iso}},
+        )
+        if result.modified_count:
+            logger.warning("startup sweep: marked %d orphaned %s row(s) failed",
+                            result.modified_count, coll_name)
 
     async def _run():
         from agents.retrieval import _get_embedder, _get_reranker  # noqa: WPS437
