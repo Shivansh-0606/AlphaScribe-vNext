@@ -58,7 +58,7 @@ def test_validate_key_success_calls_the_resolved_provider_fn():
     real_env = os.environ.pop("LLM_BASE_URL", None)
     calls = []
 
-    def stub(system, user, model, key, base_url):
+    def stub(system, user, model, key, base_url, *, usage_sink=None):
         calls.append({"model": model, "key": key, "base_url": base_url})
         return "OK"
 
@@ -87,7 +87,7 @@ def test_validate_key_base_url_resolution_matches_generate_01_d3_fix():
     os.environ["LLM_BASE_URL"] = "https://operator-configured.example.com/v1"
     calls = []
 
-    def stub(system, user, model, key, base_url):
+    def stub(system, user, model, key, base_url, *, usage_sink=None):
         calls.append(base_url)
         return "OK"
 

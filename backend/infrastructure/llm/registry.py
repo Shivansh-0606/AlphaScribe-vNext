@@ -50,6 +50,7 @@ def dispatch(
     gen_gemini,
     gen_anthropic,
     gen_openai_compatible,
+    usage_sink: dict | None = None,
 ) -> str:
     """The one place a provider name maps to a call. Adding a provider means
     adding one branch here — not one branch in two different functions.
@@ -61,11 +62,16 @@ def dispatch(
     call sites (agents/llm.py's `_generate_sync` and `validate_key`) pass
     their own existing `_gen_gemini`/`_gen_anthropic`/`_gen_openai_compatible`
     module functions — the actual provider logic is unchanged.
+
+    `usage_sink` (M6, token-usage metric): optional, forwarded unchanged to
+    whichever `gen_*` is called. `validate_key`'s call site doesn't pass one
+    (usage during key validation isn't tracked — it's not a real generation),
+    so this stays fully backward compatible.
     """
     if provider == "gemini":
-        return gen_gemini(system, user, model, key)
+        return gen_gemini(system, user, model, key, usage_sink=usage_sink)
     if provider == "anthropic":
-        return gen_anthropic(system, user, model, key)
+        return gen_anthropic(system, user, model, key, usage_sink=usage_sink)
     if provider in _OPENAI_COMPATIBLE_PROVIDERS:
-        return gen_openai_compatible(system, user, model, key, base_url)
+        return gen_openai_compatible(system, user, model, key, base_url, usage_sink=usage_sink)
     raise ValueError(f"Unknown LLM provider: {provider}")

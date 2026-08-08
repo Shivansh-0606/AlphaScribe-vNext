@@ -27,12 +27,13 @@ a startup failure or a blocked request.
 | Every Redis command | `RedisInstrumentor` | `redis-py`; **no-op under `JOB_BACKEND=memory`** (RR-10 default — no client constructed) | **M6** |
 | Each LangGraph node | `instrument_node()` — manual span, `{graph}.{node}` | research (5 nodes) + learning (2 nodes) | **M6** |
 | Each SSE stream session | manual span, `sse.{stream_name}` | `/reports/{id}/stream`, `/learning/{id}/stream` | **M6** |
+| Each `chat_text` retry attempt | manual span, `llm.attempt` (attributes: `attempt`, `provider`, `model`, `tier`) | closes the gap row 3 below used to describe | **M6 (2026-08-08)** |
+| Job lifecycle (admission → terminal) | manual span, `pipeline.{graph}` (attributes: `job_id`) | wraps `graph.astream()` in both pipeline task functions — node spans now nest under this instead of each rooting its own trace, since the background task outlives the initiating request's own span | **M6 (2026-08-08)** |
 
 ## 3. What is still NOT traced
 
-| Gap | Why it's out of scope for M6 |
+| Gap | Why it's out of scope |
 |---|---|
-| Individual retry attempts inside `chat_text`'s backoff loop (`04` O-11) | Each attempt IS inside an `HTTPXClientInstrumentor` span (the outbound call itself), but the retry loop's wait/backoff between attempts has no span of its own — visible in the `llm_calls_total{outcome="error"}` counter (one increment per failed attempt) but not as trace timing. Upgrade path: wrap the loop body in `get_tracer().start_as_current_span("llm.attempt", attributes={"attempt": n})`. |
 | Cross-job aggregate queries (`04` O-9) | Out of scope — this is a metrics/dashboard concern (`20`/`22`), not a per-request trace gap. |
 | External source fetch breakdown (EDGAR/BSE/yfinance — `04` O-10) | Each already gets an `HTTPXClientInstrumentor` span per call; a parent span grouping the 3 sequential BSE calls (naming which one was slow) does not exist. Small, deferred — no operator complaint yet motivating it. |
 

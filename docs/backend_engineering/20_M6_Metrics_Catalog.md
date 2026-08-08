@@ -28,6 +28,16 @@ multiple independent registries are actually required).
 | `alphascribe_redis_errors_total` | Counter | `op, kind` | `RateLimiter.hit`, `JobStore.create`, `EventBus.publish` (highest-value site per adapter — §5 of `19`) | **M6** |
 | `alphascribe_jobs_active` | Gauge | `kind` | `JobLifecycle.start()` (inc) / pipeline `finally` (dec) | **M6** |
 
+## Active (added 2026-08-08 follow-up pass)
+
+| Metric | Type | Labels | Call site |
+|---|---|---|---|
+| `alphascribe_retrieval_duration_seconds` | Histogram | (none) | `agents/retrieval.py::retrieve()` |
+| `alphascribe_llm_tokens_total` | Counter | `provider, model, kind=input\|output` | `agents/llm.py::chat_text`, populated via a `usage_sink` threaded through `dispatch()`; best-effort — zero/absent for providers whose SDK response doesn't expose usage |
+| `alphascribe_report_cache_lookups_total` | Counter | `result=hit\|miss` | `server.py::generate_report`'s SI-1 cache lookup |
+| `alphascribe_sse_sessions_total` | Counter | `stream_name, outcome=completed\|error\|cancelled` | `infrastructure/streaming/sse.py::_frame_events` |
+| `alphascribe_sse_session_duration_seconds` | Histogram | `stream_name` | same |
+
 ## Defined, not yet incremented (honest, inspectable via `/metrics` as zero/absent)
 
 | Metric | Type | Labels | Blocked on |

@@ -8,12 +8,15 @@ fallback bolted on for tests; they are the documented production option for
 `scripts/run.py`'s no-Docker developer path (09 RA-2), and here they are the
 default so importing/using this container never requires a running Redis.
 
-Nothing in server.py constructs this yet — see the Phase 1 report's
-"Additive server.py integration" section for exactly what IS wired live this
-phase (health/ready, /metrics, the DomainError handler, request-timing
-middleware) versus what is built-and-tested-standalone, ready for Phase 3's
-actual cutover (the container itself, ChunkRepository/ReportLikeRepository
-adapters, and wiring server.py's routes to resolve dependencies through it).
+`server.py:90` constructs this at import time (`container = build_container(settings)`)
+and uses `container.job_lifecycle` on every job admission, publish, and
+terminal transition in both the research and Learning pipelines — this has
+been live since the M2 Phase 4/L cutover, not merely built-and-tested-standalone
+(a stale claim this docstring carried past that cutover; corrected in M6 —
+see `docs/backend_engineering/26_M6_Observability_Architecture_Review.md`
+A3). `ChunkRepository`/`ReportLikeRepository` adapters and routing
+server.py's routes through this container for their data access remain
+future Phase 3 work — that part of the original claim still holds.
 """
 from __future__ import annotations
 
@@ -37,11 +40,18 @@ class Container:
     events: EventBus
     limiter: RateLimiter
     job_lifecycle: JobLifecycle
+    job_backend: str = "memory"
+    # M6 A2 — exposed only under JOB_BACKEND=redis, so /health/ready can
+    # verify the configured execution backend (26 A2) without the
+    # JobStore/EventBus/RateLimiter ports needing a generic, transport-leaking
+    # `ping()` method of their own.
+    redis_client: object | None = None  # redis.asyncio.Redis, typed loosely for the same reason as mongo_client
 
 
 def build_container(settings: Settings) -> Container:
     backend = os.environ.get("JOB_BACKEND", "memory").strip().lower()
     mongo_client = create_mongo_client(settings.mongo_url)
+    redis_client = None
 
     if backend == "redis":
         import redis.asyncio as redis
@@ -66,4 +76,6 @@ def build_container(settings: Settings) -> Container:
         events=events,
         limiter=limiter,
         job_lifecycle=job_lifecycle,
+        job_backend=backend,
+        redis_client=redis_client,
     )

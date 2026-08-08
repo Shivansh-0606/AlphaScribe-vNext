@@ -100,6 +100,90 @@ observability from zero.
 - **Live suite:** see [`25`](25_M6_Production_Readiness_Assessment.md) for
   the run captured against the already-running local stack.
 
+## 5a. Addendum (2026-08-08) — doc 26 fixes + brief's expanded metrics/tracing list
+
+Follow-up execution pass implementing doc 26's three findings plus the
+additional metrics/tracing items a later brief requested beyond doc 26's own
+scope. Gap-checked against the live repo before touching anything (per that
+brief's own Step 1) — see its gap summary in-conversation for the full
+before/after inventory.
+
+**Doc 26 fixes:**
+- **A1** (`infrastructure/observability/logging.py`): `install_correlation_filter()`
+  now attaches to the target's **handlers**, not the logger's own `.filters`
+  list — the actual root cause (`Logger.filters` is only consulted by that
+  logger's own `.handle()`; every real log call in this app goes through a
+  named child logger, which propagates to ancestor **handlers**, never
+  re-invoking an ancestor logger's `.filter()`). New regression test exercises
+  a real child logger through real propagation, not `CorrelationIdFilter.filter()`
+  called directly (the shape of test that would have caught A1 originally).
+- **A2** (`server.py::health_ready`, `app/container.py`): readiness now verifies
+  Redis via `infrastructure/redis/client.py::ping()`, but only when
+  `container.job_backend == "redis"` — `Container` gained `job_backend`/
+  `redis_client` fields (`redis_client` is `None` under the `memory` default,
+  so the check is skipped entirely, never a new mandatory dependency).
+- **A3** (`app/container.py`, `infrastructure/streaming/sse.py`): both
+  docstrings corrected to state what's actually live.
+- **Hygiene**: `metrics.py`'s module comment no longer claims
+  `pipeline_runs_total`/etc. are unwired — they've been active since Phase L.
+
+**New instrumentation (beyond doc 26, from the follow-up brief's explicit list):**
+- `retrieval_duration_seconds` — wired into `agents/retrieval.py::retrieve()`,
+  no labels (single series — avoids per-ticker/per-query cardinality).
+- `llm_tokens_total` (`provider`, `model`, `kind=input|output`) — a
+  `usage_sink: dict | None = None` optional kwarg threads through
+  `infrastructure/llm/registry.py::dispatch()` and the three `_gen_*`
+  functions in `agents/llm.py`, populated best-effort from each SDK's
+  response object (never raises if a provider's usage shape differs).
+  `validate_key`'s call site doesn't pass one — unaffected, fully backward
+  compatible.
+- `report_cache_lookups_total` (`result=hit|miss`) — wired at the SI-1 cache
+  lookup in `server.py::generate_report`.
+- `sse_sessions_total` (`stream_name`, `outcome=completed|error|cancelled`) +
+  `sse_session_duration_seconds` — wired into `_frame_events`. **A real bug
+  was found and fixed while implementing this**: the first version counted
+  every normal completion as `cancelled`, because a well-behaved SSE client
+  stops consuming immediately after the terminal `event: end` frame, which
+  raises `GeneratorExit` at that exact suspended yield — indistinguishable
+  from a genuine disconnect unless `outcome` is set to `"completed"` *before*
+  the terminal yield, not after (execution never resumes past a yield the
+  caller doesn't request again). Caught by the new regression tests in
+  `tests/unit/test_sse_infrastructure.py`, not by manual review.
+- LLM retry-attempt spans — each `chat_text` attempt is now its own child
+  span (`llm.attempt`), closing the trace-coverage gap doc 21 had named as
+  deferred.
+- Job-level parent span — `server.py`'s two pipeline task functions now open
+  a `pipeline.{graph}` span (attributes: `job_id`) wrapping the
+  `graph.astream()` loop, entered/exited manually (not `with`) so it wraps
+  the pre-existing `try/except/finally` without reindenting it; the
+  pre-existing `finally` guarantees the exit runs exactly once. Without this,
+  each node's span rooted its own independent trace (the background task
+  outlives the request span that would otherwise be the parent).
+
+**Reused, not rebuilt:** MongoDB/Redis per-operation visibility stays on the
+existing OTel spans rather than a duplicate Prometheus counter — same
+reasoning as `19` §3's original call, now also matching the brief's own
+"do not rewrite working infrastructure unnecessarily" instruction.
+
+**Engineering Question raised, not resolved unilaterally:** the brief
+requires liveness to have zero external-service dependency, but `/health`
+(this app's liveness endpoint — there is no separate `/health/live`) does
+two Mongo reads. Adding a new zero-I/O route is a route-inventory contract
+change; stripping the existing fields breaks tests asserting on them. Left
+`/health` as-is (cheap reads, not the O-12 full scans) pending a product/CTO
+ruling on which constraint yields.
+
+**Verification:** 173/173 hermetic+contract (168 prior + 5 new: 2 SSE outcome
+tests, 3 retrieval/cache/token metric-existence tests), live suite 43/49 on a
+fresh instance — **identical failure set**
+to the pre-existing baseline (`test_get_report`, `test_delete_account_scopes_report_cascade`,
+`test_samples_visible_to_any_authed_user`, 3× `test_password_reset.py`),
+confirming zero regressions. Real pipeline run against the live instance
+populated `retrieval_duration_seconds` (2 observations, ~1.0s and ~1.0s),
+`report_cache_lookups_total{result="miss"}`, and both `sse_sessions_total`
+outcomes (`completed` and `cancelled`) with real traffic — not just unit-test
+values.
+
 ## 5. Files touched
 
 | File | Change |

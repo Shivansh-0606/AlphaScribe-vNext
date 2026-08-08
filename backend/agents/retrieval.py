@@ -8,9 +8,12 @@ from __future__ import annotations
 import math
 import re
 import threading
+import time
 from typing import Any
 import numpy as np
 from rank_bm25 import BM25Okapi
+
+from infrastructure.observability.metrics import retrieval_duration_seconds
 
 _TOKEN_RE = re.compile(r"[a-zA-Z][a-zA-Z0-9%$\.-]+")
 
@@ -157,64 +160,73 @@ async def retrieve(
     # the cap drops the oldest rather than silently dropping the latest filing.
     # ponytail: no dedup/replace on re-ingest, so stale chunks still coexist with
     # fresh ones; add a doc_id/version filter if that ever causes bad retrievals.
-    cursor = db.filing_chunks.find({"ticker": ticker.upper()}, {"_id": 0}).sort("created_at", -1)
-    chunks: list[dict] = await cursor.to_list(2000)
-    meta = {"total_chunks": len(chunks), "bm25": True, "dense": False, "reranker": False}
-    if not chunks:
-        return [], meta
+    _started = time.monotonic()
+    try:
+        cursor = db.filing_chunks.find({"ticker": ticker.upper()}, {"_id": 0}).sort("created_at", -1)
+        chunks: list[dict] = await cursor.to_list(2000)
+        meta = {"total_chunks": len(chunks), "bm25": True, "dense": False, "reranker": False}
+        if not chunks:
+            return [], meta
 
-    # ---- Stage 1: BM25 ----
-    corpus_tokens = [_tokenize(c["text"]) for c in chunks]
-    bm25 = BM25Okapi(corpus_tokens)
-    q_tokens = _tokenize(query)
-    bm_scores = bm25.get_scores(q_tokens)
-    bm_norm = _minmax([float(s) for s in bm_scores])
+        # ---- Stage 1: BM25 ----
+        corpus_tokens = [_tokenize(c["text"]) for c in chunks]
+        bm25 = BM25Okapi(corpus_tokens)
+        q_tokens = _tokenize(query)
+        bm_scores = bm25.get_scores(q_tokens)
+        bm_norm = _minmax([float(s) for s in bm_scores])
 
-    # ---- Stage 2: Dense ----
-    dense_norm: list[float] | None = None
-    if len(chunks) >= 2:
-        q_emb = embed_query(query)
-        if q_emb is not None:
-            # Use cached embeddings (stored at ingest) when every chunk has one;
-            # otherwise embed on the fly. This is the big per-query speedup.
-            cached = [c.get("embedding") for c in chunks]
-            if all(v is not None for v in cached):
-                emb = np.asarray(cached, dtype=np.float32)
-            else:
-                emb = embed_texts([c["text"] for c in chunks])
-            if emb is not None and emb.size:
-                # cosine (rows already l2-normalized by fastembed)
-                sims = emb @ q_emb / (np.linalg.norm(emb, axis=1) * np.linalg.norm(q_emb) + 1e-9)
-                dense_norm = _minmax([float(x) for x in sims])
-                meta["dense"] = True
+        # ---- Stage 2: Dense ----
+        dense_norm: list[float] | None = None
+        if len(chunks) >= 2:
+            q_emb = embed_query(query)
+            if q_emb is not None:
+                # Use cached embeddings (stored at ingest) when every chunk has one;
+                # otherwise embed on the fly. This is the big per-query speedup.
+                cached = [c.get("embedding") for c in chunks]
+                if all(v is not None for v in cached):
+                    emb = np.asarray(cached, dtype=np.float32)
+                else:
+                    emb = embed_texts([c["text"] for c in chunks])
+                if emb is not None and emb.size:
+                    # cosine (rows already l2-normalized by fastembed)
+                    sims = emb @ q_emb / (np.linalg.norm(emb, axis=1) * np.linalg.norm(q_emb) + 1e-9)
+                    dense_norm = _minmax([float(x) for x in sims])
+                    meta["dense"] = True
 
-    # ---- Stage 3: Numeric boost + fusion ----
-    number_re = re.compile(r"\$[\d,\.]+|[\d,\.]+%|[\d]{4,}")
-    fused = []
-    for i, c in enumerate(chunks):
-        c.pop("embedding", None)  # don't carry vectors downstream (report/prompt bloat)
-        b = bm_norm[i]
-        d = dense_norm[i] if dense_norm is not None else 0.0
-        # weighted fusion: 55% BM25, 40% dense, 5% numeric-evidence heuristic
-        score = 0.55 * b + (0.40 * d if dense_norm is not None else 0.0)
-        num_hits = len(number_re.findall(c["text"]))
-        score += 0.05 * min(num_hits, 6) / 6.0
-        # if only BM25 available, weight BM25 fully
-        if dense_norm is None:
-            score = 0.95 * b + 0.05 * min(num_hits, 6) / 6.0
-        fused.append({**c, "score": float(score), "_bm25": b, "_dense": d})
-    fused.sort(key=lambda x: x["score"], reverse=True)
-    candidates = fused[:candidate_k]
+        # ---- Stage 3: Numeric boost + fusion ----
+        number_re = re.compile(r"\$[\d,\.]+|[\d,\.]+%|[\d]{4,}")
+        fused = []
+        for i, c in enumerate(chunks):
+            c.pop("embedding", None)  # don't carry vectors downstream (report/prompt bloat)
+            b = bm_norm[i]
+            d = dense_norm[i] if dense_norm is not None else 0.0
+            # weighted fusion: 55% BM25, 40% dense, 5% numeric-evidence heuristic
+            score = 0.55 * b + (0.40 * d if dense_norm is not None else 0.0)
+            num_hits = len(number_re.findall(c["text"]))
+            score += 0.05 * min(num_hits, 6) / 6.0
+            # if only BM25 available, weight BM25 fully
+            if dense_norm is None:
+                score = 0.95 * b + 0.05 * min(num_hits, 6) / 6.0
+            fused.append({**c, "score": float(score), "_bm25": b, "_dense": d})
+        fused.sort(key=lambda x: x["score"], reverse=True)
+        candidates = fused[:candidate_k]
 
-    # ---- Stage 4: Cross-encoder rerank on candidates ----
-    ce_scores = rerank_pairs(query, [c["text"] for c in candidates])
-    if ce_scores is not None:
-        meta["reranker"] = True
-        ce_norm = _minmax(ce_scores)
-        for c, s, raw in zip(candidates, ce_norm, ce_scores):
-            # blend: 70% CE, 30% prior fused score
-            c["_ce"] = float(raw)
-            c["score"] = float(0.7 * s + 0.3 * c["score"])
-        candidates.sort(key=lambda x: x["score"], reverse=True)
+        # ---- Stage 4: Cross-encoder rerank on candidates ----
+        ce_scores = rerank_pairs(query, [c["text"] for c in candidates])
+        if ce_scores is not None:
+            meta["reranker"] = True
+            ce_norm = _minmax(ce_scores)
+            for c, s, raw in zip(candidates, ce_norm, ce_scores):
+                # blend: 70% CE, 30% prior fused score
+                c["_ce"] = float(raw)
+                c["score"] = float(0.7 * s + 0.3 * c["score"])
+            candidates.sort(key=lambda x: x["score"], reverse=True)
 
-    return candidates[:top_k], meta
+        return candidates[:top_k], meta
+    finally:
+        # M6 fast-follow: a single try/finally around the whole attempt, not
+        # an .observe() at each return — the prior version only recorded
+        # duration on the two normal-return paths, so an exception anywhere
+        # in stages 1-4 (a bad BM25 tokenization, a corrupt cached embedding,
+        # etc.) left the metric silently un-recorded for that attempt.
+        retrieval_duration_seconds.observe(time.monotonic() - _started)

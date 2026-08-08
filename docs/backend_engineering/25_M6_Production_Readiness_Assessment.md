@@ -1,9 +1,26 @@
 # M6 — Production Readiness Assessment
 
 **Milestone:** Backend Engineering M6 (Observability Hardening) · **Date:** 2026-08-05
-**Recommendation:** ✅ **Ready for CTO Review** — no new ADR (same
+(follow-up execution pass: 2026-08-08)
+**Recommendation:** ✅ **READY FOR CTO REVIEW** — no new ADR (same
 "focused, reviewable PR" precedent EQ-2/EQ-3/M5 already established for
 narrow, well-verified milestones).
+
+---
+
+## 0. Follow-up pass (2026-08-08)
+
+Doc 26's three findings (A1 correlation-id filter, A2 conditional Redis
+readiness, A3 stale docstrings) are now fixed, plus the metrics/tracing
+items a later brief requested beyond doc 26's scope (token usage, retrieval
+duration, cache hit/miss, SSE session metrics, LLM retry-attempt spans, a
+job-level parent span). Full detail: `19` §5a (implementation), `20`/`21`
+(catalog/coverage updates). One genuine implementation bug was found and
+fixed *during* this pass, not before it — the initial SSE outcome-tracking
+logic miscounted every normal stream completion as "cancelled"; caught by a
+new regression test, not manual review (`19` §5a has the root cause).
+Verification below is from this follow-up pass, superseding the 2026-08-05
+numbers in §2.
 
 ---
 

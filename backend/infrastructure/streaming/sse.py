@@ -11,17 +11,16 @@ the stale API doc describes (01 D-11): unnamed `data:` frames, a `: keepalive`
 comment (never a named event — comments never fire `onmessage`), and a
 terminal named `event: end`.
 
-NOT wired into server.py's live `GET /reports/{job_id}/stream` this phase —
-that handler still uses its own single-`asyncio.Queue` generator exactly as
-today (01 D-1 unfixed there; fixing it in place is explicitly Migration
-Phase 4 work, 06 §7, because it needs the job lifecycle — application/jobs.py
-— cut over at the same time, not this phase's job lifecycle module used only
-standalone). This module is the target `stream_report` migrates onto, built
-and proven correct in isolation first — the same strangler-fig discipline as
-everything else in this phase (06 AD-4).
+Wired into server.py's live `GET /reports/{job_id}/stream` and
+`GET /learning/{id}/stream` since the Migration Phase 4/L cutover (both call
+`sse_response()` directly) — this module has been the live SSE path since
+then, not merely a standalone-proven target awaiting cutover (a stale claim
+this docstring carried past that cutover; corrected in M6 — see
+`docs/backend_engineering/26_M6_Observability_Architecture_Review.md` A3).
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
@@ -31,6 +30,7 @@ from fastapi.responses import StreamingResponse
 
 from domain.events import TraceEvent
 from infrastructure.observability.logging import get_correlation_id
+from infrastructure.observability.metrics import sse_session_duration_seconds, sse_sessions_total
 from infrastructure.observability.tracing import get_tracer
 
 _KEEPALIVE_NODE = "_keepalive"  # matches infrastructure/redis/event_bus.py's sentinel
@@ -53,6 +53,7 @@ async def _frame_events(events: AsyncIterator[TraceEvent], *, stream_name: str) 
     # middleware) ties it back to the HTTP access log line.
     start = time.monotonic()
     count = 0
+    outcome = "unknown"
     correlation_id = get_correlation_id()
     with get_tracer().start_as_current_span(f"sse.{stream_name}"):
         try:
@@ -62,11 +63,39 @@ async def _frame_events(events: AsyncIterator[TraceEvent], *, stream_name: str) 
                     continue
                 count += 1
                 yield f"data: {json.dumps(ev, default=str)}\n\n"
+            # The upstream EventBus iterator only exhausts naturally after a
+            # terminal event (is_terminal_event) — reaching here means the
+            # stream genuinely completed. Recorded BEFORE the final yield,
+            # not after: a well-behaved client stops calling __anext__() the
+            # moment it sees "event: end" and never resumes this generator
+            # past that yield, so `aclose()` raises GeneratorExit AT that
+            # suspended yield — indistinguishable from a real disconnect if
+            # outcome were only set after it. This is the fix for a real bug
+            # a first version of this code had: every normal completion was
+            # being counted as "cancelled" (caught by the GeneratorExit
+            # handler below), because that handler ran unconditionally.
+            outcome = "completed"
             yield "event: end\ndata: {}\n\n"
+        except (GeneratorExit, asyncio.CancelledError):
+            # Client disconnected mid-stream — must re-raise un-swallowed
+            # (a generator that eats GeneratorExit is a bug). Only downgrade
+            # to "cancelled" if the stream hadn't already completed (see the
+            # comment above) — the terminal yield being closed immediately
+            # after is the expected shape of every successful stream, not a
+            # cancellation.
+            if outcome != "completed":
+                outcome = "cancelled"
+            raise
+        except Exception:
+            outcome = "error"
+            raise
         finally:
+            duration = time.monotonic() - start
+            sse_sessions_total.labels(stream_name=stream_name, outcome=outcome).inc()
+            sse_session_duration_seconds.labels(stream_name=stream_name).observe(duration)
             logger.info(
-                "sse stream %s ended: correlation_id=%s events=%d duration_s=%.2f",
-                stream_name, correlation_id, count, time.monotonic() - start,
+                "sse stream %s ended: correlation_id=%s events=%d duration_s=%.2f outcome=%s",
+                stream_name, correlation_id, count, duration, outcome,
             )
 
 

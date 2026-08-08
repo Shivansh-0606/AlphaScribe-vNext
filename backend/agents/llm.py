@@ -27,7 +27,8 @@ from pydantic import BaseModel, ValidationError
 # if/elif chain. See infrastructure/llm/registry.py's module docstring.
 from infrastructure.llm.registry import dispatch as _dispatch_provider
 from infrastructure.llm.registry import resolve_base_url as _resolve_base_url
-from infrastructure.observability.metrics import llm_calls_total
+from infrastructure.observability.metrics import llm_calls_total, llm_tokens_total
+from infrastructure.observability.tracing import get_tracer
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -168,7 +169,21 @@ class NonRetryableLLMError(RuntimeError):
     immediately instead of looping."""
 
 
-def _gen_gemini(system: str, user: str, model: str, key: str) -> str:
+def _record_usage(usage_sink: dict | None, *, input_tokens, output_tokens) -> None:
+    """M6 token-usage metric: best-effort, never raises — a provider SDK
+    changing its usage-field shape must not break generation itself."""
+    if usage_sink is None:
+        return
+    try:
+        if input_tokens is not None:
+            usage_sink["input_tokens"] = int(input_tokens)
+        if output_tokens is not None:
+            usage_sink["output_tokens"] = int(output_tokens)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _gen_gemini(system: str, user: str, model: str, key: str, *, usage_sink: dict | None = None) -> str:
     import google.generativeai as genai
     # google.generativeai.configure() sets a PROCESS-GLOBAL key, so two
     # concurrent requests with different keys would clobber each other and a
@@ -184,6 +199,12 @@ def _gen_gemini(system: str, user: str, model: str, key: str) -> str:
     if getattr(getattr(cand, "finish_reason", None), "name", "") == "MAX_TOKENS":
         # Truncated brief — don't let a cut-off draft reach the fact-checker.
         raise NonRetryableLLMError("Gemini output was truncated (MAX_TOKENS).")
+    usage = getattr(resp, "usage_metadata", None)
+    _record_usage(
+        usage_sink,
+        input_tokens=getattr(usage, "prompt_token_count", None),
+        output_tokens=getattr(usage, "candidates_token_count", None),
+    )
     try:
         return resp.text or ""
     except Exception:  # noqa: BLE001
@@ -195,7 +216,8 @@ def _gen_gemini(system: str, user: str, model: str, key: str) -> str:
         return "\n".join(parts)
 
 
-def _gen_openai_compatible(system: str, user: str, model: str, key: str, base_url: str | None) -> str:
+def _gen_openai_compatible(system: str, user: str, model: str, key: str, base_url: str | None,
+                            *, usage_sink: dict | None = None) -> str:
     # openai>=1.0 SDK; Groq is OpenAI-compatible via base_url.
     from openai import OpenAI
     # max_retries=0: chat_text already owns the retry/backoff loop. The SDK's
@@ -222,10 +244,16 @@ def _gen_openai_compatible(system: str, user: str, model: str, key: str, base_ur
             "LLM output was truncated by the max_tokens cap "
             "(LLM_MAX_OUTPUT_TOKENS). Raise it in backend/.env and retry."
         )
+    usage = getattr(resp, "usage", None)
+    _record_usage(
+        usage_sink,
+        input_tokens=getattr(usage, "prompt_tokens", None),
+        output_tokens=getattr(usage, "completion_tokens", None),
+    )
     return choice.message.content or ""
 
 
-def _gen_anthropic(system: str, user: str, model: str, key: str) -> str:
+def _gen_anthropic(system: str, user: str, model: str, key: str, *, usage_sink: dict | None = None) -> str:
     import anthropic
     # max_retries=0 for the same reason as the OpenAI path: chat_text owns retries,
     # the SDK default (2) would compound multiplicatively.
@@ -237,10 +265,16 @@ def _gen_anthropic(system: str, user: str, model: str, key: str) -> str:
     if resp.stop_reason == "max_tokens":
         # Same truncation guard as the other providers (was missing here).
         raise NonRetryableLLMError("Anthropic output was truncated (max_tokens=4096).")
+    usage = getattr(resp, "usage", None)
+    _record_usage(
+        usage_sink,
+        input_tokens=getattr(usage, "input_tokens", None),
+        output_tokens=getattr(usage, "output_tokens", None),
+    )
     return "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
 
 
-def _generate_sync(system: str, user: str, model: str) -> str:
+def _generate_sync(system: str, user: str, model: str, *, usage_sink: dict | None = None) -> str:
     cfg = _active()
     provider, key = cfg["provider"], cfg["api_key"]
     if not key:
@@ -254,6 +288,7 @@ def _generate_sync(system: str, user: str, model: str) -> str:
             provider, system, user, real_model, key, cfg["base_url"],
             gen_gemini=_gen_gemini, gen_anthropic=_gen_anthropic,
             gen_openai_compatible=_gen_openai_compatible,
+            usage_sink=usage_sink,
         )
     except ValueError as e:
         # dispatch() raises ValueError for an unknown provider; this call
@@ -333,22 +368,38 @@ async def chat_text(system: str, user: str, *, model: str = DEFAULT_HEAVY_MODEL)
               "tier": _TIER_LABELS.get(model, "explicit")}
     last_err: Exception | None = None
     for attempt in range(4):
-        try:
-            result = await asyncio.to_thread(_generate_sync, system, user, model)
-            llm_calls_total.labels(**labels, outcome="success").inc()
-            return result
-        except NonRetryableLLMError:
-            llm_calls_total.labels(**labels, outcome="error").inc()
-            raise  # deterministic — retrying wastes calls + backoff
-        except Exception as e:  # noqa: BLE001
-            llm_calls_total.labels(**labels, outcome="error").inc()  # one per failed attempt, retries visible
-            last_err = e
-            if attempt == 3:
-                break
-            wait = _retry_after_seconds(e)
-            if wait is None:
-                wait = 2.0 * (attempt + 1)
-            await asyncio.sleep(min(wait, 30.0))
+        # M6 — doc 26 §Trace Coverage's named gap: "individual retry attempts
+        # inside chat_text's backoff loop... not traced". Each attempt is now
+        # its own child span (nests under whatever span is active when
+        # chat_text is called — a node span during a pipeline run), so a
+        # provider that's silently retrying shows up as N spans, not one
+        # HTTPX span indistinguishable from a single slow call.
+        with get_tracer().start_as_current_span(
+            "llm.attempt", attributes={"attempt": attempt, **labels}
+        ):
+            try:
+                usage: dict = {}
+                result = await asyncio.to_thread(_generate_sync, system, user, model, usage_sink=usage)
+                llm_calls_total.labels(**labels, outcome="success").inc()
+                if usage.get("input_tokens") is not None:
+                    llm_tokens_total.labels(provider=labels["provider"], model=labels["model"],
+                                             kind="input").inc(usage["input_tokens"])
+                if usage.get("output_tokens") is not None:
+                    llm_tokens_total.labels(provider=labels["provider"], model=labels["model"],
+                                             kind="output").inc(usage["output_tokens"])
+                return result
+            except NonRetryableLLMError:
+                llm_calls_total.labels(**labels, outcome="error").inc()
+                raise  # deterministic — retrying wastes calls + backoff
+            except Exception as e:  # noqa: BLE001
+                llm_calls_total.labels(**labels, outcome="error").inc()  # one per failed attempt, retries visible
+                last_err = e
+        if attempt == 3:
+            break
+        wait = _retry_after_seconds(last_err)
+        if wait is None:
+            wait = 2.0 * (attempt + 1)
+        await asyncio.sleep(min(wait, 30.0))
     raise last_err  # type: ignore[misc]
 
 

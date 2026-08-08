@@ -25,7 +25,10 @@ from infrastructure.observability.logging import (
 from infrastructure.observability.metrics import (
     deadline_exceeded_total,
     http_requests_total,
+    llm_tokens_total,
     render_latest,
+    report_cache_lookups_total,
+    retrieval_duration_seconds,
     track_redis_errors,
 )
 from infrastructure.observability.tracing import instrument_node
@@ -64,15 +67,56 @@ def test_correlation_filter_injects_the_active_id():
 
 
 def test_install_correlation_filter_attaches_and_fires():
+    # Fixed for A1: attaches to the logger's HANDLER, not its own .filters
+    # list — a bare getLogger() has no handler until one is added, so this
+    # test gives it one and checks that handler's filters, matching what
+    # install_correlation_filter() now actually does.
     logger = logging.getLogger("test.correlation." + __name__)
-    install_correlation_filter(logger)
-    set_correlation_id("attached-id")
+    handler = logging.StreamHandler()
+    logger.addHandler(handler)
     try:
-        record = logging.LogRecord("test", logging.INFO, __file__, 1, "msg", None, None)
-        assert all(f.filter(record) for f in logger.filters)
-        assert record.correlation_id == "attached-id"
+        install_correlation_filter(logger)
+        set_correlation_id("attached-id")
+        try:
+            record = logging.LogRecord("test", logging.INFO, __file__, 1, "msg", None, None)
+            assert all(f.filter(record) for f in handler.filters)
+            assert record.correlation_id == "attached-id"
+        finally:
+            set_correlation_id(None)
+    finally:
+        logger.removeHandler(handler)
+
+
+def test_correlation_id_reaches_a_real_child_logger_via_propagation():
+    # M6 A1 regression test (doc 26's own recommendation): exercises the
+    # REAL propagation path — a named child logger (exactly how the app
+    # logs, e.g. logging.getLogger("alphascribe")) propagating up to an
+    # ancestor's handler — instead of calling CorrelationIdFilter.filter()
+    # directly. This is the shape of test that would have caught A1: the
+    # bug was that install_correlation_filter() attached to the wrong
+    # object, invisible to a test that bypasses the logger hierarchy.
+    import io
+
+    parent = logging.getLogger("test.correlation.parent." + __name__)
+    parent.handlers.clear()
+    parent.propagate = False
+    stream = io.StringIO()
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(logging.Formatter("corr=%(correlation_id)s %(message)s"))
+    parent.addHandler(handler)
+    install_correlation_filter(parent)
+
+    child = logging.getLogger("test.correlation.parent." + __name__ + ".child")
+    child.setLevel(logging.INFO)
+
+    set_correlation_id("propagated-id")
+    try:
+        child.info("hello from a real child logger")
     finally:
         set_correlation_id(None)
+        parent.removeHandler(handler)
+
+    assert "corr=propagated-id hello from a real child logger" in stream.getvalue()
 
 
 def test_metrics_counter_increments_and_renders():
@@ -160,17 +204,48 @@ def test_deadline_exceeded_total_is_a_real_counter():
     assert after_body != before_body
 
 
+def test_retrieval_duration_seconds_is_a_real_metric():
+    before_body, _ = render_latest()
+    retrieval_duration_seconds.observe(0.05)
+    after_body, _ = render_latest()
+    assert b"alphascribe_retrieval_duration_seconds" in after_body
+    assert after_body != before_body
+
+
+def test_report_cache_lookups_total_tracks_hit_and_miss():
+    before_body, _ = render_latest()
+    report_cache_lookups_total.labels(result="hit").inc()
+    report_cache_lookups_total.labels(result="miss").inc()
+    after_body, _ = render_latest()
+    assert b'result="hit"' in after_body
+    assert b'result="miss"' in after_body
+    assert after_body != before_body
+
+
+def test_llm_tokens_total_is_a_real_counter():
+    before_body, _ = render_latest()
+    llm_tokens_total.labels(provider="gemini", model="gemini-2.0-flash", kind="input").inc(123)
+    after_body, _ = render_latest()
+    assert b"alphascribe_llm_tokens_total" in after_body
+    assert after_body != before_body
+
+
 if __name__ == "__main__":
     test_correlation_id_defaults_to_none()
     test_correlation_id_round_trips()
     test_correlation_filter_injects_a_dash_when_unset()
     test_correlation_filter_injects_the_active_id()
     test_install_correlation_filter_attaches_and_fires()
+    test_correlation_id_reaches_a_real_child_logger_via_propagation()
     test_metrics_counter_increments_and_renders()
     test_tracing_creates_real_spans()
     test_instrument_node_records_duration_and_returns_value()
     test_instrument_node_propagates_exceptions()
     test_track_redis_errors_counts_then_reraises()
     test_deadline_exceeded_total_is_a_real_counter()
+    test_retrieval_duration_seconds_is_a_real_metric()
+    test_report_cache_lookups_total_tracks_hit_and_miss()
+    test_llm_tokens_total_is_a_real_counter()
     print("ok: correlation-id logging filter, Prometheus counter + /metrics rendering, real OTel span "
-          "creation, LangGraph node instrumentation, Redis error tracking, deadline metric")
+          "creation, LangGraph node instrumentation, Redis error tracking, deadline metric, "
+          "retrieval/cache/token metrics")

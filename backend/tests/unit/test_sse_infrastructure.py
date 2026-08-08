@@ -13,6 +13,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from infrastructure.observability.metrics import render_latest
 from infrastructure.redis.event_bus import InMemoryEventBus
 from infrastructure.streaming.sse import SSE_HEADERS, sse_response
 
@@ -74,9 +75,72 @@ def test_media_type_is_event_stream():
     assert response.media_type == "text/event-stream"
 
 
+def test_session_metrics_record_completed_outcome():
+    async def fake_events():
+        yield {"node": "pipeline", "status": "ok"}  # terminal
+
+    before_body, _ = render_latest()
+    response = sse_response(fake_events(), stream_name="m6_test_completed")
+    asyncio.run(asyncio.wait_for(_collect_frames(response), timeout=5))
+    after_body, _ = render_latest()
+
+    # prometheus_client renders labels alphabetically, not definition order —
+    # check independently rather than assume a fixed label ordering.
+    assert b'alphascribe_sse_sessions_total{outcome="completed",stream_name="m6_test_completed"}' in after_body
+    assert after_body != before_body
+
+
+def test_mid_stream_cancellation_records_cancelled_not_completed():
+    # M6 fast-follow regression test for the original outcome-classification
+    # bug: a real InMemoryEventBus (not a hand-built fake iterator), no
+    # terminal event ever published (the job is still "running" from the
+    # stream's point of view), one frame consumed, then the SAME close
+    # mechanism Starlette's StreamingResponse actually uses on a real client
+    # disconnect — body_iterator.aclose() — mid-stream, before "event: end".
+    async def run():
+        bus = InMemoryEventBus()
+        job_id = "job-sse-cancel"
+        await bus.publish(job_id, {"node": "pipeline", "status": "start"})
+
+        response = sse_response(bus.subscribe(job_id), stream_name="m6_test_cancel")
+        it = response.body_iterator
+        first = await asyncio.wait_for(it.__anext__(), timeout=5)
+        assert first == 'data: {"node": "pipeline", "status": "start"}\n\n'
+        await it.aclose()
+
+    before_body, _ = render_latest()
+    asyncio.run(run())
+    after_body, _ = render_latest()
+
+    assert b'alphascribe_sse_sessions_total{outcome="cancelled",stream_name="m6_test_cancel"}' in after_body
+    # And NOT counted as completed — the bug this regresses against.
+    assert b'alphascribe_sse_sessions_total{outcome="completed",stream_name="m6_test_cancel"}' not in after_body
+    assert after_body != before_body
+
+
+def test_session_metrics_record_error_outcome_and_reraise():
+    async def failing_events():
+        yield {"node": "pipeline", "status": "start"}
+        raise RuntimeError("provider blew up mid-stream")
+
+    response = sse_response(failing_events(), stream_name="m6_test_error")
+    try:
+        asyncio.run(asyncio.wait_for(_collect_frames(response), timeout=5))
+        raise AssertionError("expected RuntimeError to propagate out of the SSE generator")
+    except RuntimeError as e:
+        assert "provider blew up" in str(e)
+
+    body, _ = render_latest()
+    assert b'alphascribe_sse_sessions_total{outcome="error",stream_name="m6_test_error"}' in body
+
+
 if __name__ == "__main__":
     test_end_to_end_through_a_real_event_bus()
     test_keepalive_sentinel_becomes_a_comment_not_a_named_event()
     test_headers_match_the_existing_report_stream_contract()
     test_media_type_is_event_stream()
-    print("ok: SSE transport — real EventBus end-to-end, keepalive framing, headers, media type")
+    test_session_metrics_record_completed_outcome()
+    test_mid_stream_cancellation_records_cancelled_not_completed()
+    test_session_metrics_record_error_outcome_and_reraise()
+    print("ok: SSE transport — real EventBus end-to-end, keepalive framing, headers, media type, "
+          "session outcome metrics (completed/cancelled/error)")

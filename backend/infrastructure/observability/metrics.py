@@ -27,9 +27,11 @@ http_request_duration_seconds = Histogram(
     "alphascribe_http_request_duration_seconds", "HTTP request duration", ["method", "path"]
 )
 
-# --- DEFINED, not yet incremented anywhere (07 §7.2 / 09 §12 / 10 §13
-# catalogs) — the pipeline/job/Redis/Mongo call sites that would increment
-# these belong to Phases 3/4/7, explicitly out of this phase's scope. ---
+# --- ACTIVE (M2 Phase L + M6 — 07 §7.2 / 09 §12 / 10 §13 catalogs). This
+# comment previously read "DEFINED, not yet incremented anywhere... belong
+# to Phases 3/4/7" — stale past Phase L and M6 landing real call sites for
+# all of these (hygiene fix, M6; see docs/backend_engineering/
+# 26_M6_Observability_Architecture_Review.md §3). ---
 pipeline_runs_total = Counter(
     "alphascribe_pipeline_runs_total", "Pipeline runs", ["graph", "status"]
 )
@@ -54,11 +56,35 @@ authz_denied_total = Counter(
 redis_errors_total = Counter(
     "alphascribe_redis_errors_total", "Redis errors", ["op", "kind"]
 )
-ratelimit_degraded = Gauge(
-    "alphascribe_ratelimit_degraded", "1 when the rate limiter is running degraded (fail-open)"
-)
 jobs_active = Gauge(
     "alphascribe_jobs_active", "Currently active jobs", ["kind"]
+)
+retrieval_duration_seconds = Histogram(
+    "alphascribe_retrieval_duration_seconds", "Hybrid retrieval duration (agents/retrieval.py::retrieve)"
+)
+llm_tokens_total = Counter(
+    "alphascribe_llm_tokens_total", "LLM token usage, where the provider reports it",
+    ["provider", "model", "kind"],  # kind: input | output
+)
+report_cache_lookups_total = Counter(
+    "alphascribe_report_cache_lookups_total", "generate_report's (ticker,query) cache lookups (SI-1)",
+    ["result"],  # hit | miss
+)
+sse_sessions_total = Counter(
+    "alphascribe_sse_sessions_total", "SSE stream sessions", ["stream_name", "outcome"]
+)
+sse_session_duration_seconds = Histogram(
+    "alphascribe_sse_session_duration_seconds", "SSE stream session duration", ["stream_name"]
+)
+
+# --- DEFINED, not yet incremented anywhere — its call site is 09 §8.1's
+# fail-open policy, implemented today in agents/auth.py's in-memory rate
+# limiter, not the RedisRateLimiter port this gauge belongs to (that port
+# is built-and-tested-standalone, not yet cut into the live /auth/login
+# path — a separate milestone's cutover). Wiring this before that cutover
+# exists would be a fabricated signal, not an early one. ---
+ratelimit_degraded = Gauge(
+    "alphascribe_ratelimit_degraded", "1 when the rate limiter is running degraded (fail-open)"
 )
 
 

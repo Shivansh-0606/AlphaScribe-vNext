@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 import agents.retrieval as retrieval
 from agents.retrieval import _minmax, retrieve
+from infrastructure.observability.metrics import render_latest
 
 
 def test_minmax_empty():
@@ -123,6 +124,39 @@ def test_retrieve_ticker_is_uppercased_for_the_query():
     assert seen["ticker"] == "AAPL"
 
 
+def test_retrieve_records_duration_even_when_it_raises():
+    # M6 fast-follow: the first version only called
+    # retrieval_duration_seconds.observe() at the two normal-return points,
+    # so an exception anywhere in retrieve() left the metric silently
+    # un-recorded for that attempt. A raising fake DB proves the try/finally
+    # now covers the exception path too, and that the exception still
+    # propagates unchanged (retrieval behavior itself is untouched).
+    class _RaisingCursor:
+        def sort(self, *a, **k):
+            return self
+
+        async def to_list(self, n):
+            raise RuntimeError("simulated Mongo failure")
+
+    class _RaisingChunks:
+        def find(self, *a, **k):
+            return _RaisingCursor()
+
+    class _RaisingDB:
+        filing_chunks = _RaisingChunks()
+
+    before_body, _ = render_latest()
+    try:
+        asyncio.run(retrieve(_RaisingDB(), "AAPL", "revenue"))
+        raise AssertionError("expected RuntimeError to propagate out of retrieve()")
+    except RuntimeError as e:
+        assert "simulated Mongo failure" in str(e)
+    after_body, _ = render_latest()
+
+    assert after_body != before_body
+    assert b"alphascribe_retrieval_duration_seconds_count" in after_body
+
+
 if __name__ == "__main__":
     test_minmax_empty()
     test_minmax_all_equal_maps_to_half()
@@ -130,4 +164,6 @@ if __name__ == "__main__":
     test_retrieve_empty_corpus_returns_empty_with_meta()
     test_retrieve_bm25_only_degradation_branch()
     test_retrieve_ticker_is_uppercased_for_the_query()
-    print("ok: _minmax edge cases; retrieve() BM25-only degradation branch; empty corpus; ticker normalization")
+    test_retrieve_records_duration_even_when_it_raises()
+    print("ok: _minmax edge cases; retrieve() BM25-only degradation branch; empty corpus; ticker "
+          "normalization; duration recorded on both success and exception paths")

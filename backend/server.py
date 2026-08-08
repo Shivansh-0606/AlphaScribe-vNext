@@ -46,6 +46,7 @@ from app.settings import load_settings
 from domain.errors import DomainError
 from domain.models import JobKind
 from infrastructure.mongo.client import ping as mongo_ping
+from infrastructure.redis.client import ping as redis_ping
 from infrastructure.mongo.indexes import ensure_indexes as ensure_mongo_indexes
 from infrastructure.observability.logging import install_correlation_filter, set_correlation_id
 from infrastructure.observability.metrics import (
@@ -58,8 +59,10 @@ from infrastructure.observability.metrics import (
     pipeline_duration_seconds,
     pipeline_runs_total,
     render_latest as render_metrics,
+    report_cache_lookups_total,
 )
-from infrastructure.observability.tracing import setup_tracing
+from infrastructure.observability.tracing import get_tracer, setup_tracing
+from opentelemetry.trace import Status, StatusCode
 from infrastructure.security.authorization import require_admin
 from infrastructure.streaming.sse import sse_response
 
@@ -253,16 +256,40 @@ async def health_ready():
     addition). A TRUE liveness/dependency check, not `/health`'s document
     counts (04 O-12): `mongo_ping` is a metadata round-trip
     (`{"ping": 1}`), not a collection scan. No frontend consumer — this is
-    an operator/orchestrator probe, same posture as `/health`."""
+    an operator/orchestrator probe, same posture as `/health`.
+
+    M6 A2: also verifies Redis, but ONLY when `container.job_backend ==
+    "redis"` — under the `JOB_BACKEND=memory` default (09 RR-10, the
+    no-Docker developer path), `redis_client` is None and this check is
+    skipped entirely, so readiness never gains a dependency that mode
+    deliberately doesn't have. Response gains one field (`redis`, null
+    under the memory backend) — additive, no existing key removed or
+    retyped; no test or `web/` code path depends on this endpoint's exact
+    shape (04 O-16)."""
     try:
         await mongo_ping(db)
         mongo_ok = True
     except Exception:  # noqa: BLE001 — readiness must report, never 500
         mongo_ok = False
-    ready = mongo_ok
+
+    redis_ok: bool | None = None
+    if container.redis_client is not None:
+        try:
+            await redis_ping(container.redis_client)
+            redis_ok = True
+        except Exception:  # noqa: BLE001 — readiness must report, never 500
+            redis_ok = False
+
+    ready = mongo_ok and (redis_ok is not False)
     return JSONResponse(
         status_code=200 if ready else 503,
-        content={"ready": ready, "mongo": mongo_ok, "retrieval": retrieval_status()},
+        content={
+            "ready": ready,
+            "mongo": mongo_ok,
+            "redis": redis_ok,
+            "job_backend": container.job_backend,
+            "retrieval": retrieval_status(),
+        },
     )
 
 
@@ -782,6 +809,16 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
             {"$push": {"events": ev}, "$set": {"updated_at": ev.get("ts", "")}}
         )
 
+    # M6 — job-level parent span (doc 26's "background job tracing" gap):
+    # this background task runs after the initiating request's own span
+    # already ended, so without an explicit parent here, each node's span
+    # (instrument_node()) would root its own independent trace instead of
+    # nesting under one job-level trace. Entered/exited manually (not `with`)
+    # because it must wrap the pre-existing try/except/finally without
+    # reindenting the whole block; `finally` below guarantees the exit runs
+    # exactly once regardless of outcome.
+    _job_span_cm = get_tracer().start_as_current_span("pipeline.research", attributes={"job_id": job_id})
+    _job_span = _job_span_cm.__enter__()
     try:
         initial: dict = {
             "ticker": ticker.upper(),
@@ -855,6 +892,14 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
         # cancellation is ever triggered another way.
         await container.job_lifecycle.cancel(job_id)
         pipeline_runs_total.labels(graph="research", status="cancelled").inc()
+        # M6 fast-follow: the span context manager's __exit__ is always
+        # called with (None, None, None) below (it must run exactly once
+        # from the shared `finally`, regardless of which branch handled the
+        # exception) — so it can never auto-detect an error here. The
+        # outcome is already known at this point in every except branch;
+        # set it explicitly rather than relying on exception propagation
+        # the span will never see.
+        _job_span.set_status(Status(StatusCode.ERROR, "Job cancelled"))
     except TimeoutError as e:
         # LG-11: a pathological job (retry loops, a slow provider) is bounded
         # to its deadline instead of running unbounded — no raw exception
@@ -867,6 +912,7 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
         )
         await container.job_lifecycle.fail(job_id, err)
         pipeline_runs_total.labels(graph="research", status="failed").inc()
+        _job_span.set_status(Status(StatusCode.ERROR, err))
     except Exception:
         # Don't persist/stream the raw error: provider SDK exceptions can embed
         # the API key (Gemini passes it as a ?key=... URL param), and this text
@@ -879,6 +925,7 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
         )
         await container.job_lifecycle.fail(job_id, err)
         pipeline_runs_total.labels(graph="research", status="failed").inc()
+        _job_span.set_status(Status(StatusCode.ERROR, err))
     finally:
         if _tok is not None:
             reset_llm_context(_tok)
@@ -887,6 +934,7 @@ async def _run_pipeline(job_id: str, ticker: str, query: str,
         pipeline_duration_seconds.labels(graph="research").observe(
             asyncio.get_event_loop().time() - started
         )
+        _job_span_cm.__exit__(None, None, None)
 
 
 class ValidateLlmKeyRequest(BaseModel):
@@ -989,10 +1037,12 @@ async def generate_report(req: GenerateRequest, user: dict = Depends(current_use
             {"id": 1, "created_at": 1, "fact_check_status": 1, "user_id": 1, "is_sample": 1, "_id": 0},
             sort=[("created_at", -1)],
         )
-        if cached and (
+        is_hit = bool(cached) and (
             not latest_filing
             or cached.get("created_at", "") >= latest_filing.get("created_at", "")
-        ):
+        )
+        report_cache_lookups_total.labels(result="hit" if is_hit else "miss").inc()
+        if is_hit:
             # A cache hit skips _run_pipeline (where user_id normally gets set),
             # so an unclaimed report a signed-in user reuses would otherwise
             # never show up in their history. Claim it once; leave already-owned
@@ -1193,6 +1243,9 @@ async def _run_explanation(job_id: str, ticker: str, concept: str, query: str,
             {"$push": {"events": ev}, "$set": {"updated_at": ev.get("ts", "")}}
         )
 
+    # M6 — job-level parent span, same reasoning as _run_pipeline's (research).
+    _job_span_cm = get_tracer().start_as_current_span("pipeline.learning", attributes={"job_id": job_id})
+    _job_span = _job_span_cm.__enter__()
     try:
         initial: dict = {"ticker": ticker.upper(), "query": query, "concept": concept, "trace": []}
         if company_name:
@@ -1256,6 +1309,7 @@ async def _run_explanation(job_id: str, ticker: str, concept: str, query: str,
         )
         await container.job_lifecycle.cancel(job_id)  # idempotent — see _run_pipeline's identical note
         pipeline_runs_total.labels(graph="learning", status="cancelled").inc()
+        _job_span.set_status(Status(StatusCode.ERROR, "Job cancelled"))  # see _run_pipeline's identical note
     except TimeoutError as e:
         logger.warning("learning pipeline %s: %s", job_id, e)
         err = "The explanation exceeded its time budget and was stopped."
@@ -1265,6 +1319,7 @@ async def _run_explanation(job_id: str, ticker: str, concept: str, query: str,
         )
         await container.job_lifecycle.fail(job_id, err)
         pipeline_runs_total.labels(graph="learning", status="failed").inc()
+        _job_span.set_status(Status(StatusCode.ERROR, err))
     except Exception:
         # Never echo the raw exception — provider SDK errors can embed the API
         # key (mirrors _run_pipeline's identical redaction).
@@ -1276,6 +1331,7 @@ async def _run_explanation(job_id: str, ticker: str, concept: str, query: str,
         )
         await container.job_lifecycle.fail(job_id, err)
         pipeline_runs_total.labels(graph="learning", status="failed").inc()
+        _job_span.set_status(Status(StatusCode.ERROR, err))
     finally:
         if _tok is not None:
             reset_llm_context(_tok)
@@ -1284,6 +1340,7 @@ async def _run_explanation(job_id: str, ticker: str, concept: str, query: str,
         pipeline_duration_seconds.labels(graph="learning").observe(
             asyncio.get_event_loop().time() - started
         )
+        _job_span_cm.__exit__(None, None, None)
 
 
 @api.post("/learning/explain")

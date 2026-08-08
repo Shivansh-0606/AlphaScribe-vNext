@@ -44,7 +44,11 @@ def _chat_json_with_raw(raw: str, schema=_Simple):
     """Drive chat_json end-to-end through its real parsing logic by stubbing
     the one point that would otherwise touch a network."""
     real = llm._generate_sync
-    llm._generate_sync = lambda system, user, model: raw
+    # M6: chat_text now calls _generate_sync(..., usage_sink=...) to collect
+    # token-usage metrics — the stub's signature must accept (and ignore)
+    # that keyword-only arg, same as the real function does when a provider
+    # doesn't report usage.
+    llm._generate_sync = lambda system, user, model, *, usage_sink=None: raw
     try:
         return asyncio.run(chat_json("sys", "user", schema))
     finally:
