@@ -85,6 +85,9 @@ jobs:
     steps:
       - name: Skip until CI Mongo + LLM secrets are configured
         if: ${{ env.MONGO_URL == '' }}
+        working-directory: .
+        # Overrides the job's `backend` default — this step runs before
+        # checkout, so that directory doesn't exist on the runner yet.
         run: |
           echo "::notice::Live job skipped — CI_MONGO_URL / CI_GEMINI_API_KEY not configured. See .github/workflows/backend-ci.yml."
           exit 0
