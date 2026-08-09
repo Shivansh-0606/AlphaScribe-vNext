@@ -32,9 +32,13 @@ jobs:
       # connect lazily (see tests/contract/conftest.py's docstring).
       MONGO_URL: mongodb://localhost:27017
       DB_NAME: alphascribe_ci_hermetic
-      # Deliberately unset — a developer's local backend/.env may set this
-      # (see tests/test_ssrf_guard.py's M2 Ph0 finding); CI must not load it.
-      LLM_ALLOW_PRIVATE_BASE_URL: ""
+      # LLM_ALLOW_PRIVATE_BASE_URL is intentionally absent from this block —
+      # a developer's local backend/.env may set it (see
+      # tests/test_ssrf_guard.py's M2 Ph0 finding), but CI must not load it.
+      # GitHub Actions `env:` always sets a listed key, even to "" — that's
+      # not "unset", and Settings' bool field rejects "" (empty string isn't
+      # a valid bool). Omitting the key entirely is the correct way to leave
+      # it unset.
     steps:
       - uses: actions/checkout@v4
 

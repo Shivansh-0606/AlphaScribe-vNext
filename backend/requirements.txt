@@ -10,6 +10,7 @@ requests>=2.31.0
 pytest>=8.0.0
 pytest-xdist>=3.6.0
 pytest-cov>=5.0.0     # 06 §0.1 approved stack — dev/CI only; coverage baseline (M2 Ph0)
+fakeredis>=2.21       # dev/CI only — in-memory Redis for infrastructure/redis/ unit tests
 
 # --- LLM providers (bring-your-own key) ---
 # gemini via google SDK; openai SDK covers openai/groq/openrouter/deepseek/
