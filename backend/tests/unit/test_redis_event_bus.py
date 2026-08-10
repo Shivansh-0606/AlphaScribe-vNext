@@ -142,11 +142,46 @@ def test_subscribe_stops_at_the_terminal_event():
         asyncio.run(run())
 
 
+def test_redis_subscribe_yields_keepalive_after_the_configured_idle_window():
+    """T-10 (M7, Doc 28 B-5): the InMemory adapter has no idle timeout at all
+    (`await q.get()` blocks forever) — keepalive is a Redis Streams-only
+    behavior, `subscribe()`'s own XREAD `block=_XREAD_BLOCK_MS` timing out
+    with no new entries (infrastructure/redis/event_bus.py:98-105). Exercises
+    the real method against fakeredis (a real Redis-protocol implementation,
+    not a mock of this module — see the module docstring), with the module's
+    `_XREAD_BLOCK_MS` constant monkeypatched down for a fast test — the
+    production value (15s) is unchanged, only this test's view of it during
+    the call is, since `subscribe()` reads the module global at call time."""
+    async def run():
+        real_block_ms = event_bus_module._XREAD_BLOCK_MS
+        event_bus_module._XREAD_BLOCK_MS = 200
+        try:
+            bus = _new_redis_bus()
+            job_id = "job-keepalive"
+            gen = bus.subscribe(job_id)
+
+            first = await asyncio.wait_for(gen.__anext__(), timeout=5)
+            assert first == event_bus_module._KEEPALIVE, (
+                f"expected a keepalive after the idle window with nothing published, got {first}"
+            )
+
+            # A real event published after the keepalive must still arrive —
+            # keepalive is a "nothing happened yet" signal, not a stream end.
+            await bus.publish(job_id, TERMINAL)
+            second = await asyncio.wait_for(gen.__anext__(), timeout=5)
+            assert second == TERMINAL
+        finally:
+            event_bus_module._XREAD_BLOCK_MS = real_block_ms
+
+    asyncio.run(run())
+
+
 if __name__ == "__main__":
     test_static_ban_on_xreadgroup()
     test_fan_out_two_concurrent_subscribers_each_get_every_event()
     test_replay_then_live_no_duplicates()
     test_history_returns_everything_published()
     test_subscribe_stops_at_the_terminal_event()
+    test_redis_subscribe_yields_keepalive_after_the_configured_idle_window()
     print("ok: EventBus port conformance (memory + redis/fakeredis) — fan-out, replay, history, "
-          "terminal-stop, XREADGROUP ban")
+          "terminal-stop, XREADGROUP ban, keepalive-after-idle")

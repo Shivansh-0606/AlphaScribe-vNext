@@ -9,6 +9,16 @@
 Fast-Follow Round 1 ✅, Fast-Follow Round 2 ✅. **Overall M6: APPROVED / CLOSED.** Not
 reopened, not modified by this document.
 
+> **Post-publication note (2026-08-09, added — not a rewrite of the above):**
+> M7 implementation began before this document's own §D instruction ("Do not
+> start implementation until this milestone has been reviewed and approved
+> by the CTO") was formally satisfied. That sequencing gap, and the CTO's
+> one-time retroactive exception for the resulting implementation, are
+> recorded in
+> [`29_M7_Streaming_Lifecycle_Test_Hardening_Implementation_Report.md`](29_M7_Streaming_Lifecycle_Test_Hardening_Implementation_Report.md)
+> §6–§7. This document's own account of events above is unchanged and
+> remains the historical record of what was recommended and when.
+
 ---
 
 ## Method
