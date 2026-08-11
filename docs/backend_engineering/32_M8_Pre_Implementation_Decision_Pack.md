@@ -181,6 +181,7 @@ prefix — matching `companies`, `filings`, `filing_chunks`, `reports`,
 | `currency` | string, ISO 4217 | Sourced from `.info.financialCurrency` (Document 31 §6's recommendation over `.info.currency`); document-level context (§D) |
 | `source` | `"yfinance"` | Matches existing `filings.source` convention |
 | `fetched_at` | ISO-8601 datetime string | Matches existing convention |
+| `metrics` | array of metric objects | Contains the persisted financial line items; each metric contains `canonical_metric`, `provider_label`, `value`, and `unit` as defined in §2.D |
 
 **`period_duration` — recommend dropping as a stored field (reasoning
 revised per CTO review).** ADR-029 §6.2 proposed it to guard against a TTM
@@ -436,49 +437,77 @@ below, exist to prevent exactly that collapse) — how that boundary gets
 implemented (a separate small tracking structure, a status alongside the
 document, or something else) is left to implementation.
 
-**Recommended: a minimal three-state acquisition status, evaluated per
-`(ticker, period_type, period_end, statement_type)` combination — the same
-identity ADR-029 §8 already fixed for the statement document itself:**
+**Original proposal in this document (superseded — see below): a minimal
+three-state acquisition status, evaluated per `(ticker, period_type,
+period_end, statement_type)` combination — the same identity ADR-029 §8
+already fixed for the statement document itself.**
 
 | State | Meaning |
 |---|---|
-| **not yet acquired** | No fetch attempt has been made for this combination yet |
+| **not yet acquired** | No fetch attempt has been made for this identity yet |
 | **available** | A fetch succeeded and returned usable data — the statement document exists with a populated `metrics[]` |
-| **confirmed unavailable** | A fetch was attempted and the provider explicitly returned no data for this combination (an empty DataFrame, per Document 31 §9 — not an exception, not a timeout) |
+| **confirmed unavailable** | A fetch was attempted and the provider explicitly returned no data for this identity (an empty DataFrame, per Document 31 §9 — not an exception, not a timeout) |
 
-This is proposed as a **status concept**, not a mandated storage
-mechanism — whether it's a field on a (possibly minimal) placeholder
-document, a separate small tracking structure, or something else is an
-implementation-time modeling choice, not fixed here. What this document
-does fix is that the distinction between these three states must be
-representable and must not collapse into a single "no document" case,
-which would make "haven't tried yet" indistinguishable from "tried and
-confirmed nothing exists" — a real ambiguity the original open-ended
-proposal risked.
+This document originally left the acquisition-status *identity/grain*
+itself as, in effect, an open recommendation rather than a fixed
+decision — it fixed only that the three states above must be
+representable and must not collapse into a single "no document" case
+(which would make "haven't tried yet" indistinguishable from "tried and
+confirmed nothing exists"). **Document 34 subsequently flagged the
+`period_end`-inclusive identity above as R10 — a granularity mismatch
+against Document 33's per-statement-type response shape.** **Document 35
+§6 evaluated company-level, period-level, and statement-type-level
+alternatives and definitively resolved R10**, rejecting period-level
+granularity (it would require an aggregation rule the architecture has
+no evidence to define, and doesn't correspond to an independently
+executable provider operation) in favor of statement-type-level:
 
-**Interaction with other decided architecture:**
-- **Cold start** (ADR-029 §8): a ticker/period/statement combination in
-  the **not yet acquired** state is exactly what triggers the "controlled
-  initial acquisition path" ADR-029 already established (and explicitly
-  did not design the mechanism for) — this section doesn't change that,
-  it just names the state that triggers it.
+**Current, ratified `AcquisitionState` identity (Document 35 §6):**
+`(ticker, period_type, statement_type)` — **`period_end` is not part of
+the `AcquisitionState` identity.** The earlier period-level formulation
+above is therefore superseded and must not be used as the implementation
+identity.
+
+This does not change `FinancialStatement` itself: `period_end` remains a
+valid, required `FinancialStatement` field (§2.B) — individual financial
+statements are period-specific, and ADR-029 §8's `FinancialStatement`
+identity (`ticker + period_type + period_end + statement_type`) is
+unaffected. The correction applies only to the separate
+`AcquisitionState` entity's own identity, per the boundary this section
+already establishes (`FinancialStatement data ≠ Acquisition lifecycle
+state`, above). The storage mechanism for `AcquisitionState` — whether a
+field on a placeholder document, a separate small tracking structure, or
+something else — remains an implementation-time modeling choice, not
+fixed by Document 35 §6 or here.
+
+**Interaction with other decided architecture (stated at the ratified
+`AcquisitionState` grain — `ticker, period_type, statement_type`, no
+`period_end`):**
+- **Cold start** (ADR-029 §8): a `ticker`/`period_type`/`statement_type`
+  identity in the **not yet acquired** state is exactly what triggers the
+  "controlled initial acquisition path" ADR-029 already established (and
+  explicitly did not design the mechanism for) — this section doesn't
+  change that, it just names the state that triggers it.
 - **Freshness / serve-then-refresh-async** (ADR-029 §8): only applies to
   the **available** state — there is nothing to "serve stale, refresh
-  async" for a combination that's **not yet acquired** (nothing persisted
+  async" for an identity that's **not yet acquired** (nothing persisted
   to serve) or **confirmed unavailable** (refreshing wouldn't change a
   provider-side absence without new evidence prompting a re-check).
 - **`RELIANCE.NS` `.quarterly_cashflow` (Document 31 §9)** is the concrete
   example of **confirmed unavailable** — the fetch was attempted, no
   exception occurred, and the provider returned a genuinely empty
-  `(0, 0)` DataFrame. Under this scheme, that combination would be marked
-  confirmed unavailable rather than silently absent, which is precisely
-  what lets the frontend's `StatementTable` "Partial Failure" state
-  (ADR-029 §6.5) distinguish "this statement type is unavailable for this
-  company" from "we haven't checked yet" or a transient fetch problem.
+  `(0, 0)` DataFrame. Under this scheme, that `ticker`/`period_type`/
+  `statement_type` identity would be marked confirmed unavailable rather
+  than silently absent, which is precisely what lets the frontend's
+  `StatementTable` "Partial Failure" state (ADR-029 §6.5) distinguish
+  "this statement type is unavailable for this company" from "we haven't
+  checked yet" or a transient fetch problem.
 
 **Not implemented here** — no field, document shape, or code exists yet;
-this section only resolves the *semantic* question the CTO's review
-flagged, per the explicit instruction not to design or implement it.
+this section resolves the *semantic* question the CTO's review flagged,
+and records that Document 35 §6 subsequently resolved the identity/grain
+question R10 raised — neither is a new decision made by this
+synchronization.
 
 ---
 
@@ -501,7 +530,7 @@ at all — a different, later authorization).
 | 7 | Migration numbering | `m0006` | **DECIDED** — formal ratification occurs with final pack approval |
 | 8 | BSE/NSE v1 policy | yfinance-only, no PDF fallback | **DECIDED** — formal ratification occurs with final pack approval |
 | 9 | Canonical vocabulary governance | Five-step process; mappings reviewed/approved through the Backend & AI architecture/data-governance review process; versioned artifact; no recurring per-mapping CTO approval; material changes escalate | **DECIDED** — CTO approves the governance model, not each future mapping |
-| 10 | Data-availability/acquisition state | Three-state model, explicitly separate from `FinancialStatement` persistence | **DECIDED** (semantic only, nothing implemented) |
+| 10 | Data-availability/acquisition state | Three-state model, explicitly separate from `FinancialStatement` persistence. Identity/granularity subsequently resolved by Document 35 §6 as `(ticker, period_type, statement_type)` — no `period_end` | **DECIDED** — states and identity/granularity both settled (states here; granularity via Document 35 §6); repository/schema/code mechanism remains implementation-level work, nothing implemented |
 | 11 | `GET /companies/{ticker}/financials` route | Proposed shape only | **SEPARATE FUTURE GATE** — not part of this pack's approval; needs its own API-contract review (ADR-029 §9/§18) |
 | 12 | This decision pack as a whole | — | **REQUIRES FINAL APPROVAL** |
 
@@ -514,8 +543,14 @@ at all — a different, later authorization).
 - **Per-metric `unit` semantics:** DECIDED; implementation
   (parsing/assigning `unit` per canonical metric) remains **unauthorized**.
 - **Acquisition-state semantics:** DECIDED (three states, conceptually
-  separate from `FinancialStatement` data); the implementation mechanism
-  is intentionally unspecified and remains **unauthorized**.
+  separate from `FinancialStatement` data). **Acquisition-state identity
+  granularity is also DECIDED — resolved by Document 35 §6 as `(ticker,
+  period_type, statement_type)`, without `period_end`**, superseding this
+  document's original period-level formulation (§4). Remaining
+  implementation work concerns the concrete persistence mechanism,
+  repository behavior, schema/index details, and integration with the
+  ratified orchestration architecture (Document 36) — all of which remain
+  **unauthorized**.
 - **Canonical vocabulary governance:** DECIDED; the actual mappings
   remain future work under that governance model — none exist yet.
 - **Restatement policy:** DECIDED (latest-provider-value-wins); formal

@@ -16,6 +16,35 @@ proposed in [`30_ADR_Proposal_M8_Financial_Statements_Data_Model.md`](30_ADR_Pro
 subsequently decided (currency/unit model §2.D, acquisition state §4,
 canonical metric shape §3) — Document 32 is treated as authoritative
 wherever this document and the older ADR-029 §9 text diverge.
+**Governance reopening (2026-08-10):** previously frozen; **narrowly
+reopened** solely to govern one additional endpoint,
+`POST /companies/{ticker}/financials/acquire` — see "Amendment —
+Financials Acquisition Request Endpoint" near the end of this document.
+This reopening does not change the `GET` contract's own status above,
+does not authorize implementation of either endpoint, and does not
+touch any other provision of this document.
+**`POST .../acquire` contract status:** 🟢 **CTO APPROVED.** The
+endpoint's wire-level contract (path, method, parameters, response
+envelope, outcome enumeration/precedence, HTTP status, external error
+contract) is fully frozen (Amendment §1-§17 below) — no field, status
+code, or semantic in that contract remains undesigned, no further,
+separate API Contract Review gate follows it, and it has received final
+CTO approval (Amendment §17 step 5). This status is distinct from, and
+does not alter, the `GET` contract's own status line above. Approval of
+this contract does not by itself authorize implementation — see
+Amendment §18.
+
+**Governance status ledger:**
+
+| Item | Status |
+|---|---|
+| Document 35 (M8 Acquisition-State Architecture) | 🟢 RATIFIED |
+| Document 36 (M8 Acquisition Orchestration Architecture) | 🟢 RATIFIED |
+| Document 37 (Financials Acquisition Request Endpoint Proposal) | 🟢 CTO APPROVED |
+| Document 33 narrow reopening | 🟢 COMPLETE |
+| Document 33 `POST .../acquire` API contract | 🟢 CTO APPROVED |
+| Document 33 `GET /financials` API contract | 🟡 unchanged from Round 4 — awaiting final CTO approval, not resolved by this reopening |
+| M8 implementation | 🔴 BLOCKED |
 
 > **Revision, Round 2 — CTO-directed API contract amendment (2026-08-10):**
 > the CTO reviewed the initial review (Round 1, same day) and issued
@@ -64,6 +93,24 @@ wherever this document and the older ADR-029 §9 text diverge.
 > must not invent such a mechanism; a separately approved architecture
 > must provide the canonical acquisition-state source before the endpoint
 > implementation relies on it.
+>
+> **Revision, Round 5 — CTO-directed narrow governance reopening
+> (2026-08-10):** the CTO ratified [`35_M8_Acquisition_State_Architecture_Decision.md`](35_M8_Acquisition_State_Architecture_Decision.md)
+> and [`36_M8_Acquisition_Orchestration_Architecture.md`](36_M8_Acquisition_Orchestration_Architecture.md)
+> in full, approved [`37_Document33_Amendment_Financials_Acquisition_Request_Endpoint.md`](37_Document33_Amendment_Financials_Acquisition_Request_Endpoint.md)'s
+> governance proposal, and explicitly authorized reopening this document
+> **narrowly** to govern exactly one additional endpoint,
+> `POST /companies/{ticker}/financials/acquire` — see the "Amendment —
+> Financials Acquisition Request Endpoint" section below. **This
+> reopening does not touch, reinterpret, or reduce the approval status
+> of `GET /companies/{ticker}/financials`'s existing contract** — every
+> decision in §1-§10, the Proposed Frozen Contract, and the Final
+> Recommendation above remains exactly as Round 4 left it, including its
+> own still-open "awaiting final CTO approval" status, which this
+> amendment does not resolve one way or the other. This reopening also
+> does **not** authorize implementation of either endpoint — the next
+> mandatory gate is a separate API Contract Review of the new endpoint's
+> wire-level schema.
 
 ---
 
@@ -575,12 +622,403 @@ approved for implementation.
 
 ---
 
+## Amendment — Financials Acquisition Request Endpoint
+
+### 1. Governance status
+
+**Document 33 — previous status:** frozen, governing exactly one
+endpoint (`GET /companies/{ticker}/financials`, §1-§10 above,
+unchanged by this amendment).
+
+**Document 33 — new status:** **narrowly reopened**, solely to govern
+one additional endpoint: `POST /companies/{ticker}/financials/acquire`.
+No other provision of this document is reopened, reworded, or
+reinterpreted by this amendment. That endpoint's wire-level contract is
+now **complete** (§17) and 🟢 **CTO APPROVED** (§17 step 5).
+
+**This narrow reopening does not authorize implementation.** Document
+35 (M8 Acquisition-State Architecture) and Document 36 (M8 Acquisition
+Orchestration Architecture) remain ratified and unchanged. Document 37
+(the governance proposal this amendment formalizes) remains approved
+and unchanged. `GET /financials`'s existing contract remains frozen
+exactly as Round 4 left it. Only this one additive endpoint is being
+introduced into Document 33's governance scope.
+
+### 2. Purpose
+
+`POST /companies/{ticker}/financials/acquire` is **an explicit request
+to initiate or ensure acquisition of the financial data implied by the
+requested company and period type.** It is not a retry API, a
+force-refresh API, a provider-selection API, a status API, an
+acquisition-history API, a job-management API, a general
+acquisition-management API, or a direct provider API. Internal
+orchestration — who actually calls the provider, when, and how failures
+are retried — remains entirely governed by Document 36 and is not
+redefined here.
+
+### 3. Endpoint definition
+
+```
+METHOD:            POST
+PATH:              /companies/{ticker}/financials/acquire
+AUTHENTICATION:    current_user (identical to GET /financials)
+AUTHORIZATION:     same resource-ownership/access boundary as
+                   GET /financials — none beyond authentication;
+                   shared corpus, no per-user ownership dimension
+QUERY:             period_type = annual | quarterly - REQUIRED, no default
+BODY:              none
+VERSIONING:        existing unversioned /api/... convention (unchanged)
+```
+
+### 4. Request semantics
+
+For `(ticker, period_type)`, the request concerns the three statement
+identities `income`, `balance_sheet`, `cash_flow` implied by that pair
+— the same batch scope Document 36 §5 already established for this
+trigger. **`statement_type` is not exposed as a request parameter** —
+doing so would expose internal acquisition granularity beyond what this
+governance amendment authorizes. Only identities currently
+`not_yet_acquired` are submitted to the shared acquisition use case
+(Document 35/36, unchanged): an identity already `available` is not
+reacquired; an identity already `confirmed_unavailable` is not
+refreshed (a deliberate re-check remains a separate, out-of-scope
+refresh-policy question, ADR-029 §18 item 4). No new acquisition state
+is introduced, and the three-state model ratified by Document 35 is not
+altered in any way.
+
+### 5. Response semantics — frozen wire-level envelope
+
+**The response body is frozen as exactly these three fields, no more:**
+
+```json
+{
+  "ticker": "AAPL",
+  "period_type": "annual",
+  "outcome": "requested"
+}
+```
+
+| Field | Contract |
+|---|---|
+| `ticker` | Normalized uppercase ticker, echoing the requested path parameter. Contains no new state information — a pure echo |
+| `period_type` | Echoes the required request parameter — exactly one of `annual`, `quarterly` |
+| `outcome` | Exactly one of `requested` \| `available` \| `confirmed_unavailable` \| `mixed` (§6) |
+
+**No other response field is introduced.** This response body explicitly
+does **not** expose: `acquisition_state` as a top-level response field;
+task IDs; job IDs; attempt IDs; retry counts; provider names; lock
+state; worker state; timestamps; provider errors; or internal
+persistence details of any kind.
+
+**`requested` means only that the acquisition request was accepted for
+processing.** It does **not** imply that a new task was definitely
+created, that acquisition definitely started, that acquisition
+succeeded, that no other acquisition attempt was already running, or
+that eventual availability is guaranteed. The response does not expose
+internal task/lock state — the endpoint remains a request trigger, not
+a status endpoint.
+
+### 6. Response precedence
+
+Evaluated in this exact deterministic order over the relevant
+identities implied by `(ticker, period_type)`:
+
+1. **If any relevant identity is `not_yet_acquired` then outcome =
+   `requested`.** Takes precedence over every other case.
+2. **Else if all relevant identities are `available` then outcome =
+   `available`.**
+3. **Else if all relevant identities are `confirmed_unavailable` then
+   outcome = `confirmed_unavailable`.**
+4. **Otherwise outcome = `mixed`.**
+
+No alternative precedence rule and no additional public state are
+introduced.
+
+**Example A — rule 1 applies (`requested`):**
+
+```
+Request:  POST /companies/AAPL/financials/acquire?period_type=annual
+
+Response: HTTP 200
+{
+  "ticker": "AAPL",
+  "period_type": "annual",
+  "outcome": "requested"
+}
+```
+
+Underlying state: `income = available, balance_sheet = not_yet_acquired,
+cash_flow = confirmed_unavailable`. Meaning: at least one relevant
+identity was `not_yet_acquired` and the request was accepted for
+processing. **This does NOT guarantee that a new task was created or
+that acquisition has started** (§5).
+
+**Example B — rule 2 applies (`available`):**
+
+```
+Response: HTTP 200
+{
+  "ticker": "AAPL",
+  "period_type": "annual",
+  "outcome": "available"
+}
+```
+
+Underlying state: all relevant identities are already `available`.
+Meaning: all relevant identities are already `available` — nothing was
+scheduled.
+
+**Example C — rule 4 applies (`mixed`):**
+
+```
+Response: HTTP 200
+{
+  "ticker": "AAPL",
+  "period_type": "annual",
+  "outcome": "mixed"
+}
+```
+
+Underlying state: `income = available, balance_sheet = available,
+cash_flow = confirmed_unavailable`. Meaning: no identity remains
+`not_yet_acquired`, but the terminal states present contain a
+combination of `available` and `confirmed_unavailable`.
+
+### 7. HTTP status — frozen
+
+**Success status: 200.** No `202 Accepted` pattern exists anywhere in
+this codebase today, and every existing fire-and-forget `POST` in this
+backend (`/reports/generate`, `/learning/explain`) already returns 200
+with a small acknowledgment body — 200 matches existing convention and
+does not imply a trackable resource this endpoint deliberately doesn't
+expose. This is the frozen wire-level HTTP contract for this endpoint's
+success case — not subject to a further, separate contract review (§17).
+
+### 8. Error semantics — frozen external error contract
+
+Reuses the existing `domain/errors.py` error hierarchy exactly (§5
+above, unchanged) — no new public error class is introduced:
+
+| Status | Case |
+|---|---|
+| **401** | Authentication failure |
+| **422** | Malformed ticker, missing `period_type`, invalid `period_type`, or otherwise malformed request |
+| **429** | Rate limited |
+| **502** | Synchronous infrastructure failure encountered while processing the request |
+
+**Explicit asynchronous-provider-failure boundary:** provider failures
+occurring *after* the acquisition request has been accepted are **not**
+part of this POST response contract. The request is answered
+synchronously, before any provider call runs (Document 36 §9.3's
+fire-and-forget model, unchanged) — a timeout, exception, malformed
+response, or rate limit encountered by the *asynchronous* acquisition
+attempt is never surfaced through this endpoint's response. Such
+outcomes are observed later, exclusively through
+`GET /companies/{ticker}/financials` (§3/§4 above, unchanged). This
+endpoint's error contract governs only failures in *accepting* the
+request, never failures in the acquisition attempt itself.
+
+This is the frozen external error contract for this endpoint.
+
+### 9. Unknown ticker behavior
+
+A malformed ticker produces **422**. A syntactically valid ticker that
+is unknown to AlphaScribe **may be accepted** — the request is not
+rejected merely because the ticker has never been seen before; the
+eventual acquisition processing (Document 36) determines the outcome.
+**Ticker existence is intentionally not validated as a prerequisite to
+accepting the acquisition request.** No mandatory preliminary
+company-existence lookup is introduced merely to validate the request —
+this mirrors §5 row 5's existing `GET /filings` precedent exactly.
+
+### 10. Idempotency / deduplication
+
+Repeated requests for the same acquisition target must not create
+uncontrolled duplicate acquisition work. The endpoint may fold into the
+existing shared acquisition mechanism and its in-process deduplication
+(Document 36 §9-§11, unchanged) — but **"accepted for processing" is an
+acknowledgment of the request only and does not guarantee that a new
+internal task was created.** No internal lock/task state is exposed
+through the API. No second idempotency system is introduced — Document
+35's AS-4 remains the sole correctness guarantee under concurrency,
+unchanged.
+
+### 11. Rate limiting
+
+Proposed protection: key by `user + ticker + period` (e.g.
+`acquire:{user_id}:{ticker}:{period_type}`), reusing the existing
+in-memory rate-limiter pattern (`agents/auth.py`'s
+`is_rate_limited`/`record_hit`) — no new infrastructure, no Redis. **This
+is explicitly not a global acquisition budget** — it does not by itself
+prevent a user from requesting acquisition across many unrelated
+tickers in quick succession; a global budget, if ever needed, is a
+separate implementation/operational question not designed by this
+amendment. Rate limiting itself is not implemented by this task — the
+existing backend security/rate-limit architecture is referenced only as
+the future implementation basis.
+
+### 12. Authentication / authorization
+
+Identical to `GET /financials`: `current_user` required; no additional
+authorization dimension exists because this data has no per-user
+ownership boundary (shared corpus, `08` RI-5 / `10` SI-1, unchanged). No
+new authorization model is introduced.
+
+### 13. Security invariants
+
+- Authentication required, identical to `GET /financials`.
+- Authorization follows the same existing resource-access boundary —
+  none beyond authentication.
+- Acquisition cannot be triggered for an "unauthorized" resource because
+  no per-user resource-ownership dimension exists on this data.
+- Provider credentials remain internal — not applicable today (yfinance
+  and the BSE fetch path remain credential-free, Document 36 §3/§19,
+  unchanged); forward-looking guidance only if a future provider ever
+  requires one.
+- Orchestration internals (provider selection, retry/backoff, worker/
+  lock state, attempt history) remain private — never exposed through
+  this endpoint's response.
+- The cache-ownership invariant (SI-1) is unaffected — unchanged.
+- `GET /financials` cannot bypass this endpoint's authorization, and
+  this endpoint cannot bypass `GET /financials`'s — the two are
+  independent, identically-authenticated endpoints with no shared
+  bypass surface.
+
+### 14. Observability
+
+References the already-approved M6 observability architecture — not
+modified by this amendment. A future implementation would be observable
+through the existing infrastructure: the existing correlation-ID/
+structured-logging middleware; a request-outcome metric (following the
+existing `llm_calls_total`-style labeled-counter convention); tracing
+via the existing `get_tracer()` helper; structured logging, server-side
+only. **No acquisition/job identifier or other internal telemetry is
+exposed through the public response** (§5, §10 above) — consistent with
+this endpoint remaining a request trigger, not a status endpoint.
+
+### 15. GET /financials preservation
+
+`GET /companies/{ticker}/financials`'s existing contract (§1-§10 above)
+is **entirely unchanged** by this amendment. It remains:
+
+- strictly read-only;
+- never triggering acquisition, synchronously or asynchronously;
+- never scheduling acquisition;
+- never mutating acquisition state;
+- never invoking a provider;
+- governed by its existing authentication (`current_user`) and
+  authorization (none beyond authentication) exactly as §7 above states;
+- governed by its existing response contract (§3 above) exactly as
+  written;
+- governed by its existing error semantics (§5 above) exactly as
+  written.
+
+This amendment introduces an additive endpoint alongside `GET
+/financials`; it does not modify, reinterpret, or weaken `GET
+/financials`'s contract in any respect.
+
+### 16. Rejected alternatives
+
+Carried forward from Document 37's approved evaluation:
+
+- **GET-triggered acquisition** — rejected. This is what Document 36
+  Round 1 proposed and the CTO rejected outright; `GET /financials`
+  remains strictly read-only, unconditionally, under this amendment.
+- **Frontend-only retry** — rejected as a complete solution. Client
+  polling with no backend endpoint to call has nothing to invoke;
+  Document 36 §9.2/§12 establish polling as observation, not retry —
+  this endpoint is the explicit request polling alone cannot provide.
+- **Automatic background acquisition without explicit request** (a
+  scheduler, Document 36 §4.6) — not rejected outright; named as the
+  fallback if this endpoint proves insufficient, and a plausible future
+  backstop regardless. Not proposed here because it requires new
+  infrastructure (a periodic loop) not currently justified by evidence
+  — the dedicated endpoint is the narrower, already-precedented option.
+- **General acquisition-management API** (status, history, retry-control,
+  provider-selection endpoints) — rejected explicitly and repeatedly
+  throughout this amendment (§2, §5, §10 above) — directly contrary to
+  the narrow scope this governance reopening authorizes.
+
+### 17. Governance sequence — this document is the API Contract Review
+
+**This amendment section is itself the API Contract Review artifact for
+`POST /companies/{ticker}/financials/acquire`.** No further, separate
+"API Contract Review" gate follows it. The governance sequence, updated
+to reflect that:
+
+1. Document 36 CTO ratification — **COMPLETE.**
+2. Document 37 CTO approval — **COMPLETE.**
+3. Document 33 narrow governance reopening — **COMPLETE.**
+4. Document 33 API contract (this section, §1-§16 above) — **COMPLETE**
+   after this final freeze: exact path, method, request parameter,
+   request-body rule, authentication rule, response JSON schema (§5),
+   outcome enumeration and precedence (§6), concrete response examples
+   (§6), HTTP status (§7), and external error contract (§8) are all
+   frozen.
+5. CTO final approval of this contract — **COMPLETE.**
+6. Implementation may be **separately** authorized — subject to the
+   acquisition-state-provider dependency (§18 below, unchanged from
+   §4's "Contract Dependency — Acquisition-State Provider").
+
+**Step 5 is granted. Until step 6's dependency is satisfied and
+implementation is separately authorized, M8 implementation remains
+BLOCKED.**
+
+### 18. Implementation authorization boundary
+
+This amendment is a **governance/documentation artifact only.** It does
+not authorize: production implementation; backend code changes;
+frontend changes; tests; MongoDB schema changes; Redis changes;
+repository implementation; provider implementation; acquisition-worker
+implementation; orchestration implementation; or API deployment. No
+endpoint was implemented, no route was registered, and
+`test_route_inventory.py`'s frozen `APPROVED_ROUTES` set was not
+touched to produce this amendment.
+
+**Even with this contract now complete and CTO-approved (§17),
+implementation requires all of:**
+
+1. **Final CTO approval of this contract** (§17 step 5 — complete).
+2. **The canonical acquisition-state-provider dependency satisfied** —
+   unchanged from §4's "Contract Dependency — Acquisition-State
+   Provider," which this endpoint relies on exactly as `GET /financials`
+   already does: either an already-approved architecture provides the
+   canonical acquisition-state source, or a separate architecture
+   decision defines it. This dependency is **not removed or weakened**
+   by completing this endpoint's wire contract — a complete API contract
+   is not a substitute for the underlying state source existing.
+3. **Explicit implementation authorization**, granted separately from
+   both of the above.
+
+Absent all three, M8 implementation remains **BLOCKED.**
+
+### 19. Amendment history
+
+| Round | Date | Action |
+|---|---|---|
+| - | 2026-08-10 | Document 37 (governance proposal) drafted, reviewed through four correction rounds, and CTO-approved |
+| 1 | 2026-08-10 | This amendment added to Document 33, narrowly reopening governance for `POST /companies/{ticker}/financials/acquire` only. `GET /financials`'s existing contract (§1-§10 above) left entirely unchanged |
+| 2 | 2026-08-10 | Final freeze: response envelope (§5), response examples (§6), HTTP status (§7), and external error contract (§8) all frozen; the "API Contract Review" gate folded into this document itself (§17); acquisition-state-provider dependency explicitly restated (§18) |
+
+---
+
 *Companion documents:
 [`30_ADR_Proposal_M8_Financial_Statements_Data_Model.md`](30_ADR_Proposal_M8_Financial_Statements_Data_Model.md) §9/§18 ·
 [`32_M8_Pre_Implementation_Decision_Pack.md`](32_M8_Pre_Implementation_Decision_Pack.md) (CTO-approved architecture this amendment builds on, unmodified) ·
-[`10_Backend_Security_Architecture.md`](10_Backend_Security_Architecture.md) §4.5 (SI-1).*
+[`10_Backend_Security_Architecture.md`](10_Backend_Security_Architecture.md) §4.5 (SI-1) ·
+[`35_M8_Acquisition_State_Architecture_Decision.md`](35_M8_Acquisition_State_Architecture_Decision.md) (ratified, unmodified — governs the "Amendment" section above) ·
+[`36_M8_Acquisition_Orchestration_Architecture.md`](36_M8_Acquisition_Orchestration_Architecture.md) (ratified, unmodified — the "Amendment" section above operationalizes its §4.4) ·
+[`37_Document33_Amendment_Financials_Acquisition_Request_Endpoint.md`](37_Document33_Amendment_Financials_Acquisition_Request_Endpoint.md) (CTO-approved governance proposal this "Amendment" section formalizes, unmodified).*
 
 *This is a documentation-only amendment. No endpoint, repository, schema,
-migration, or frontend code was implemented. M8 implementation and
-implementation planning remain gated pending final CTO review of this
-contract.*
+migration, or frontend code was implemented. The `POST .../acquire`
+contract has received final CTO approval (§17 step 5); M8 implementation
+and implementation planning remain gated on the acquisition-state-
+provider dependency (§18) and a separate implementation authorization.
+The "Amendment — Financials Acquisition Request Endpoint" section above
+narrowly reopens this document's governance for exactly one additional
+endpoint and completes and CTO-approves that endpoint's wire-level API
+contract (§17) — it does not itself authorize implementation of either
+endpoint. No further, separate "API Contract Review" gate follows this
+document; the remaining steps are the acquisition-state-provider
+dependency (§18) and a separate implementation authorization.*
