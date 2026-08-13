@@ -1,11 +1,15 @@
 # Document 33 Amendment — Financials Acquisition Request Endpoint
 
-**Status:** 🟡 **PROPOSED — AWAITING CTO APPROVAL.** This is a
-**governance amendment proposal**, not an amendment itself. It does not
-modify Document 33, Document 35, or Document 36. If approved, Document
-33 would be updated separately, narrowly, to incorporate the contract
-proposed here — that update is not performed by this document.
-**Date:** 2026-08-10
+**Status:** 🟢 **CTO APPROVED.** See the Governance Addendum near the end
+of this document for the approval record. This document was originally
+submitted as a **governance amendment proposal**, not an amendment
+itself, and previously awaited CTO approval; that approval is now
+recorded. It does not itself modify Document 33, Document 35, or
+Document 36 — the narrow amendment to Document 33 incorporating the
+contract proposed here was performed separately (see
+[`33_M8_Financials_API_Contract_Review.md`](33_M8_Financials_API_Contract_Review.md)'s
+own Amendment section).
+**Date:** 2026-08-10 · **Approved:** 2026-08-12
 **Proposed following:** the CTO's recommendation to reopen Document 33's
 governance scope, as contemplated by Document 36 §4.4 step 2. **Formal
 reopening remains subject to explicit CTO approval recorded
@@ -345,7 +349,12 @@ the authoritative record of where this proposal sits within it):**
 5. Only after step 4's approval may implementation begin.
 
 **This document is a recommendation submitted for step 2 — it is not
-itself step 2.** Steps 2-5 all remain outstanding.
+itself step 2.** Steps 2-5 all remain outstanding as of this document's
+original submission (2026-08-10). **Status update, not a rewrite of the
+above:** step 2 (this document's own approval) is now recorded — see the
+Governance Addendum below. Steps 3-4 were subsequently completed via
+Document 33's own Amendment section (narrow reopening and frozen POST
+contract). Step 5 (implementation authorization) remains outstanding.
 
 ### Existing frozen rule
 
@@ -477,7 +486,36 @@ gap without expanding into a general acquisition-management surface.
 narrowly for this one endpoint's contract (governance step 2, above). It
 does not itself grant that approval, does not freeze the endpoint's
 wire-level schema, and does not authorize implementation.** Steps 2-5 of
-the governance sequence above all remain outstanding.
+the governance sequence above all remained outstanding as of this
+recommendation's original submission — see the Governance Addendum
+immediately below for the current, post-approval status.
+
+## Governance Addendum — CTO Approval Record
+
+**Decision:** 🟢 CTO APPROVED
+
+**Date:** 2026-08-12
+
+**Scope:** Narrow API-governance amendment for
+`POST /companies/{ticker}/financials/acquire` as defined by this
+document and reflected in the frozen POST contract in Document 33.
+Approved contract characteristics: POST method; the
+`/companies/{ticker}/financials/acquire` path; required `period_type`
+query parameter; no request body; `requested`/`available`/
+`confirmed_unavailable`/`mixed` outcomes; deterministic precedence
+behavior; the documented 200/401/422/429/502 status semantics; the
+explicitly asynchronous provider-failure boundary; a response computed
+from state at request time only.
+
+**CTO Determination:** The CTO approves the narrow API-governance
+amendment proposed in this document. The endpoint contract represented
+by this proposal is accepted as the approved POST acquisition contract,
+subject to the existing architecture and governance boundaries
+established by Documents 32, 35, 36, and 38. This approval does not
+authorize implementation, production code changes, database changes,
+migrations, frontend implementation, or deployment, and does not reopen
+Document 33's `GET /financials` contract. Implementation remains subject
+to the separate M8 implementation-readiness/authorization gate.
 
 ---
 

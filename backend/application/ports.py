@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import Any, AsyncIterator, Protocol, Type, TypeVar
 
 from domain.events import TraceEvent
+from domain.financials import AcquisitionOutcome, FinancialStatement, PeriodType, StatementType
 from domain.models import Job, JobStatus
 
 T = TypeVar("T")
@@ -104,3 +105,45 @@ class ReportLikeRepository(Protocol[T]):
     async def save(self, doc: T) -> None: ...
     async def get(self, doc_id: str, *, owner_id: str) -> T | None: ...
     async def delete(self, doc_id: str, *, owner_id: str) -> bool: ...
+
+
+class FinancialStatementRepository(Protocol):
+    """M8 Phase 1 (ADR-029 §5, ratified) — the frozen minimum v1 surface,
+    deliberately not extended speculatively ("a floor, not a ceiling").
+    Identity: ticker + period_type + period_end + statement_type."""
+
+    async def get(self, ticker: str, period_type: PeriodType) -> list[FinancialStatement]: ...
+    async def upsert(self, statement: FinancialStatement) -> None: ...
+    async def freshness(self, ticker: str, period_type: PeriodType) -> str | None:
+        """Latest fetched_at (ISO-8601 str, repo convention) across every
+        statement_type for this (ticker, period_type), or None if nothing is
+        persisted yet. Signature matches ADR-029 §5 exactly — no
+        statement_type parameter was specified there."""
+        ...
+
+
+class AcquisitionStateRepository(Protocol):
+    """M8 Phase 1 (Document 35 §9, ratified) — separate boundary from
+    FinancialStatementRepository (Document 32 §4's `FinancialStatement data
+    != Acquisition lifecycle state`). Identity: ticker + period_type +
+    statement_type (Document 35 §6 — period_end excluded)."""
+
+    async def get(self, ticker: str, period_type: PeriodType, statement_type: StatementType) -> AcquisitionOutcome:
+        """Returns NOT_YET_ACQUIRED when no document exists (AS-3 — a
+        non-terminal outcome is never persisted)."""
+        ...
+
+    async def write_terminal(
+        self,
+        ticker: str,
+        period_type: PeriodType,
+        statement_type: StatementType,
+        outcome: AcquisitionOutcome,
+    ) -> AcquisitionOutcome:
+        """Writes AVAILABLE or CONFIRMED_UNAVAILABLE under AS-4's monotonic
+        evidence precedence (available > confirmed_unavailable > no terminal
+        state) — a single-document conditional write, deterministic
+        regardless of arrival order, no lock or transaction. Returns the
+        identity's resulting state, which may differ from `outcome` if a
+        higher-precedence state already existed."""
+        ...

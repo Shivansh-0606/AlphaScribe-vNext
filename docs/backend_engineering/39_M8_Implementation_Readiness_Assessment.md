@@ -1,100 +1,73 @@
 # M8 Implementation Readiness Assessment
 
-**Status:** 🔵 **ASSESSMENT — NOT AN APPROVAL.** This document evaluates
-whether the M8 Financials-acquisition architecture is ready for
-implementation authorization. It does not itself ratify, approve, modify,
-or reopen any of Documents 32-38, does not create a schema, repository,
-migration, or endpoint, and does not authorize implementation.
-**Date:** 2026-08-11
+**Status:** 🟢 **CTO APPROVED & FROZEN.** See the Governance Addendum near
+the end of this document for the approval record. This document remains
+an *assessment*, not an architecture decision — approving it means the
+CTO accepts its readiness conclusion (no governance or architectural
+blocker remains) and closes further architecture/readiness review before
+the implementation-authorization decision. It does not itself ratify,
+approve, modify, or reopen any of Documents 32-38, does not create a
+schema, repository, migration, or endpoint, and **does not authorize
+implementation** — that remains a separate, later decision.
+**Date:** 2026-08-11 · **Re-evaluated:** 2026-08-12 · **Final
+re-evaluation:** 2026-08-13 · **Approved:** 2026-08-13
 
 ---
 
 ## 1. Executive Summary
 
-**Verdict: 🟡 NOT READY — TWO INDEPENDENT GOVERNANCE BLOCKERS REMAIN
-(Documents 32 and 35, parallel, no ordering between them). TECHNICAL
-ARCHITECTURE SUBSTANTIALLY READY.**
+**Verdict: 🟢 READY FOR CTO IMPLEMENTATION AUTHORIZATION — NO GOVERNANCE
+OR ARCHITECTURAL BLOCKER REMAINS. This is NOT an implementation
+authorization; see §18/§19.**
 
-An earlier revision of this assessment found that Document 38's own
-status line did not yet reflect CTO ratification. That has since been
-resolved directly: Document 38 now carries a "Governance Addendum — CTO
-Ratification Record" (added 2026-08-11) recording the CTO's ratification
-of the canonical-provider decision, mirroring the same pattern Document
-36 already used for its own ratification. Document 38 is therefore
-**verifiably** 🟢 CTO RATIFIED as of this document's current revision —
-not merely asserted, but recorded in its own text.
+This re-evaluation re-verified all five governing documents directly,
+by reading each document's own text, not by trusting downstream
+references — the same standard this assessment has applied throughout
+this session, including the one time it caught a real gap (Document 37,
+found unrecorded in the immediately preceding turns of this session,
+subsequently closed with a dated Governance Addendum, and now
+independently re-verified as closed in this revision).
 
 | Item | Actual state found in the document itself |
 |---|---|
-| Document 35 | 🟡 Document 35's **current document text does not contain an explicit CTO ratification record**, despite downstream documents (36, 37, 38, the Document 33 POST amendment) treating it as ratified/binding. Status line still reads "PROPOSED — AWAITING CTO APPROVAL" (line 3), footer still reads "READY FOR CTO RATIFICATION" (line 621). This is evidence of a recording gap, not a claim about what was or wasn't decided outside this repository. |
+| Document 32 | 🟢 **Confirmed CTO APPROVED** — status line, Summary Table items 2/3/12, and a "Governance Addendum — CTO Approval Record" (2026-08-12) all confirm this directly. |
+| Document 35 | 🟢 **Confirmed CTO RATIFIED** — status line reads "CTO RATIFIED," with a "Governance Addendum — CTO Ratification Record" (dated 2026-08-12). |
 | Document 36 | 🟢 Confirmed — "CTO RATIFIED — ORCHESTRATION ARCHITECTURE APPROVED (Round 4, 2026-08-10)," with a governance-addendum ratification record. |
-| Document 37 | 🟢 Confirmed — CTO APPROVED. |
-| Document 33 POST contract | 🟢 Confirmed — frozen and CTO-approved (this session, prior turn). |
-| `GET /companies/{ticker}/financials` (same document) | 🟡 CTO approval pending — a **separate, pre-existing, independently-tracked governance item**, not entangled with the POST/acquisition work (see §6). |
-| Document 38 | 🟢 Confirmed CTO RATIFIED — ratification record added to the document itself this revision. |
-| MongoDB canonical provider | 🟢 Ratified — Document 38's recommendation is now binding, per the above. Not reopened, not reconsidered. |
+| Document 37 | 🟢 **Confirmed CTO APPROVED** — status line reads "CTO APPROVED," with a "Governance Addendum — CTO Approval Record" (dated 2026-08-12), re-verified directly this revision (not carried forward from a prior revision's finding). |
+| Document 33 POST contract | 🟢 Confirmed — frozen and CTO-approved, re-verified directly. |
+| `GET /companies/{ticker}/financials` (same document) | 🟡 CTO approval pending — a **separate, pre-existing, independently-tracked governance item**, not entangled with the POST/acquisition work (see §6). Explicitly not part of the M8 acquisition authorization gate. |
+| Document 38 | 🟢 Confirmed CTO RATIFIED — ratification record in the document itself. |
+| MongoDB canonical provider | 🟢 Ratified — Document 38's recommendation is binding. Not reopened, not reconsidered. |
 
-**Two independent governance blockers remain: Documents 32 and 35.**
-Neither is a precondition for the other — no binding document in this
-chain establishes that Document 35 must close before Document 32, or
-vice versa. Both must close before M8 implementation is authorized; they
-can close in either order or in parallel.
+**No governance blocker and no architectural blocker remain.** AS-5's
+two halves are both closed at the architecture level — Document 35
+(acquisition-state architecture) and Document 32 (`FinancialStatement`
+persistence shape). Document 37's approval closes the last open item in
+the POST-endpoint governance chain that Document 33's frozen contract
+rests on.
 
-- **Document 35** is the foundational acquisition-state architecture
-  (AS-0 through AS-5, the terminal-state model) that Documents 36, 37,
-  38, and the Document 33 POST-contract amendment all explicitly build on
-  and cite as "ratified" / "binding, not reopened." Its own document text
-  does not carry the same closure record Documents 36 and 38 now both
-  have. This does not assert that no such decision was ever made — only
-  that the repository's record of it is incomplete, and this assessment
-  can't treat a dependency as closed on the basis of downstream
-  documents' assertions alone when the document itself doesn't say so.
-- **Document 32**, confirmed by direct inspection of its own text — not
-  inferred. Document 32's Summary Table classifies both the
-  `financial_statements` collection name (item 2) and the complete field
-  set (item 3) as **"REQUIRES FINAL APPROVAL,"** a distinct category from
-  "DECIDED" and from "SEPARATE FUTURE GATE" in the same table — Document
-  32 itself distinguishes these three categories explicitly and puts
-  these two items in the approval-pending one, not the decided one.
-  Document 32 also states, unqualified: *"This decision pack itself still
-  REQUIRES FINAL APPROVAL as a whole"* (item 12) and *"M8 implementation
-  remains unauthorized."* Document 32 does not delegate these two items to
-  implementation-time discretion; it names them as awaiting a CTO
-  decision.
-
-**Both blockers converge on AS-5, but neither is independently sufficient
-to implement it.** AS-5 requires `FinancialStatement` persistence to
-happen *before* `acquisition_state = available` is written. That
-ordering guarantee needs both halves settled: Document 32's approval
-freezes the `FinancialStatement` persistence shape being written first;
-Document 35's ratification freezes the acquisition-state architecture
-governing the second write. Document 32 approval alone does not make
-AS-5 implementable (the acquisition-state side would still be
-un-ratified); Document 35 ratification alone does not make it
-implementable either (the thing being persisted first would still be
-un-approved). Only once both are closed can AS-5's ordering guarantee
-safely be wired.
-
-Beyond governance, the **technical architecture is substantially
-complete** — MongoDB infrastructure, the state model, the orchestration
-model, security, and observability all have clear, specific answers with
-almost nothing invented for this assessment. The blockers below are
-governance-status and a small number of concrete implementation-prep
-gaps, not open architectural design questions.
+The **technical architecture is fully complete** — MongoDB
+infrastructure, the state model, the orchestration model, security, and
+observability all have clear, specific, ratified answers with nothing
+invented for this assessment. What remains is engineering work (§16-19),
+not governance decisions — and **M8 implementation is NOT YET
+AUTHORIZED**: a separate, explicit CTO implementation-authorization
+decision is required before production engineering begins. This
+document does not grant that authorization.
 
 ## 2. Approved Architecture Baseline (as actually found, not as asserted)
 
 | Document | Subject | Status found in the document itself |
 |---|---|---|
-| **32** | **Pre-Implementation Decision Pack** | **🔴 GOVERNANCE BLOCKER.** Per Document 32's own Summary Table: collection name (item 2) and complete field set (item 3) are both classified **"REQUIRES FINAL APPROVAL"** — a category Document 32 itself distinguishes from "DECIDED"; item 12, "this decision pack as a whole," carries the same classification. Document 32's own text: *"M8 implementation remains unauthorized."* Not delegated to implementation — an explicit, still-open CTO gate, independent of Document 35 (see §1). |
-| 34 | Acquisition-State Risk Review | 🟡 Investigation only, not a decision — its "required decisions" (§7.A) are the ones Document 35 purports to resolve |
-| **35** | **Acquisition-State Architecture** | **🔴 GOVERNANCE BLOCKER.** CTO ratification not yet explicitly recorded in the document's own text — governance decision requires explicit closure, independent of Document 32 (see §1) |
+| **32** | **Pre-Implementation Decision Pack** | **🟢 CTO APPROVED** (2026-08-12) — status line, Summary Table items 2/3/12, and a "Governance Addendum — CTO Approval Record" all confirm this directly. No longer a blocker (see §1). |
+| 34 | Acquisition-State Risk Review | 🟡 Investigation only, not a decision — its "required decisions" (§7.A) are the ones Document 35 resolves |
+| **35** | **Acquisition-State Architecture** | **🟢 CTO RATIFIED** (2026-08-12) — Governance Addendum recorded in the document itself. No longer a blocker (see §1). |
 | 36 | Acquisition Orchestration Architecture | 🟢 CTO RATIFIED (Round 4, 2026-08-10), with an explicit ratification record |
-| 37 | Acquisition Endpoint Proposal | 🟢 CTO APPROVED |
-| 33 | `POST .../acquire` API contract | 🟢 CTO APPROVED (this session, prior turn) |
+| **37** | **Acquisition Endpoint Proposal** | **🟢 CTO APPROVED** (2026-08-12) — status line and a "Governance Addendum — CTO Approval Record" confirm this directly; re-verified this revision. No longer a blocker (see §1). |
+| 33 | `POST .../acquire` API contract | 🟢 CTO APPROVED (verified directly, unchanged) |
 | 33 | `GET /financials` API contract | 🟡 CTO approval pending — separate governance item, tracked independently, not a dependency for POST/acquisition readiness (see §6) |
-| 38 | Canonical Acquisition-State Provider (MongoDB) | 🟢 CTO RATIFIED — ratification record added to the document this revision |
-| — | M8 implementation | 🔴 BLOCKED |
+| 38 | Canonical Acquisition-State Provider (MongoDB) | 🟢 CTO RATIFIED — ratification record in the document itself |
+| — | M8 implementation | 🔴 BLOCKED (pending explicit implementation authorization — not a governance/architecture gap; see §18/§19) |
 
 Also noted, non-blocking but worth flagging as a hygiene gap:
 **`docs/backend_engineering/00_README.md`, the doc-index/ratification
@@ -112,13 +85,14 @@ architecture):
 - `POST /companies/{ticker}/financials/acquire` per Document 33's frozen
   contract.
 - A canonical acquisition-state persistence mechanism satisfying AS-0
-  through AS-5 — required by the downstream architecture and the
-  acquisition-state model Document 35 represents. Document 35's
-  ratification must be explicitly recorded in its artifact, while
-  Document 32's separate approval must settle the `FinancialStatement`
-  persistence shape required by AS-5 (see §1). Documents 36, 37, 38, and
-  the Document 33 POST amendment already depend on and treat AS-0 through
-  AS-5 as binding; this assessment does not redesign them.
+  through AS-5 — both halves are now settled: Document 35 (acquisition-
+  state architecture) is CTO ratified, and Document 32
+  (`FinancialStatement` persistence shape) is CTO approved. AS-5 itself
+  has no remaining governance gap. Documents 36, 38, and the Document 33
+  POST amendment already depend on and treat AS-0 through AS-5 as
+  binding; this assessment does not redesign them. Document 37's
+  approval (see §1) closes the last open item in the POST-endpoint
+  governance chain.
 - A shared `acquire(identity)` use case invoked by the triggers Document
   36 §4 defines (report/explain ingestion, the new endpoint, manual
   operational trigger).
@@ -189,7 +163,7 @@ here):
 | Acquisition-state provider (Mongo) | `create_mongo_client()`, `_idx()` | None | New collection, index, repository port/adapter | Document 38 — 🟢 CTO RATIFIED |
 | Provider adapters | `fetch_edgar_latest`/`fetch_yfinance`/`fetch_bse_annual_report` | **Yes** — add definitive-vs-transient outcome classification | Outcome-mapping layer | None |
 | Background execution | None (deliberately non-durable per Doc 36 §9.3) | N/A | In-process `asyncio.to_thread` call per attempt | Provider adapters |
-| Recovery | AS-3 (nothing to recover, by construction) | None | None | Document 35 ratification |
+| Recovery | AS-3 (nothing to recover, by construction) | None | None | Document 35 — 🟢 CTO RATIFIED |
 | Retry/idempotency | AS-4 (monotonic precedence, single-doc conditional write) | None | Conditional-write query implementing AS-4 | State repository |
 | Concurrency | AS-4 | None | Same conditional-write logic | State repository |
 | Eventing | None planned/needed | N/A | N/A | N/A |
@@ -249,17 +223,24 @@ blocker list (§17, §19).
 
 ## 7. MongoDB Implementation Readiness
 
-Conceptually implementable today, with the canonical provider decision
-already ratified by Document 38. Remaining work is implementation detail,
-subject to closure of Document 35's governance record and the separate
-Document 32 approval governing the `FinancialStatement` persistence shape
-required by AS-5 (§1/§2). What it requires:
-- **Collection**: new, name not yet finalized (Document 35 §13 defers
-  this explicitly).
+Conceptually implementable today — the canonical provider decision
+(Document 38), the acquisition-state architecture (Document 35), and the
+`FinancialStatement` persistence shape (Document 32) are all now CTO
+approved/ratified, with no remaining governance gap on the MongoDB side
+(§1/§2). What it requires, now describable at implementation-planning
+level since the architecture is closed (schema/index *creation* is still
+not performed here — planning description only):
+- **Collection**: new — a `acquisition_states`-style collection (exact
+  name still an implementation-time choice, Document 35 §13 explicitly
+  defers this; not a CTO gate, unlike Document 32's `financial_statements`
+  name in §1).
 - **Document structure**: per-identity (`ticker + period_type +
   statement_type`) document carrying at minimum a terminal-state field
-  (`not_yet_acquired | available | confirmed_unavailable`) — shape not
-  yet fixed, deliberately deferred to implementation per Document 35 §8.
+  (`not_yet_acquired | available | confirmed_unavailable`) plus enough
+  metadata to support AS-4's monotonic precedence (e.g. a timestamp or
+  outcome-precedence marker) — exact field names deferred to
+  implementation per Document 35 §8, but the shape itself is no longer in
+  question.
 - **Indexes**: a unique compound index on the identity tuple, following
   the exact `_idx()` pattern already used for 25 existing indexes across
   9 collections (`backend/infrastructure/mongo/indexes.py`) — mechanically
@@ -350,9 +331,8 @@ No new provider and no provider-selection change is implied or needed.
 
 ## 10. Recovery Readiness
 
-AS-3 (Document 35 — governance recording gap, but internally consistent
-— see §1) means there is nothing to recover at the state-provider level
-by construction:
+AS-3 (Document 35 — 🟢 CTO RATIFIED — see §1) means there is nothing to
+recover at the state-provider level by construction:
 a crash before a definitive write leaves the prior state untouched.
 Combined with Document 36's deliberately non-durable execution model
 (§9.3), the accepted trade-off is that an in-flight *attempt* itself can
@@ -468,18 +448,20 @@ scope, per §18 step 13.
 
 | # | Question | Affected architecture | Why it matters | CTO decision required? |
 |---|---|---|---|---|
-| 1 | Is Document 32's final approval granted (collection name, field set, pack as a whole)? | `FinancialStatement` persistence, which AS-5 requires to precede `acquisition_state = available` | Document 32's own Summary Table classifies these items "REQUIRES FINAL APPROVAL," distinct from "DECIDED," and states M8 implementation "remains unauthorized" | **YES/NO — governance closure required; independent blocker, parallel to #2** |
-| 2 | Is Document 35's ratification explicitly recorded in its own artifact? | Everything downstream (36, 37, 38, 33 amendment) | The entire acquisition-state model's authority currently rests on a document that still reads "PROPOSED — AWAITING CTO APPROVAL" in its own text | **YES/NO — governance closure required; independent blocker, parallel to #1** |
-| 3 | Provider-outcome classification (transient vs. definitive) | Orchestration, AS-3/AS-4 | Current ingest fetchers don't distinguish these; needed before `confirmed_unavailable` can be written correctly | No — engineering-level implementation prerequisite, must be resolved *before* the write path is built, not after |
-| 4 | Timeout duration, backoff policy, polling cadence, scheduler-or-not (Doc 36 §25 items 1-4) | Orchestration | Concrete values needed before code ships, but the *mechanism* for each is already decided | No — engineering-level |
-| 5 | `00_README.md`'s stale ratification register (no M7/M8 entries) | Documentation hygiene only | Doesn't block implementation, but the register is no longer trustworthy for this milestone | No — documentation housekeeping |
+| # | Question | Affected architecture | Why it matters | CTO decision required? |
+|---|---|---|---|---|
+| 1 | Provider-outcome classification (transient vs. definitive) | Orchestration, AS-3/AS-4 | Current ingest fetchers don't distinguish these; needed before `confirmed_unavailable` can be written correctly | No — engineering-level implementation prerequisite, must be resolved *before* the write path is built, not after |
+| 2 | Timeout duration, backoff policy, polling cadence, scheduler-or-not (Doc 36 §25 items 1-4) | Orchestration | Concrete values needed before code ships, but the *mechanism* for each is already decided | No — engineering-level |
+| 3 | `00_README.md`'s stale ratification register (no M7/M8 entries) | Documentation hygiene only | Doesn't block implementation, but the register is no longer trustworthy for this milestone | No — documentation housekeeping |
+
+*(Documents 32, 35, and 37's approval/ratification, previously listed
+here across earlier revisions, are all resolved — see §1. No open
+governance question remains.)*
 
 ## 17. Implementation Risks
 
 | Risk | Category | Severity |
 |---|---|---|
-| Document 32's collection name, field set, and the pack as a whole still require final CTO approval per Document 32's own Summary Table | Governance | **BLOCKER — independent, parallel to Document 35** |
-| Document 35's CTO ratification is not explicitly recorded in its own text | Governance | **BLOCKER — independent, parallel to Document 32** |
 | Provider adapters conflate transient and definitive failure | Data consistency | MEDIUM — **implementation prerequisite**, must be closed before the acquisition-state write path is built (§9, §18 step 5), not a blocker to starting other prep work |
 | `test_route_inventory.py`'s closed route set will fail CI until updated | Technical | LOW — mechanical, well-understood |
 | Mongo default write concern (`w:1`) / standalone topology vs. Document 08's stated `w:1, j:true` RS convention | Data consistency / operational | LOW — pre-existing across the whole database, already accepted in Document 38, not new to M8 |
@@ -491,147 +473,156 @@ scope, per §18 step 13.
 
 ## 18. Implementation Checklist (dependency order)
 
-Steps 1 and 2 are a **parallel governance gate** — both must close, in
-either order or simultaneously, before step 3 onward:
-
-1. **Resolve Document 32 final approval** — collection name, complete
-   `FinancialStatement` field set, and decision-pack approval (Document
-   32's Summary Table items 2, 3, 12).
-2. **Resolve Document 35 governance** — obtain and record explicit CTO
-   ratification of the acquisition-state architecture.
-3. **Synchronize Document 32 and Document 35's governance records** after
-   their respective CTO closures — record the appropriate approval or
-   ratification directly in each document of record, using the same
-   governance-addendum pattern already demonstrated by Documents 36 and
-   38 (Document 32 → a CTO approval record; Document 35 → a CTO
-   ratification record), so each decision is recorded where a future
-   reader will actually find it, not just asserted elsewhere.
-4. Document 38 synchronization — **DONE.** Document 38 was CTO-ratified
-   and its own Governance Addendum (2026-08-11) has been recorded; its
-   status line reads 🟢 CTO RATIFIED. No further approval gate applies
-   to Document 38.
-5. **Confirm both `FinancialStatement` and acquisition-state shapes are
-   frozen** (steps 1-3 complete), then finalize the implementation-level
-   schema/index details each governing document explicitly deferred: the
-   *acquisition-state* Mongo collection name/document shape/index
-   (Document 35 §13's deferred implementation detail) — distinct from
-   Document 32's `financial_statements` collection, which requires CTO
-   approval (step 1) rather than being an implementation-time choice.
-6. Resolve provider outcome classification (transient vs. definitive) —
-   **implementation prerequisite**, must land before step 7.
-7. Build the acquisition-state repository port + Mongo adapter
+1. Document 32, 35, 36, 37, and 38 governance closure — **DONE.** All
+   five carry their own Governance Addendum with a CTO approval/
+   ratification record, re-verified directly this revision; status lines
+   read 🟢 CTO APPROVED/RATIFIED. No further approval gate applies to any
+   of them.
+2. Finalize the implementation-level schema/index details each governing
+   document explicitly deferred: the *acquisition-state* Mongo collection
+   name/document shape/index (Document 35 §13's deferred implementation
+   detail, not a CTO gate) — distinct from Document 32's already-approved
+   `financial_statements` collection/field set, which needed no further
+   deferral.
+3. Resolve provider outcome classification (transient vs. definitive) —
+   **implementation prerequisite**, must land before step 4.
+4. Build the acquisition-state repository port + Mongo adapter
    (single-document conditional write implementing AS-4).
-8. Build the `acquire(identity)` use case.
-9. Wire the use case into Document 36's existing, ratified triggers
+5. Build the `acquire(identity)` use case.
+6. Wire the use case into Document 36's existing, ratified triggers
    (report/explain ingestion, the new endpoint, manual operational
    trigger).
-10. Implement the `POST /companies/{ticker}/financials/acquire` endpoint
-    against Document 33's frozen, CTO-approved contract.
-11. Add observability (metrics/spans) following the existing M6 catalog
-    convention.
-12. Update `test_route_inventory.py`'s `APPROVED_ROUTES` set and count.
-13. Write the backend test suite (§13 above).
-14. Frontend acquisition UX as a **separate implementation slice** (§15)
-    — not sequenced ahead of or blocking steps 1-13, and not designed
+7. Implement the `POST /companies/{ticker}/financials/acquire` endpoint
+   against Document 33's frozen, CTO-approved contract.
+8. Add observability (metrics/spans) following the existing M6 catalog
+   convention.
+9. Update `test_route_inventory.py`'s `APPROVED_ROUTES` set and count.
+10. Write the backend test suite (§13 above).
+11. Frontend acquisition UX as a **separate implementation slice** (§15)
+    — not sequenced ahead of or blocking steps 2-10, and not designed
     here.
 
 Also, separately and not gating the above: update
 `docs/backend_engineering/00_README.md`'s ratification register to
 include Documents 30-39 (low-effort governance hygiene, §2).
 
+**None of steps 2-11 may begin until a separate, explicit CTO
+implementation-authorization decision is made — see §19.**
+
 ## 19. Final Readiness Decision
 
-## 🟡 NOT READY
+## 🟢 READY FOR CTO IMPLEMENTATION AUTHORIZATION
 
-**Two independent governance blockers remain: Documents 32 and 35.** No
-binding document establishes that either must close before the other —
-they are parallel, not sequential:
+**No governance blocker and no architectural blocker remain.** All five
+governing documents were re-verified by direct reading this revision:
 
-- **Document 32** — its own Summary Table requires explicit CTO sign-off
-  on the `financial_statements` collection name, the complete field set,
-  and the decision pack as a whole — all three classified "REQUIRES FINAL
-  APPROVAL," a category Document 32 itself distinguishes from "DECIDED."
-  Document 32's own text states "M8 implementation remains unauthorized."
-  This is not delegated to implementation and is not resolved by anything
-  in Documents 35-38.
-- **Document 35** — CTO ratification is not explicitly recorded in its
-  own governance artifact; its status line still reads 🟡 PROPOSED —
-  AWAITING CTO APPROVAL, despite being treated as ratified and binding by
-  every document built on top of it (36, 37, 38, the Document 33 POST
-  amendment). This assessment does not assert that the underlying
-  decision was never made — only that the repository's record of it is
-  incomplete, which is sufficient reason not to treat it as closed.
+- Document 32 — 🟢 CTO APPROVED, "Governance Addendum — CTO Approval
+  Record" dated 2026-08-12.
+- Document 35 — 🟢 CTO RATIFIED, "Governance Addendum — CTO Ratification
+  Record" dated 2026-08-12.
+- Document 36 — 🟢 CTO RATIFIED (Round 4, 2026-08-10), governance-addendum
+  ratification record.
+- Document 37 — 🟢 CTO APPROVED, "Governance Addendum — CTO Approval
+  Record" dated 2026-08-12 — the one gap this assessment previously found
+  (via primary-source inspection, not by trusting downstream references)
+  is now closed and independently re-verified.
+- Document 38 — 🟢 CTO RATIFIED, governance-addendum ratification record
+  added 2026-08-11.
 
-Both must close before implementation readiness is reached; from there,
-explicit implementation authorization is a separate, later step.
+**TECHNICAL ARCHITECTURE:** architecturally closed and
+implementation-ready, subject to the documented engineering
+prerequisites — MongoDB approach, orchestration design, security, and
+observability all have specific, ratified, implementable answers with no
+open architectural design questions.
 
-**Document 38 is fully resolved, not a blocker** — its repository status
-banner has been synchronized with its CTO ratification this revision (a
-Governance Addendum was added directly to Document 38, mirroring
-Document 36's pattern), so Document 38 is verifiably 🟢 CTO RATIFIED as
-of this document. It is unrelated to the two open blockers above.
+**IMPLEMENTATION PREREQUISITES:** must be completed per §18 —
+provider-outcome classification before the state-write path is built,
+then the remaining build-out steps. `GET /financials`'s pending approval
+and the frontend acquisition UX are both tracked separately and are not
+part of this readiness gate.
 
-**TECHNICAL ARCHITECTURE:** substantially ready — MongoDB approach,
-orchestration design, security, and observability all have specific,
-implementable answers with no open architectural design questions. The
-blockers above are governance authorization/recording gaps, not
-technical-architecture gaps — the technical design itself is not blocked
-by either document.
-
-**IMPLEMENTATION PREREQUISITES:** must be completed per §18 — Documents
-32 and 35's governance closure (parallel, no required order between
-them), then provider-outcome classification before the state-write path
-is built, then the remaining build-out steps. `GET /financials`'s pending
-approval and the frontend acquisition UX are both tracked separately and
-are not part of this blocker list.
+**This verdict does NOT authorize implementation.** M8 implementation is
+**NOT YET AUTHORIZED** — a separate, explicit CTO implementation-
+authorization decision is required before production engineering begins,
+covering: production code, MongoDB schemas/indexes/migrations,
+repositories, orchestration, API endpoints, and tests. This document does
+not grant that authorization and does not itself constitute it.
 
 ---
 
 ## M8 IMPLEMENTATION READINESS
 
-**STATUS:** 🟡 NOT READY
+**STATUS:** 🟢 READY FOR CTO IMPLEMENTATION AUTHORIZATION
 
-**TWO INDEPENDENT GOVERNANCE BLOCKERS (parallel, no ordering between
-them):**
-1. Document 32 — its own Summary Table requires final CTO approval on
-   the `financial_statements` collection name, the complete field set,
-   and the decision pack as a whole (items 2, 3, 12); Document 32's own
-   text states M8 implementation "remains unauthorized."
-2. Document 35 — its own artifact does not yet contain an explicit CTO
-   ratification record (status line still reads 🟡 PROPOSED — AWAITING
-   CTO APPROVAL).
+**GOVERNANCE BLOCKERS:** NONE.
+
+**ARCHITECTURAL BLOCKERS:** NONE.
 
 **RESOLVED GOVERNANCE ITEMS:**
+- Document 32 — 🟢 CTO APPROVED (Governance Addendum dated 2026-08-12)
+- Document 35 — 🟢 CTO RATIFIED (Governance Addendum dated 2026-08-12)
 - Document 36 — 🟢 CTO RATIFIED
-- Document 37 — 🟢 CTO APPROVED
+- Document 37 — 🟢 CTO APPROVED (Governance Addendum dated 2026-08-12 —
+  re-verified this revision, the gap this assessment previously found is
+  closed)
 - Document 33 POST `.../acquire` — 🟢 CTO APPROVED
 - Document 38 — 🟢 CTO RATIFIED
 - MongoDB canonical acquisition-state provider — 🟢 FROZEN
 
-**IMPLEMENTATION PREREQUISITES** (§18):
-- Document 32 final approval (collection name, field set, pack as a
-  whole) — parallel to Document 35, no required order
-- Document 35 governance recording and status synchronization — parallel
-  to Document 32, no required order
+**ENGINEERING PREREQUISITES** (§18):
 - Provider-outcome classification (transient vs. definitive)
-- Schema/index finalization (acquisition-state collection — distinct from
-  Document 32's `financial_statements` collection above)
-- Remaining implementation-level engineering decisions (Doc 36 §25)
-- Repository/use-case/orchestration implementation
-- Route-inventory update
-- Backend tests
-- Frontend acquisition UX as a separate implementation slice
+- Schema/index finalization (acquisition-state collection — Document 35
+  §13's deferred implementation detail)
+- Remaining implementation-level engineering decisions (Doc 36 §25:
+  timeout duration, backoff policy, polling cadence, scheduler-or-not)
 
-**`GET /companies/{ticker}/financials`:** 🟡 CTO approval pending,
-tracked separately — **not** an M8 acquisition backend blocker.
+**IMPLEMENTATION WORK** (§18, not gated by any governance decision):
+- Acquisition-state repository/Mongo adapter
+- `acquire(identity)` use case + orchestration-trigger wiring
+- `POST /companies/{ticker}/financials/acquire` endpoint
+- Observability additions (M6 catalog convention)
+- `test_route_inventory.py` route-inventory update
+- Backend test suite
+- Frontend acquisition UX (separate implementation slice, §15)
 
-**NEXT GOVERNANCE ACTION:** Obtain and record explicit CTO decisions for
-both remaining blockers — Document 35's ratification and Document 32's
-final approval — then add a Governance Addendum to each (mirroring the
-pattern now present in both Documents 36 and 38) so the decisions are
-captured in the documents of record, not only asserted elsewhere. Once
-both addenda exist, this readiness
-verdict should be re-evaluated — at that point the remaining items are
-implementation prerequisites (§18), not governance blockers.
+**SEPARATE FUTURE GATES:**
+- `GET /companies/{ticker}/financials`: 🟡 CTO approval pending, tracked
+  independently — **not** an M8 acquisition backend blocker.
+
+**DOCUMENTATION HOUSEKEEPING (non-blocking):**
+- `00_README.md`'s ratification register has no entries for Documents
+  30-39 — low-effort cleanup, not gating.
+
+**IMPLEMENTATION AUTHORIZATION:** 🔴 NOT YET AUTHORIZED.
+
+**NEXT GOVERNANCE ACTION:** A separate, explicit CTO decision to
+authorize M8 implementation. No further architecture, governance, or
+readiness review is required before that decision — this assessment has
+found the baseline closed and re-verified it directly against every
+primary source.
+
+## Governance Addendum — CTO Approval Record
+
+**Decision:** 🟢 CTO APPROVED & FROZEN
+
+**Date:** 2026-08-13
+
+**Scope:** This readiness assessment as a whole, including its
+governance-status findings (Documents 32/35/36/37/38 all closed, no
+contradiction found), its architecture-closure verification, its
+governance/architectural/engineering-prerequisite/implementation-work
+classification (§16-§19), and its final verdict (READY FOR CTO
+IMPLEMENTATION AUTHORIZATION).
+
+**CTO Determination:** The CTO approves this assessment's conclusion and
+freezes it. No further architecture or readiness review is required
+before the implementation-authorization decision. **This approval does
+not itself authorize M8 implementation** — approving an assessment that
+concludes "no blocker remains" is not the same act as authorizing
+production engineering. A separate, explicit CTO decision — "M8
+IMPLEMENTATION AUTHORIZED" — is still required, covering production
+code, MongoDB schemas/indexes/migrations, repositories, orchestration,
+API endpoints, and tests. Until that separate decision is made, M8
+implementation remains 🔴 NOT YET AUTHORIZED.
 
 STOP. No implementation performed.

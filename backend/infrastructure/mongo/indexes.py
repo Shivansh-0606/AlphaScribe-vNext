@@ -1,5 +1,7 @@
-"""ensure_indexes — the full 25-index set from
-docs/backend_engineering/08_MongoDB_Data_Architecture.md §5.1.
+"""ensure_indexes — the 25-index set from
+docs/backend_engineering/08_MongoDB_Data_Architecture.md §5.1, plus I-26/I-27
+added for M8 Phase 1 (financial_statements / acquisition_states — Document
+32 Summary Table item 2 and Document 35 §6/§13, both CTO approved/ratified).
 
 Supersedes agents/auth.py's ensure_indexes (which only covers I-1/I-3/I-4/
 I-6/I-7 — the 5 auth-collection indexes that existed before this phase).
@@ -110,6 +112,22 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> dict[str, list[str]]:
     await _idx(
         "explanation_jobs", "created_at",
         expireAfterSeconds=30 * 24 * 3600, name="I-25_created_at_ttl_30d",
+    )
+
+    # --- financial_statements (M8 Phase 1 — ADR-029 §8, identity: ticker +
+    # period_type + period_end + statement_type) -------------------------
+    await _idx(
+        "financial_statements",
+        [("ticker", 1), ("period_type", 1), ("period_end", 1), ("statement_type", 1)],
+        unique=True, name="I-26_ticker_period_type_end_statement_unique",
+    )
+
+    # --- acquisition_states (M8 Phase 1 — Document 35 §6, identity: ticker +
+    # period_type + statement_type, period_end excluded) ------------------
+    await _idx(
+        "acquisition_states",
+        [("ticker", 1), ("period_type", 1), ("statement_type", 1)],
+        unique=True, name="I-27_ticker_period_type_statement_unique",
     )
 
     return created

@@ -75,15 +75,17 @@ def test_ping_raises_infrastructure_error_on_failure():
         raise AssertionError("expected InfrastructureError")
 
 
-def test_ensure_indexes_creates_exactly_the_25_row_set():
+def test_ensure_indexes_creates_exactly_the_27_row_set():
+    # 25 rows from 08 §5.1, plus I-26/I-27 added for M8 Phase 1
+    # (financial_statements / acquisition_states).
     db = _FakeDB()
     created = asyncio.run(ensure_indexes(db))
 
     names = [n for coll in created.values() for n in coll]
     ids = {n.split("_", 1)[0] for n in names}
-    expected_ids = {f"I-{i}" for i in range(1, 26)}
+    expected_ids = {f"I-{i}" for i in range(1, 28)}
     assert ids == expected_ids, f"missing or extra rows: {expected_ids ^ ids}"
-    assert sum(len(v) for v in created.values()) == 25
+    assert sum(len(v) for v in created.values()) == 27
 
 
 def test_ensure_indexes_is_idempotent_across_two_runs():
@@ -102,8 +104,8 @@ def test_ensure_indexes_tolerates_a_pre_existing_differently_named_index():
     names = [n for coll in created.values() for n in coll]
     conflict_hits = [n for n in names if "pre-existing under a different name" in n]
     assert len(conflict_hits) == 2
-    # Still reports all 25 rows as satisfied, not as failures.
-    assert sum(len(v) for v in created.values()) == 25
+    # Still reports all 27 rows as satisfied, not as failures.
+    assert sum(len(v) for v in created.values()) == 27
 
 
 def test_ensure_indexes_reraises_unrelated_operation_failures():
@@ -125,9 +127,9 @@ def test_ensure_indexes_reraises_unrelated_operation_failures():
 if __name__ == "__main__":
     test_ping_returns_true_on_success()
     test_ping_raises_infrastructure_error_on_failure()
-    test_ensure_indexes_creates_exactly_the_25_row_set()
+    test_ensure_indexes_creates_exactly_the_27_row_set()
     test_ensure_indexes_is_idempotent_across_two_runs()
     test_ensure_indexes_tolerates_a_pre_existing_differently_named_index()
     test_ensure_indexes_reraises_unrelated_operation_failures()
-    print("ok: Mongo ping + ensure_indexes — 25/25 rows, idempotent, tolerates pre-existing conflicts, "
+    print("ok: Mongo ping + ensure_indexes — 27/27 rows, idempotent, tolerates pre-existing conflicts, "
           "re-raises real failures")

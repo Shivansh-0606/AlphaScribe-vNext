@@ -1,11 +1,11 @@
 # M8 — Pre-Implementation Decision Pack
 
-**Status:** 🟡 **Partially decided across three CTO review rounds; a
-short remaining list needs final approval.** This document is no longer a
-from-scratch proposal — most of it reflects decisions the CTO already
-made during review. **M8 implementation remains gated regardless** —
-nothing in this document authorizes code, schema, dependency, or
-migration changes.
+**Status:** 🟢 **CTO APPROVED.** See the Governance Addendum near the end
+of this document for the approval record. This document is no longer a
+from-scratch proposal — it reflects decisions the CTO made across three
+review rounds plus this final approval. **M8 implementation remains
+gated regardless** — nothing in this document authorizes code, schema,
+dependency, or migration changes.
 
 ### A. Already CTO-decided (prior review rounds — not reopened here)
 
@@ -522,17 +522,17 @@ at all — a different, later authorization).
 | # | Item | Recommendation | Classification |
 |---|---|---|---|
 | 1 | yfinance version constraint | `yfinance==1.5.1`, exact pin (initial reproducibility baseline, not a permanent refusal to upgrade) | **DECIDED** — the `requirements.txt` *file change* itself remains a **SEPARATE FUTURE GATE**; deciding the version does not authorize editing the file |
-| 2 | Collection name | `financial_statements` | **REQUIRES FINAL APPROVAL** |
-| 3 | Field set | Per §2.B table; `period_duration` and `scale` both omitted | **REQUIRES FINAL APPROVAL** as the complete field-set confirmation; the individual field semantics (including both omissions) are already **DECIDED** and unchanged |
+| 2 | Collection name | `financial_statements` | **APPROVED** |
+| 3 | Field set | Per §2.B table (including `metrics[]`); `period_duration` and `scale` both omitted | **APPROVED** as the complete field-set confirmation; the individual field semantics (including both omissions) were already **DECIDED** and unchanged |
 | 4 | `fiscal_year` | Final field name **`fiscal_year`**; calendar year of `period_end`; AlphaScribe-derived, not provider-observed | **DECIDED** (name and semantic) |
 | 5 | Currency/unit model | `currency` document-level; per-metric `unit`; `scale` removed entirely (§2.D) | **DECIDED** |
-| 6 | Restatement policy | Latest-provider-value-wins (ADR-029 §6.4) | **DECIDED** — formal ratification occurs with final pack approval |
-| 7 | Migration numbering | `m0006` | **DECIDED** — formal ratification occurs with final pack approval |
-| 8 | BSE/NSE v1 policy | yfinance-only, no PDF fallback | **DECIDED** — formal ratification occurs with final pack approval |
+| 6 | Restatement policy | Latest-provider-value-wins (ADR-029 §6.4) | **DECIDED** — formally ratified with final pack approval |
+| 7 | Migration numbering | `m0006` | **DECIDED** — formally ratified with final pack approval |
+| 8 | BSE/NSE v1 policy | yfinance-only, no PDF fallback | **DECIDED** — formally ratified with final pack approval |
 | 9 | Canonical vocabulary governance | Five-step process; mappings reviewed/approved through the Backend & AI architecture/data-governance review process; versioned artifact; no recurring per-mapping CTO approval; material changes escalate | **DECIDED** — CTO approves the governance model, not each future mapping |
 | 10 | Data-availability/acquisition state | Three-state model, explicitly separate from `FinancialStatement` persistence. Identity/granularity subsequently resolved by Document 35 §6 as `(ticker, period_type, statement_type)` — no `period_end` | **DECIDED** — states and identity/granularity both settled (states here; granularity via Document 35 §6); repository/schema/code mechanism remains implementation-level work, nothing implemented |
 | 11 | `GET /companies/{ticker}/financials` route | Proposed shape only | **SEPARATE FUTURE GATE** — not part of this pack's approval; needs its own API-contract review (ADR-029 §9/§18) |
-| 12 | This decision pack as a whole | — | **REQUIRES FINAL APPROVAL** |
+| 12 | This decision pack as a whole | — | **APPROVED** — see Governance Addendum |
 
 ## Implementation Blockers Remaining
 
@@ -553,19 +553,43 @@ at all — a different, later authorization).
   **unauthorized**.
 - **Canonical vocabulary governance:** DECIDED; the actual mappings
   remain future work under that governance model — none exist yet.
-- **Restatement policy:** DECIDED (latest-provider-value-wins); formal
-  ratification occurs with final approval of the complete decision pack.
-- **Migration `m0006`:** DECIDED; formal confirmation occurs with final
-  approval of the complete decision pack.
+- **Restatement policy:** DECIDED (latest-provider-value-wins); formally
+  ratified with final approval of the complete decision pack.
+- **Migration `m0006`:** DECIDED; formally confirmed with final approval
+  of the complete decision pack.
 - **BSE/NSE yfinance-only strategy:** DECIDED (no PDF fallback for v1);
-  formal ratification occurs with final approval of the complete decision
-  pack.
+  formally ratified with final approval of the complete decision pack.
 - **API contract** (`GET /companies/{ticker}/financials`) remains a
   **SEPARATE FUTURE GATE**, unresolved — ADR-029 §9/§18, unchanged here.
 - No collection, index, migration, route, or repository code exists.
-- **This decision pack itself still REQUIRES FINAL APPROVAL as a whole**
-  (item 12, above) even though most of its individual items are DECIDED.
+- **This decision pack as a whole is now APPROVED** (item 12, above; see
+  Governance Addendum). Approval of the decision pack is not itself an
+  implementation authorization.
 - **M8 implementation remains unauthorized.**
+
+## Governance Addendum — CTO Approval Record
+
+- **Date:** 2026-08-12
+- **Decision:** CTO APPROVED
+- **Scope:** the `financial_statements` collection name (Summary Table
+  item 2); the complete `FinancialStatement` field set (item 3),
+  including `metrics[]` and its nested `canonical_metric`,
+  `provider_label`, `value`, and `unit` fields (§2.B); and this decision
+  pack as a whole (item 12). Nothing about this approval reopens,
+  rewrites, or reinterprets any technical content in this document —
+  every other item (`fiscal_year`, currency/unit model, restatement
+  policy, migration `m0006`, BSE/NSE v1 policy, canonical vocabulary
+  governance, and acquisition-state semantics/identity) was already
+  DECIDED in prior review rounds and remains exactly as recorded above,
+  including the Document 35 §6 granularity synchronization already
+  applied to §4.
+- **`GET /companies/{ticker}/financials` route** remains a **SEPARATE
+  FUTURE GATE** (item 11) — unaffected by, and not resolved by, this
+  approval.
+- **Implementation:** remains 🔴 **unauthorized.** This approval is not
+  itself an implementation authorization. Implementation remains subject
+  to the separate M8 implementation-readiness/authorization gate (see
+  [`39_M8_Implementation_Readiness_Assessment.md`](39_M8_Implementation_Readiness_Assessment.md)).
 
 ---
 

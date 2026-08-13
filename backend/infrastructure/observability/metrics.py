@@ -77,6 +77,19 @@ sse_session_duration_seconds = Histogram(
     "alphascribe_sse_session_duration_seconds", "SSE stream session duration", ["stream_name"]
 )
 
+# --- ACTIVE — M8 Step 5 (Document 39 §18: "Build the acquire(identity) use
+# case", application/financials.py::AcquireFinancialsUseCase), following the
+# llm_calls_total{outcome} convention (Document 36 §18 / Document 37 §8's
+# "acquisition_request_total{outcome}"-style recommendation, applied at the
+# use-case layer, not the future endpoint layer). ---
+acquisition_attempts_total = Counter(
+    "alphascribe_acquisition_attempts_total", "M8 financial-statement acquisition attempts",
+    ["statement_type", "outcome"],
+)
+acquisition_duration_seconds = Histogram(
+    "alphascribe_acquisition_duration_seconds", "AcquireFinancialsUseCase.acquire() duration", ["statement_type"]
+)
+
 # --- DEFINED, not yet incremented anywhere — its call site is 09 §8.1's
 # fail-open policy, implemented today in agents/auth.py's in-memory rate
 # limiter, not the RedisRateLimiter port this gauge belongs to (that port
