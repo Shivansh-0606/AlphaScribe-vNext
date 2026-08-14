@@ -169,6 +169,17 @@ export const filingsResponseSchema = z.object({
   filings: z.array(filingSchema),
 });
 
+// ---- Financials acquisition (backend/server.py POST
+// /companies/{ticker}/financials/acquire — Document 33 Amendment, frozen
+// wire contract; backend/domain/financials.py AcquisitionOutcome) ----------
+
+export const financialsAcquireResponseSchema = z.object({
+  ticker: z.string(),
+  period_type: z.enum(["annual", "quarterly"]),
+  outcome: z.enum(["requested", "available", "confirmed_unavailable", "mixed"]),
+});
+export type FinancialsAcquireResponse = z.infer<typeof financialsAcquireResponseSchema>;
+
 // ---- SSE stream events -----------------------------------------------------
 
 /**

@@ -10,8 +10,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 const fetchReport = vi.fn();
+const acquireFinancials = vi.fn();
 vi.mock("../integration/api", () => ({
   fetchReport: (...args: unknown[]) => fetchReport(...args),
+  acquireFinancials: (...args: unknown[]) => acquireFinancials(...args),
 }));
 
 const BASE_REPORT: ReportDoc = {
@@ -39,6 +41,7 @@ describe("FinancialsSection", () => {
   beforeEach(() => {
     searchParams = new URLSearchParams();
     fetchReport.mockReset();
+    acquireFinancials.mockReset();
   });
 
   it("shows an empty state prompting Overview when there's no job yet", () => {
@@ -115,5 +118,158 @@ describe("FinancialsSection", () => {
     await screen.findByText("$100B");
 
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  describe("Financial Statements acquisition", () => {
+    async function renderReady() {
+      searchParams = new URLSearchParams({ job: "job-1" });
+      fetchReport.mockResolvedValueOnce({
+        status: "completed",
+        id: "job-1",
+        report: { ...BASE_REPORT, extracted_data: {} },
+      });
+      const utils = renderWithProviders(<FinancialsSection ticker="AAPL" />);
+      await screen.findByText(/No financial metrics were extracted/);
+      return utils;
+    }
+
+    it("idle: shows the honest placeholder with a check action", async () => {
+      await renderReady();
+      expect(screen.getByText(/isn't available yet/)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Check for financial statements" })).toBeEnabled();
+    });
+
+    it("acquiring: disables the control and shows a loading state while the request is in flight", async () => {
+      let resolveAcquire: (v: unknown) => void = () => {};
+      acquireFinancials.mockReturnValueOnce(new Promise((res) => (resolveAcquire = res)));
+      const { user } = await renderReady();
+
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+      const button = screen.getByRole("button", { name: "Check for financial statements" });
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute("aria-busy", "true");
+
+      resolveAcquire({ ticker: "AAPL", period_type: "annual", outcome: "requested" });
+      await screen.findByText(/Fetching financial statements/);
+    });
+
+    it("requested: reports acquisition in progress and allows re-checking status", async () => {
+      acquireFinancials.mockResolvedValueOnce({
+        ticker: "AAPL",
+        period_type: "annual",
+        outcome: "requested",
+      });
+      const { user } = await renderReady();
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+
+      expect(await screen.findByText(/Fetching financial statements for AAPL/)).toBeInTheDocument();
+      const recheck = screen.getByRole("button", { name: "Check status" });
+      expect(recheck).toBeEnabled();
+
+      acquireFinancials.mockResolvedValueOnce({
+        ticker: "AAPL",
+        period_type: "annual",
+        outcome: "available",
+      });
+      await user.click(recheck);
+      expect(await screen.findByText(/are now available on the backend/)).toBeInTheDocument();
+    });
+
+    it("available: reports success without fabricating statement data, and moves focus onto the banner", async () => {
+      acquireFinancials.mockResolvedValueOnce({
+        ticker: "AAPL",
+        period_type: "annual",
+        outcome: "available",
+      });
+      const { user } = await renderReady();
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+
+      const banner = await screen.findByText(/are now available on the backend/);
+      expect(banner.closest('[role="status"]')).toBeInTheDocument();
+      // The acquisition button unmounts on this outcome — focus must land
+      // somewhere intentional (the banner's focusable wrapper), never body.
+      expect(banner.closest('[tabindex="-1"]')).toHaveFocus();
+    });
+
+    it("confirmed_unavailable: reports the terminal negative outcome, not an error, and moves focus onto the banner", async () => {
+      acquireFinancials.mockResolvedValueOnce({
+        ticker: "AAPL",
+        period_type: "annual",
+        outcome: "confirmed_unavailable",
+      });
+      const { user } = await renderReady();
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+
+      const banner = await screen.findByText(/has no financial statements for AAPL/);
+      expect(banner.closest('[role="status"]')).toBeInTheDocument();
+      expect(banner.closest('[tabindex="-1"]')).toHaveFocus();
+    });
+
+    it("mixed: reports partial availability and moves focus onto the banner", async () => {
+      acquireFinancials.mockResolvedValueOnce({
+        ticker: "AAPL",
+        period_type: "annual",
+        outcome: "mixed",
+      });
+      const { user } = await renderReady();
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+
+      const banner = await screen.findByText(/couldn't supply all of them/);
+      expect(banner.closest('[tabindex="-1"]')).toHaveFocus();
+    });
+
+    it("requested: keeps focus on the persisting action button rather than redirecting it", async () => {
+      acquireFinancials.mockResolvedValueOnce({
+        ticker: "AAPL",
+        period_type: "annual",
+        outcome: "requested",
+      });
+      const { user } = await renderReady();
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+
+      const recheck = await screen.findByRole("button", { name: "Check status" });
+      // Same control the user just activated (relabeled) — never yanked
+      // away, since it never disappears for this outcome.
+      expect(recheck).toHaveFocus();
+    });
+
+    it("error/retry: does not steal focus from the persisting Retry button", async () => {
+      acquireFinancials.mockRejectedValueOnce(new Error("Too many acquisition requests"));
+      const { user } = await renderReady();
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+
+      const retry = await screen.findByRole("button", { name: "Check for financial statements" });
+      expect(retry).toHaveFocus();
+    });
+
+    it("failure: surfaces the transport error and lets the user retry", async () => {
+      acquireFinancials.mockRejectedValueOnce(new Error("Too many acquisition requests"));
+      const { user } = await renderReady();
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+
+      const errorBanner = await screen.findByRole("alert");
+      expect(errorBanner).toHaveTextContent("Too many acquisition requests");
+
+      acquireFinancials.mockResolvedValueOnce({
+        ticker: "AAPL",
+        period_type: "annual",
+        outcome: "requested",
+      });
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+      expect(await screen.findByText(/Fetching financial statements/)).toBeInTheDocument();
+    });
+
+    it("requests the annual period — no period selector exists in this UX", async () => {
+      acquireFinancials.mockResolvedValueOnce({
+        ticker: "AAPL",
+        period_type: "annual",
+        outcome: "requested",
+      });
+      const { user } = await renderReady();
+      await user.click(screen.getByRole("button", { name: "Check for financial statements" }));
+
+      await screen.findByText(/Fetching financial statements/);
+      expect(acquireFinancials).toHaveBeenCalledWith("AAPL", "annual");
+    });
   });
 });

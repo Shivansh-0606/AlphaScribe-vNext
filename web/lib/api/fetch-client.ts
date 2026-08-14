@@ -15,6 +15,27 @@ interface ApiFetchOptions extends Omit<RequestInit, "body"> {
 }
 
 /**
+ * Backend error responses never use `{"message": ...}` — that shape matches
+ * nothing the API actually returns. The real envelope is `detail`, in one of
+ * two shapes depending on which handler produced it:
+ *  - `domain_error_handler` (backend/app/api/errors.py): `{"detail": "<string>", "type": "<code>"}`
+ *  - FastAPI's own `RequestValidationError` handler (backend/server.py, pydantic
+ *    request-shape failures): `{"detail": [{"msg": "<string>", ...}, ...]}`
+ * Both are normalized to a single human-readable string here so the rest of
+ * the app only ever deals with `AppError.message`.
+ */
+function extractBackendErrorMessage(body: unknown): string | undefined {
+  if (typeof body !== "object" || body === null || !("detail" in body)) return undefined;
+  const detail = (body as { detail?: unknown }).detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0] as { msg?: unknown } | undefined;
+    if (first && typeof first.msg === "string") return first.msg;
+  }
+  return undefined;
+}
+
+/**
  * Issues a request against the backend contract and validates the response
  * with the given Zod schema (03.3 AD-3 — untrusted until validated; 03.3 AD-4
  * fail fast on invalid data). Failures are normalized to `AppError`.
@@ -46,8 +67,7 @@ export async function apiFetch<Schema extends z.ZodType>(
   if (!response.ok) {
     let message: string | undefined;
     try {
-      const errorBody = (await response.json()) as { message?: string };
-      message = errorBody.message;
+      message = extractBackendErrorMessage(await response.json());
     } catch {
       // Non-JSON error body — fall back to the status-derived message.
     }

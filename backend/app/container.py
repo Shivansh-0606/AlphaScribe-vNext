@@ -23,10 +23,14 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from application.financials import AcquireFinancialsUseCase
+from application.financials_orchestration import FinancialsAcquisitionOrchestrator
 from application.jobs import JobLifecycle
-from application.ports import EventBus, JobStore, RateLimiter
+from application.ports import AcquisitionStateRepository, EventBus, JobStore, RateLimiter
 from app.settings import Settings
+from infrastructure.mongo.acquisition_state import MongoAcquisitionStateRepository
 from infrastructure.mongo.client import create_mongo_client
+from infrastructure.mongo.financial_statements import MongoFinancialStatementRepository
 from infrastructure.redis.event_bus import InMemoryEventBus, RedisEventBus
 from infrastructure.redis.job_store import InMemoryJobStore, RedisJobStore
 from infrastructure.redis.rate_limiter import InMemoryRateLimiter, RedisRateLimiter
@@ -40,6 +44,13 @@ class Container:
     events: EventBus
     limiter: RateLimiter
     job_lifecycle: JobLifecycle
+    financials_orchestrator: FinancialsAcquisitionOrchestrator
+    # M8 Step 7 — exposed separately from AcquireFinancialsUseCase (which
+    # holds its own instance privately) so the POST /financials/acquire
+    # endpoint can read current AcquisitionState through the same
+    # repository port Step 5 uses, without reaching into the use case's
+    # internals or duplicating its business logic.
+    acquisition_states: AcquisitionStateRepository
     job_backend: str = "memory"
     # M6 A2 — exposed only under JOB_BACKEND=redis, so /health/ready can
     # verify the configured execution backend (26 A2) without the
@@ -69,6 +80,15 @@ def build_container(settings: Settings) -> Container:
 
     job_lifecycle = JobLifecycle(jobs, events, max_active_jobs=settings.max_active_jobs)
 
+    # M8 Step 6 — the container's first Mongo-backed repository pair,
+    # extending the existing composition-root pattern (not a new one).
+    db = mongo_client[settings.db_name]
+    acquisition_states = MongoAcquisitionStateRepository(db)
+    acquire_financials = AcquireFinancialsUseCase(
+        MongoFinancialStatementRepository(db), acquisition_states
+    )
+    financials_orchestrator = FinancialsAcquisitionOrchestrator(acquire_financials)
+
     return Container(
         settings=settings,
         mongo_client=mongo_client,
@@ -76,6 +96,8 @@ def build_container(settings: Settings) -> Container:
         events=events,
         limiter=limiter,
         job_lifecycle=job_lifecycle,
+        financials_orchestrator=financials_orchestrator,
+        acquisition_states=acquisition_states,
         job_backend=backend,
         redis_client=redis_client,
     )

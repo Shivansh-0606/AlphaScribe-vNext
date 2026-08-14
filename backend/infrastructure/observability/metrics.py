@@ -90,6 +90,30 @@ acquisition_duration_seconds = Histogram(
     "alphascribe_acquisition_duration_seconds", "AcquireFinancialsUseCase.acquire() duration", ["statement_type"]
 )
 
+# --- ACTIVE — M8 Step 6 (application/financials_orchestration.py::
+# FinancialsAcquisitionOrchestrator). Orchestration-level only — how many
+# identities a trigger scheduled — distinct from acquisition_attempts_total
+# above, which Step 5 already records per individual attempt; this metric
+# is not a duplicate of that one. ---
+acquisition_orchestration_scheduled_total = Counter(
+    "alphascribe_acquisition_orchestration_scheduled_total",
+    "M8 acquisition identities scheduled for background acquisition, by trigger",
+    ["trigger"],
+)
+
+# --- ACTIVE — M8 Step 7 (server.py::acquire_financials,
+# POST /companies/{ticker}/financials/acquire). Endpoint-layer only — the
+# frozen four-way HTTP response outcome (Document 33 Amendment §5/§6:
+# requested/available/confirmed_unavailable/mixed) — distinct granularity
+# from both acquisition_attempts_total (per-identity, Step 5) and
+# acquisition_orchestration_scheduled_total (per-scheduled-identity, Step
+# 6); this is the one new counter Document 37 §8 anticipated. ---
+acquisition_request_total = Counter(
+    "alphascribe_acquisition_request_total",
+    "M8 POST /financials/acquire requests, by response outcome",
+    ["outcome"],
+)
+
 # --- DEFINED, not yet incremented anywhere — its call site is 09 §8.1's
 # fail-open policy, implemented today in agents/auth.py's in-memory rate
 # limiter, not the RedisRateLimiter port this gauge belongs to (that port

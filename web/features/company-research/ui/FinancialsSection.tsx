@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Banner } from "@/components/foundation/Banner";
 import { Button } from "@/components/foundation/Button";
@@ -7,6 +8,7 @@ import { Card, CardContent } from "@/components/foundation/Card";
 import { Loader } from "@/components/foundation/Loader";
 import { Text } from "@/components/foundation/Text";
 import { MetricStat } from "@/components/research/MetricStat";
+import { useFinancialsAcquisition } from "../application/useFinancialsAcquisition";
 import { useReport } from "../application/useReport";
 import type { ExtractedFinancials } from "../integration/schemas";
 
@@ -35,9 +37,107 @@ function directionFromValue(value: string): "up" | "down" | undefined {
   return undefined;
 }
 
+/**
+ * Terminal outcomes that render with no action button at all — the ones
+ * where the acquisition control (idle button or "Check status") unmounts,
+ * which would otherwise drop keyboard focus to `<body>` with no indication
+ * of what happened. `requested` keeps its "Check status" button in place
+ * (same control, just relabeled), so focus is never lost there.
+ */
+const TERMINAL_OUTCOMES_WITHOUT_ACTION = new Set(["available", "confirmed_unavailable", "mixed"]);
+
+/**
+ * The Statements card's acquisition-status banner. `GET /companies/{ticker}/
+ * financials` doesn't exist yet (out of scope for this integration), so a
+ * successful acquisition still can't be rendered here — this only reports
+ * what the backend now knows, never fabricates the statements themselves.
+ */
+function StatementsBanner({
+  ticker,
+  acquisition,
+}: {
+  ticker: string;
+  acquisition: ReturnType<typeof useFinancialsAcquisition>;
+}) {
+  // Focus target for the terminal-without-action outcomes below. `tabIndex={-1}`
+  // keeps it out of the normal Tab order — it's only ever reached
+  // programmatically, right after the control it replaces disappears.
+  const focusRef = useRef<HTMLDivElement>(null);
+  const outcome = acquisition.isSuccess ? acquisition.data.outcome : undefined;
+
+  useEffect(() => {
+    // Keyed on `acquisition.data`'s identity (a fresh object per resolved
+    // mutation) so this fires exactly once per new terminal result — never
+    // on an unrelated re-render, which would yank focus from whatever the
+    // user is doing next.
+    if (outcome && TERMINAL_OUTCOMES_WITHOUT_ACTION.has(outcome)) {
+      focusRef.current?.focus();
+    }
+  }, [outcome, acquisition.data]);
+
+  const checkAction = (
+    <Button
+      variant="secondary"
+      size="sm"
+      loading={acquisition.isPending}
+      onClick={() => acquisition.mutate()}
+    >
+      {acquisition.isSuccess ? "Check status" : "Check for financial statements"}
+    </Button>
+  );
+
+  let content;
+  if (acquisition.isError) {
+    content = (
+      <Banner tone="error" action={checkAction}>
+        {acquisition.error.message}
+      </Banner>
+    );
+  } else if (outcome === "requested") {
+    content = (
+      <Banner tone="info" action={checkAction}>
+        Fetching financial statements for {ticker} in the background — check back shortly.
+      </Banner>
+    );
+  } else if (outcome === "available") {
+    content = (
+      <Banner tone="success">
+        Financial statements for {ticker} are now available on the backend. Display in this screen
+        isn&apos;t built yet.
+      </Banner>
+    );
+  } else if (outcome === "confirmed_unavailable") {
+    content = (
+      <Banner tone="info">The data provider has no financial statements for {ticker}.</Banner>
+    );
+  } else if (outcome === "mixed") {
+    content = (
+      <Banner tone="info">
+        Some financial statements for {ticker} are available, others aren&apos;t — the provider
+        couldn&apos;t supply all of them.
+      </Banner>
+    );
+  } else {
+    content = (
+      <Banner tone="info" action={checkAction}>
+        Multi-period Income Statement / Balance Sheet / Cash Flow Statement data isn&apos;t
+        available yet — this section will show them once structured statement data is added to the
+        backend.
+      </Banner>
+    );
+  }
+
+  return (
+    <div ref={focusRef} tabIndex={-1}>
+      {content}
+    </div>
+  );
+}
+
 export function FinancialsSection({ ticker }: { ticker: string }) {
   const jobId = useSearchParams().get("job");
   const report = useReport(jobId);
+  const acquisition = useFinancialsAcquisition(ticker);
 
   if (!jobId) {
     return (
@@ -111,11 +211,7 @@ export function FinancialsSection({ ticker }: { ticker: string }) {
       <Card>
         <CardContent className="flex flex-col gap-3">
           <Text variant="body-strong">Financial Statements</Text>
-          <Banner tone="info">
-            Multi-period Income Statement / Balance Sheet / Cash Flow Statement data isn&apos;t
-            available yet — this section will show them once structured statement data is added to
-            the backend.
-          </Banner>
+          <StatementsBanner ticker={ticker} acquisition={acquisition} />
         </CardContent>
       </Card>
     </div>

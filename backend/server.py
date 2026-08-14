@@ -43,13 +43,15 @@ from agents import company_index
 from app.api.errors import domain_error_handler
 from app.container import build_container
 from app.settings import load_settings
-from domain.errors import DomainError
+from domain.errors import DomainError, InfrastructureError, RateLimitedError, ValidationError
+from domain.financials import AcquisitionOutcome, PeriodType, StatementType
 from domain.models import JobKind
 from infrastructure.mongo.client import ping as mongo_ping
 from infrastructure.redis.client import ping as redis_ping
 from infrastructure.mongo.indexes import ensure_indexes as ensure_mongo_indexes
 from infrastructure.observability.logging import install_correlation_filter, set_correlation_id
 from infrastructure.observability.metrics import (
+    acquisition_request_total,
     auth_failures_total,
     authz_denied_total,
     deadline_exceeded_total,
@@ -93,6 +95,26 @@ settings = load_settings()
 container = build_container(settings)
 RUNNING_TASKS: dict[str, asyncio.Task] = {}
 _tracing_started = False
+
+# Fire-and-forget background tasks with no natural key (unlike RUNNING_TASKS
+# above, keyed by job_id for cancel_report's lookup). asyncio.create_task()
+# only holds a weak reference to the task it returns — a documented footgun
+# (see the asyncio docs' own "Save a reference to the result" warning): with
+# no strong reference retained anywhere, the task can be garbage-collected
+# before it completes, even while the process stays healthy. This set is
+# that strong reference; the done-callback removes it once the task
+# finishes, so it never grows unbounded.
+_BACKGROUND_TASKS: set[asyncio.Task] = set()
+
+
+def _track_background_task(task: asyncio.Task) -> asyncio.Task:
+    """Retains an already-created fire-and-forget task until it completes,
+    then discards it automatically. Does not create a task itself — callers
+    still own `asyncio.create_task(...)` (or, for M8, the orchestrator's own
+    `schedule()`); this only fixes the reference-lifetime gap."""
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+    return task
 
 # Compile graphs once at startup.
 graph = build_graph(db)
@@ -357,7 +379,7 @@ async def forgot_password(req: ForgotPasswordRequest):
             # would make this branch measurably slower than the not-found
             # branch, leaking account existence via response timing even
             # though the response body is identical either way.
-            asyncio.create_task(notify.send_otp_email(email, otp))
+            _track_background_task(asyncio.create_task(notify.send_otp_email(email, otp)))
     return {"ok": True}
 
 
@@ -680,6 +702,18 @@ async def ensure_company(req: EnsureRequest, user: dict = Depends(current_user))
     if not ticker:
         raise HTTPException(status_code=400, detail="ticker required")
 
+    # M8 Step 6 — Document 36 §4.1's "existing ingestion step" acquisition
+    # trigger: fire-and-forget financial-statement acquisition for this
+    # ticker, unconditional (fires whether or not text filings already
+    # exist, since financial-statement acquisition is a separate, possibly
+    # not-yet-attempted concern). Matches the /auth/forgot-password
+    # OTP-email precedent exactly (asyncio.create_task, never awaited) —
+    # safe because AcquireFinancialsUseCase.acquire() never raises (Step 5).
+    # schedule() already created these tasks; retaining them here only
+    # fixes their reference lifetime, it does not create a second task.
+    for task in container.financials_orchestrator.schedule(ticker, trigger="ensure_company"):
+        _track_background_task(task)
+
     # Indian tickers aren't in SEC EDGAR
     exch = company_index.lookup_exchange(ticker)
     name = company_index.lookup_ticker(ticker)
@@ -760,6 +794,68 @@ async def ensure_company(req: EnsureRequest, user: dict = Depends(current_user))
             "Finance. Try 'Paste text' or 'Upload audio' on the Ingest page."
         ),
     )
+
+
+@api.post("/companies/{ticker}/financials/acquire")
+async def acquire_financials(
+    ticker: str, period_type: PeriodType, user: dict = Depends(current_user)
+) -> dict:
+    """M8 Step 7 — Document 33 Amendment §1-§17 (frozen wire contract). A
+    thin HTTP adapter only: reads current AcquisitionState for the three
+    statement-type identities implied by (ticker, period_type) through the
+    same repository port Step 5 uses, schedules acquisition only for
+    whichever are not_yet_acquired via Step 6's orchestrator, and maps the
+    result onto the frozen four-outcome response. No AS-4/AS-5/provider-
+    classification/acquisition-state-transition logic lives here — that
+    stays in application/financials.py (Step 5) and
+    application/financials_orchestration.py (Step 6), invoked, not
+    reimplemented. GET /companies/{ticker}/financials is a separate,
+    unbuilt, unrelated governance gate — not touched by this endpoint.
+    """
+    ticker = ticker.strip().upper()
+    if not ticker:
+        raise ValidationError("ticker required", code="validation_error")
+
+    rate_limit_key = f"acquire:{user['id']}:{ticker}:{period_type.value}"
+    if auth.is_rate_limited(rate_limit_key):
+        raise RateLimitedError("Too many acquisition requests for this ticker. Retry in a moment.")
+    auth.record_hit(rate_limit_key)
+
+    with get_tracer().start_as_current_span("financials.acquire_endpoint") as span:
+        span.set_attribute("ticker", ticker)
+        span.set_attribute("period_type", period_type.value)
+        try:
+            results = await asyncio.gather(
+                *(container.acquisition_states.get(ticker, period_type, st) for st in StatementType)
+            )
+        except Exception as e:  # noqa: BLE001 — synchronous infra failure, Document 33 §8's 502 case
+            logger.exception(
+                "acquisition-state read failed ticker=%s period_type=%s", ticker, period_type.value
+            )
+            raise InfrastructureError("Failed to read acquisition state. See server logs for details.") from e
+
+        states = dict(zip(StatementType, results))
+        not_yet = [st for st, state in states.items() if state is AcquisitionOutcome.NOT_YET_ACQUIRED]
+
+        if not_yet:
+            outcome = "requested"
+            for task in container.financials_orchestrator.schedule(
+                ticker, period_types=[period_type], statement_types=not_yet, trigger="acquire_endpoint"
+            ):
+                _track_background_task(task)
+        elif all(state is AcquisitionOutcome.AVAILABLE for state in states.values()):
+            outcome = "available"
+        elif all(state is AcquisitionOutcome.CONFIRMED_UNAVAILABLE for state in states.values()):
+            outcome = "confirmed_unavailable"
+        else:
+            outcome = "mixed"
+
+        span.set_attribute("acquisition.outcome", outcome)
+        acquisition_request_total.labels(outcome=outcome).inc()
+        logger.info(
+            "acquisition request ticker=%s period_type=%s outcome=%s", ticker, period_type.value, outcome
+        )
+        return {"ticker": ticker, "period_type": period_type.value, "outcome": outcome}
 
 
 @api.get("/filings")

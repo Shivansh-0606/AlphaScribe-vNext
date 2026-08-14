@@ -6,10 +6,15 @@ docs/backend_engineering/11_ADR_Index.md's "API-contract impact of the whole
 set" table (04 §5.3, 10 §4.4), have no frontend consumer, and modify no
 existing route — PLUS the 4 Learning routes (M2 Phase L), the one addition
 the Implementation Charter's W-4 explicitly anticipates: "only Phase L may
-regenerate [this] (4 additive routes)". Every field/path/status shape is
-transcribed verbatim from the frozen frontend contract
-(web/features/learning/integration/schemas.ts) — see
-03_Learning_Backend_Design.md §1.
+regenerate [this] (4 additive routes)" — PLUS 1 M8 Step 7 route
+(`POST /companies/{ticker}/financials/acquire`), the frozen wire contract in
+docs/backend_engineering/33_M8_Financials_API_Contract_Review.md's "Amendment
+— Financials Acquisition Request Endpoint" section (§1-§17, CTO approved).
+Every field/path/status shape is transcribed verbatim from the frozen frontend
+contract (web/features/learning/integration/schemas.ts) — see
+03_Learning_Backend_Design.md §1 — except the M8 addition, transcribed from
+Document 33's Amendment section instead (no frontend consumer exists yet,
+Document 37 §10).
 
 This is the automated guard on 06 C-1 ("no approved API contract may change")
 — it is deliberately an exact-set assertion, not a fuzzy/partial one: adding,
@@ -74,6 +79,7 @@ APPROVED_ROUTES = {
     ("GET", "/api/learning/{id}/stream"),     # M2 Phase L — additive
     ("GET", "/api/learning/{id}"),            # M2 Phase L — additive
     ("POST", "/api/learning/{id}/cancel"),    # M2 Phase L — additive
+    ("POST", "/api/companies/{ticker}/financials/acquire"),  # M8 Step 7 — additive, Document 33 Amendment
 }
 
 _HTTP_METHODS = {"get", "post", "put", "delete", "patch"}
@@ -91,8 +97,8 @@ def _actual_routes() -> set[tuple[str, str]]:
 
 def test_route_count_matches_the_approved_contract():
     # 31 approved (02) + 2 additive M2 Phase 1 (health/ready, metrics) + 4
-    # additive M2 Phase L (Learning).
-    assert len(APPROVED_ROUTES) == 37
+    # additive M2 Phase L (Learning) + 1 additive M8 Step 7 (financials acquire).
+    assert len(APPROVED_ROUTES) == 38
 
 
 def test_no_routes_were_added_removed_or_renamed():
@@ -111,4 +117,4 @@ if __name__ == "__main__":
     test_route_count_matches_the_approved_contract()
     test_no_routes_were_added_removed_or_renamed()
     print("ok: live route surface matches the 31 approved + 2 additive M2 Phase 1 "
-          "+ 4 additive M2 Phase L (Learning) routes exactly")
+          "+ 4 additive M2 Phase L (Learning) + 1 additive M8 Step 7 (financials acquire) routes exactly")

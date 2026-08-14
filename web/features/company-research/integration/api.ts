@@ -4,6 +4,7 @@ import { AppError } from "@/lib/errors/app-error";
 import {
   cancelReportResponseSchema,
   filingsResponseSchema,
+  financialsAcquireResponseSchema,
   generateReportRequestSchema,
   generateReportResponseSchema,
   ingestEdgarRequestSchema,
@@ -57,6 +58,16 @@ export function cancelReport(jobId: string) {
 export function fetchFilings(ticker: string) {
   const params = new URLSearchParams({ ticker });
   return apiFetch(`/api/filings?${params.toString()}`, filingsResponseSchema);
+}
+
+/** `period_type` is a required query param on this route, not a body field (Document 33 Amendment, frozen). */
+export function acquireFinancials(ticker: string, periodType: "annual" | "quarterly") {
+  const params = new URLSearchParams({ period_type: periodType });
+  return apiFetch(
+    `/api/companies/${encodeURIComponent(ticker)}/financials/acquire?${params.toString()}`,
+    financialsAcquireResponseSchema,
+    { method: "POST" },
+  );
 }
 
 /**
