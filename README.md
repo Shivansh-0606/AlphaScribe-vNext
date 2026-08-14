@@ -1,9 +1,10 @@
 # AlphaScribe — Multi-Agent Equity Research Copilot
 
-AlphaScribe turns raw SEC filings and earnings-call transcripts into concise,
-**fact-checked** equity-research briefs. Ask a question about a company, and a
-pipeline of specialized AI agents retrieves the relevant filing passages,
-extracts the financials, gauges management tone, writes a cited brief, and then
+AlphaScribe turns raw filings and earnings-call transcripts — US **SEC**
+filings or **Indian (NSE/BSE)** annual reports — into concise, **fact-checked**
+equity-research briefs. Ask a question about a company, and a pipeline of
+specialized AI agents retrieves the relevant filing passages, extracts the
+financials, gauges management tone, writes a cited brief, and then
 **verifies every numeric claim against the source documents** — retrying the
 draft if anything is unsupported.
 
