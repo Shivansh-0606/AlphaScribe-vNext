@@ -89,10 +89,12 @@ Three ways to get data in:
    ```bash
    curl -X POST http://localhost:8001/api/ingest/samples
    ```
-2. **Auto-fetch from SEC EDGAR**: on the Ingest page, enter a US ticker
-   (e.g. `AAPL`) and let it pull the latest 10-Q/10-K.
-3. **Paste text / upload audio**: paste a quarterly result or upload an
-   earnings-call recording (transcribed via Whisper).
+2. **Auto-fetch a filing**: on the Ingest page, enter a US ticker (e.g. `AAPL`)
+   to pull the latest 10-Q/10-K from SEC EDGAR, or an NSE/BSE ticker (e.g.
+   `RELIANCE`, `TCS`) to pull the latest annual report from BSE.
+3. **Paste text / upload a PDF or audio file**: paste a quarterly result,
+   upload an annual-report PDF, or upload an earnings-call recording
+   (transcribed via Gemini).
 
 Then pick a company on the **Dashboard**, ask a question, and watch the
 pipeline stream its work live.

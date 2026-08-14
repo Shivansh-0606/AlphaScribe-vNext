@@ -1,11 +1,15 @@
 # AlphaScribe vNext — Frontend
 
-The greenfield Next.js 15 frontend for AlphaScribe, an AI-native equity research workspace.
-Milestone 1 (application shell, design tokens, infrastructure) and Milestone 2's P0+P1 scope
-(the full foundation component library — see [`components/foundation/README.md`](components/foundation/README.md#milestone-2-status)
-for what's built and what's deliberately deferred pending upstream design work) are complete.
-No product features live here yet; see [Architecture References](#architecture-references) for
-what governs what gets built next.
+The Next.js 15 frontend for AlphaScribe, an AI-native equity research workspace, and the
+active replacement for the frozen legacy `frontend/` (CRA) app. The foundation layer
+(design tokens, component library — see
+[`components/foundation/README.md`](components/foundation/README.md#milestone-2-status))
+is complete, and product features are built on top of it in `features/`: account setup,
+workspace home, company research (including financial statements), comparison, and Learning
+(concept explanations) all live here today. See
+[Architecture References](#architecture-references) for what governs what gets built next,
+and [`docs/governance/Feature_Parity_Tracker.md`](../docs/governance/Feature_Parity_Tracker.md)
+for migration status against the legacy app.
 
 ## Stack
 
@@ -29,7 +33,7 @@ it requires a Change Request.
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000).
+   Open [http://localhost:3001](http://localhost:3001).
 
 ## Environment Setup
 

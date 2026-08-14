@@ -25,10 +25,16 @@ draft if anything is unsupported.
   `[2]`, … and unsupported numbers are flagged and rewritten.
 - **Quality scorecard:** a RAGAS-style scorecard scores each report on
   faithfulness, context precision, and answer relevance.
-- **Multiple ingest paths:** paste text, auto-fetch the latest 10-Q/10-K from
-  **SEC EDGAR**, load bundled demo filings, or upload an **earnings-call audio**
-  file (transcription uses Gemini and needs a `GEMINI_API_KEY`, regardless of
-  which provider writes the brief).
+- **US and Indian filings:** auto-fetch the latest 10-Q/10-K for any US ticker
+  from **SEC EDGAR**, or the latest annual report for an **NSE/BSE-listed
+  Indian company** (~200 bundled tickers, e.g. `RELIANCE`, `TCS`, `INFY`)
+  straight from **BSE**. Both are best-effort — if EDGAR/BSE has nothing, or
+  a company isn't in the bundled list, paste the filing text or upload the PDF
+  yourself instead.
+- **Multiple ingest paths:** paste text, auto-fetch as above, upload a PDF
+  annual report, load bundled demo filings, or upload an **earnings-call
+  audio** file (transcription uses Gemini and needs a `GEMINI_API_KEY`,
+  regardless of which provider writes the brief).
 - **Live pipeline streaming:** watch each agent's progress in real time over
   Server-Sent Events.
 - **Compare & follow-up:** compare multiple reports side by side and ask
@@ -71,9 +77,9 @@ draft if anything is unsupported.
                                     │
                  ┌──────────────────┼──────────────────┐
                  ▼                  ▼                  ▼
-             MongoDB             AI Model        SEC EDGAR
-        (filings, chunks,   (extraction, synth,  (filing fetch)
-         reports, jobs)      fact-check, audio)
+             MongoDB             AI Model      SEC EDGAR / BSE
+        (filings, chunks,   (extraction, synth,  / yfinance
+         reports, jobs)      fact-check, audio)  (filing + financials fetch)
 ```
 
 **Tech stack**
@@ -83,7 +89,7 @@ draft if anything is unsupported.
 | Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui primitives (wrapped by a foundation design-system layer), TanStack Query, Zustand, Motion |
 | Backend | FastAPI, LangGraph, Pydantic, Motor (async MongoDB) |
 | AI / ML | Pluggable LLM provider — Gemini, OpenAI, Anthropic, Groq, OpenRouter, DeepSeek, Mistral, or any OpenAI-compatible endpoint (each with sensible light/heavy model defaults); hybrid RAG: `rank-bm25` + `fastembed` dense embeddings + cross-encoder re-ranking |
-| Data | MongoDB, SEC EDGAR |
+| Data | MongoDB; SEC EDGAR (US filings), BSE (Indian annual reports), yfinance (financial statements) |
 
 ---
 
@@ -136,7 +142,8 @@ backend/
     retrieval.py         hybrid BM25 + dense + cross-encoder retrieval
     llm.py               multi-provider LLM wrapper (Gemini / OpenAI / Anthropic / Groq / …)
     scoring.py           RAGAS-style quality scorecard
-    ingest.py            SEC EDGAR fetch + document chunking
+    ingest.py            SEC EDGAR + BSE (Indian annual report) fetch, PDF/document chunking
+    indian_companies.py  bundled NSE/BSE ticker list (search coverage; SEC EDGAR is US-only)
     learning_graph.py    Learning (concept explanation) LangGraph pipeline
     financials_provider.py  yfinance-backed financial statements provider
   domain/                 framework-free models, events, errors (financials.py, …)
