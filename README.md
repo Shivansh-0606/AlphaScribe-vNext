@@ -33,6 +33,12 @@ draft if anything is unsupported.
   Server-Sent Events.
 - **Compare & follow-up:** compare multiple reports side by side and ask
   follow-up questions that build on a prior brief.
+- **Financial statements:** acquire and persist a company's income statement,
+  balance sheet, and cash flow (yfinance-backed) on demand from the research
+  screen.
+- **Concept explanations:** ask the Learning pipeline to explain any
+  financial or filing concept in plain language, grounded in the same
+  retrieval pipeline.
 
 ---
 
@@ -123,7 +129,7 @@ See **[README-RUN.md](README-RUN.md)** for detailed setup and troubleshooting.
 
 ```
 backend/
-  server.py              FastAPI app: ingest, report generation, SSE streaming
+  server.py              FastAPI app: ingest, report generation, SSE streaming, routes
   agents/
     graph.py             LangGraph pipeline definition
     nodes.py             retriever / extractor / tone / synthesizer / fact-checker
@@ -131,10 +137,18 @@ backend/
     llm.py               multi-provider LLM wrapper (Gemini / OpenAI / Anthropic / Groq / …)
     scoring.py           RAGAS-style quality scorecard
     ingest.py            SEC EDGAR fetch + document chunking
+    learning_graph.py    Learning (concept explanation) LangGraph pipeline
+    financials_provider.py  yfinance-backed financial statements provider
+  domain/                 framework-free models, events, errors (financials.py, …)
+  application/            use cases / orchestration (jobs, financials acquisition)
+  infrastructure/          Mongo, Redis, LLM registry, observability, streaming, security
+  app/                     settings + dependency-injection container
+  scripts/                 acquire_financials.py, load_test.py — one-off/manual jobs
 web/
   app/                    Next.js App Router — route composition
   components/             foundation (design-system) + feature-presentational components
-  features/               account-setup, workspace-home, company-research, comparison, …
+  features/               account-setup, workspace-home, company-research, comparison,
+                           learning, research-library
 scripts/run.py / run.bat  one-command local launcher
 ```
 
