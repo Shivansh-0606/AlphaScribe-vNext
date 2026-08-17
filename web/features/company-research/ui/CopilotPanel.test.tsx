@@ -136,4 +136,100 @@ describe("CopilotPanel", () => {
     );
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  describe("composer: Enter to send", () => {
+    it("Enter submits the follow-up question", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-2" });
+      const { user } = renderWithProviders(<CopilotPanel ticker="AAPL" contextReportId="job-1" />);
+
+      await user.type(screen.getByLabelText(/Ask a follow-up question/), "Follow-up");
+      await user.keyboard("{Enter}");
+
+      await waitFor(() => expect(generateReport).toHaveBeenCalledTimes(1));
+    });
+
+    it("Shift+Enter inserts a newline instead of submitting", async () => {
+      const { user } = renderWithProviders(<CopilotPanel ticker="AAPL" contextReportId="job-1" />);
+      const textarea = screen.getByLabelText(/Ask a follow-up question/) as HTMLTextAreaElement;
+
+      await user.type(textarea, "line one");
+      await user.keyboard("{Shift>}{Enter}{/Shift}");
+      await user.type(textarea, "line two");
+
+      expect(textarea.value).toBe("line one\nline two");
+      expect(generateReport).not.toHaveBeenCalled();
+    });
+
+    it("does not double-submit if Enter is pressed again before the request settles", async () => {
+      let resolveGenerate: (value: unknown) => void = () => {};
+      generateReport.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveGenerate = resolve;
+        }),
+      );
+      const { user } = renderWithProviders(<CopilotPanel ticker="AAPL" contextReportId="job-1" />);
+
+      await user.type(screen.getByLabelText(/Ask a follow-up question/), "Follow-up");
+      await user.keyboard("{Enter}");
+      await user.keyboard("{Enter}");
+
+      resolveGenerate({ job_id: "job-2" });
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+      expect(generateReport).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("focus management on submission", () => {
+    it("moves focus to the failure banner when a follow-up fails", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-2" });
+      const { user } = renderWithProviders(<CopilotPanel ticker="AAPL" contextReportId="job-1" />);
+      await user.type(screen.getByLabelText(/Ask a follow-up question/), "Follow-up");
+      await user.click(screen.getByRole("button", { name: "Ask" }));
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+
+      lastStreamHandlers().onEvent({
+        node: "pipeline",
+        status: "error",
+        message: "Pipeline failed",
+      });
+
+      const banner = await screen.findByText("Pipeline failed");
+      expect(banner.closest('[tabindex="-1"]')).toHaveFocus();
+    });
+
+    it("moves focus to the answer card when a follow-up completes", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-2" });
+      const { user } = renderWithProviders(<CopilotPanel ticker="AAPL" contextReportId="job-1" />);
+      await user.type(screen.getByLabelText(/Ask a follow-up question/), "Follow-up");
+      await user.click(screen.getByRole("button", { name: "Ask" }));
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+
+      lastStreamHandlers().onEvent({ node: "final", status: "ok", report: FOLLOWUP_REPORT });
+      lastStreamHandlers().onEnd();
+
+      const heading = await screen.findByText("Follow-up answer");
+      expect(heading.closest('[tabindex="-1"]')).toHaveFocus();
+    });
+
+    it("does not steal focus back on an unrelated re-render once already in a terminal state", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-2" });
+      const { user, rerender } = renderWithProviders(
+        <CopilotPanel ticker="AAPL" contextReportId="job-1" />,
+      );
+      await user.type(screen.getByLabelText(/Ask a follow-up question/), "Follow-up");
+      await user.click(screen.getByRole("button", { name: "Ask" }));
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+      lastStreamHandlers().onEvent({ node: "final", status: "ok", report: FOLLOWUP_REPORT });
+      lastStreamHandlers().onEnd();
+      await screen.findByText("Follow-up answer");
+
+      const copyButton = screen.getByRole("button", { name: "Copy" });
+      copyButton.focus();
+      expect(copyButton).toHaveFocus();
+
+      rerender(<CopilotPanel ticker="AAPL" contextReportId="job-1" />);
+
+      expect(copyButton).toHaveFocus();
+    });
+  });
 });

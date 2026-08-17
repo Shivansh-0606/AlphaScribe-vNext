@@ -114,6 +114,19 @@ acquisition_request_total = Counter(
     ["outcome"],
 )
 
+# --- ACTIVE — M9.1 (server.py::_run_comparison_explanation). `kind`-labeled,
+# not `graph`-labeled: this capability is a single chat_json call, not a
+# LangGraph graph, so it has no node-boundary deadline semantics to attach a
+# `graph=`/`deadline_exceeded_total`-style label to (Document 43 §16/§20 —
+# explicitly do not presuppose a graph exists). One counter covers run
+# outcome (completed_complete/completed_partial/failed/cancelled), which also
+# gives partial-evidence visibility without a second metric. ---
+comparison_explanation_runs_total = Counter(
+    "alphascribe_comparison_explanation_runs_total",
+    "M9.1 comparison-explanation job runs, by outcome",
+    ["outcome"],  # completed_complete | completed_partial | failed | failed_deadline_exceeded | cancelled
+)
+
 # --- DEFINED, not yet incremented anywhere — its call site is 09 §8.1's
 # fail-open policy, implemented today in agents/auth.py's in-memory rate
 # limiter, not the RedisRateLimiter port this gauge belongs to (that port

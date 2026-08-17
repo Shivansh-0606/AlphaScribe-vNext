@@ -32,3 +32,36 @@ class ClaimCheck(BaseModel):
 
 class FactCheckSchema(BaseModel):
     claims: list[ClaimCheck] = Field(default_factory=list)
+
+
+class ComparisonSourceSchema(BaseModel):
+    """One entry in a comparison explanation's citation list (M9.1, Document 43 §10).
+    `report_number` is a 1-based index into the reports supplied in the prompt, NOT a
+    real database id — the server maps it to the actual `report_id` after validation
+    (agents/comparison_explanation.py), so the model is never trusted to emit a real id."""
+    index: int = Field(description="1-based citation index; matches an [n] marker in narrative")
+    report_number: int = Field(description="1-based index into the provided reports list this claim is grounded in")
+    field: str = Field(description="One of: extracted_data, sentiment_analysis, scorecard, report")
+
+
+class ComparisonLimitationSchema(BaseModel):
+    report_number: Optional[int] = Field(
+        default=None, description="1-based index of the report with missing/non-comparable data, if attributable to one specific report"
+    )
+    metric: str = Field(description="The metric or field that is missing or non-comparable")
+    reason: str = Field(description="Short, plain-language reason the data is unavailable — never a fabricated value")
+
+
+class ComparisonExplanationSchema(BaseModel):
+    """Structured output for M9.1 comparison explanation (Level 2 — Semantic
+    Interpretation, Document 42). `narrative` must cite every material claim via
+    inline [n] markers resolved against `sources`; `limitations` names evidence gaps
+    explicitly rather than inferring/estimating them (Document 42 §11)."""
+    narrative: str = Field(description="Plain-language explanation of the meaningful differences, with inline [n] citation markers for every material claim")
+    sources: list[ComparisonSourceSchema] = Field(default_factory=list)
+    cited_source_indices: list[int] = Field(
+        default_factory=list, description="1-based indices into sources that are actually referenced by [n] markers in narrative"
+    )
+    limitations: list[ComparisonLimitationSchema] = Field(
+        default_factory=list, description="Explicit evidence gaps for data that is missing or non-comparable — never invent a value to fill these"
+    )

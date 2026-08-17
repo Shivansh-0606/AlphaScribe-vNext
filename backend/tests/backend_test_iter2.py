@@ -1,4 +1,4 @@
-"""Iteration 2 tests: retrieval status, rescore, jobs persistence, compare, scorecard."""
+"""Iteration 2 tests: retrieval status, jobs persistence, compare, scorecard."""
 import json
 import os
 import time
@@ -128,19 +128,6 @@ def test_get_report_has_scorecard(client, new_job):
     for k in ("faithfulness", "context_precision", "answer_relevance", "overall",
               "cited_sources", "n_claims", "n_supported"):
         assert k in sc, f"missing scorecard key: {k}"
-
-
-# --- Rescore ---
-def test_rescore_reports_requires_admin(client):
-    # EQ-2 (02 §4.5 / 00_README ratification register): admin-gated as of the
-    # Company Research findings pass — a regular authenticated user could
-    # previously trigger a full-collection cross-tenant scorecard rewrite.
-    # The admin-success path is covered hermetically instead
-    # (tests/unit/test_server_helpers.py) rather than live, since live-testing
-    # it would need this server's real ADMIN_EMAILS account, which a shared
-    # dev database shouldn't have test suites logging into.
-    r = client.post(f"{API}/reports/rescore")
-    assert r.status_code == 403
 
 
 # --- Compare ---

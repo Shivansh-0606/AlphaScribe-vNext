@@ -2,9 +2,7 @@
 server or DB to exercise directly: the session-cookie policy
 (_set_session_cookie), the pydantic `input`-stripping validation-error
 handler (10 §6.1 T-14 — a rejected password must never echo back verbatim),
-rescore_reports' admin gate (EQ-2, 02 §4.5 — no DB touch happens because
-require_admin raises before any db.reports call), cancel_report's
-ownership gate (EQ-3, 01 D-5, M5 — the JobStore is in-memory by default, so
+cancel_report's ownership gate (EQ-3, 01 D-5, M5 — the JobStore is in-memory by default, so
 starting then cancelling a job touches no Mongo either), and
 _track_background_task — the fire-and-forget task-lifetime fix (a task with
 no retained reference can be garbage-collected before completion, a
@@ -32,7 +30,6 @@ from fastapi import HTTPException, Response  # noqa: E402
 from fastapi.exceptions import RequestValidationError  # noqa: E402
 
 from agents import company_index  # noqa: E402
-from domain.errors import AuthorizationError  # noqa: E402
 import server  # noqa: E402
 
 
@@ -79,27 +76,12 @@ def test_validation_error_handler_strips_the_raw_input():
     assert "String should have at least 8 characters" in body  # message kept
 
 
-def test_rescore_reports_rejects_a_non_admin_before_touching_the_db():
-    # Calls the route function directly (no TestClient/lifespan, no Mongo
-    # connection needed): require_admin raises before rescore_reports' first
-    # db.reports.find() call, so this stays hermetic despite exercising the
-    # real route handler, not just infrastructure/security/authorization.py's
-    # require_admin in isolation (already covered by test_authorization.py).
-    try:
-        asyncio.run(server.rescore_reports(user={"email": "nobody@example.com"}))
-    except AuthorizationError as e:
-        assert e.status_code == 403
-        assert e.message == "This action is restricted to admin accounts."
-    else:
-        raise AssertionError("expected AuthorizationError for a non-admin user")
-
-
 def test_cancel_report_denies_a_non_owner_before_any_mongo_write():
     # container.job_lifecycle.start() only touches the in-memory JobStore
     # (JOB_BACKEND=memory, the hermetic default) — no Mongo needed to prove
     # the ownership check (M5) fires before cancel_report's first db.jobs
-    # write, mirroring the rescore test's same "hermetic despite calling the
-    # real route" shape above.
+    # write, staying hermetic despite calling the real route handler, not
+    # just a mocked one.
     job_id = f"hermetic-eq3-{id(object())}"
     asyncio.run(server.container.job_lifecycle.start(
         job_id, server.JobKind.RESEARCH, "owner-user-id", ticker="TEST",
@@ -242,11 +224,10 @@ if __name__ == "__main__":
     test_cookie_has_no_max_age_when_remember_is_false()
     test_cookie_has_max_age_when_remember_is_true()
     test_validation_error_handler_strips_the_raw_input()
-    test_rescore_reports_rejects_a_non_admin_before_touching_the_db()
     test_cancel_report_denies_a_non_owner_before_any_mongo_write()
     test_track_background_task_retains_while_pending_and_discards_when_done()
     test_forgot_password_otp_task_is_retained()
     test_ensure_company_retains_the_financials_orchestrator_tasks()
     print("ok: cookie policy (HttpOnly/Secure/SameSite/Max-Age); 422 handler strips raw input app-wide; "
-          "rescore admin gate (EQ-2); cancel_report ownership gate (EQ-3); background-task retention "
+          "cancel_report ownership gate (EQ-3); background-task retention "
           "(generic, OTP site, M8 ensure_company site)")

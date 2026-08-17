@@ -23,6 +23,7 @@ from infrastructure.observability.logging import (
     set_correlation_id,
 )
 from infrastructure.observability.metrics import (
+    comparison_explanation_runs_total,
     deadline_exceeded_total,
     http_requests_total,
     llm_tokens_total,
@@ -201,6 +202,21 @@ def test_deadline_exceeded_total_is_a_real_counter():
     deadline_exceeded_total.labels(graph="research", node="synthesizer").inc()
     after_body, _ = render_latest()
     assert b"alphascribe_deadline_exceeded_total" in after_body
+    assert after_body != before_body
+
+
+def test_comparison_explanation_runs_total_covers_deadline_exceeded_without_a_graph_label():
+    """M9.1's corrective pass (Document 43 §16/§20): a comparison-explanation
+    deadline is NOT recorded via deadline_exceeded_total (that metric's
+    graph/node labels are tied to LangGraph node-boundary semantics this
+    single-chat_json-call capability doesn't have) — it's the `outcome` label
+    on this capability-appropriate, kind-shaped counter instead."""
+    before_body, _ = render_latest()
+    comparison_explanation_runs_total.labels(outcome="failed_deadline_exceeded").inc()
+    after_body, _ = render_latest()
+    assert b"alphascribe_comparison_explanation_runs_total" in after_body
+    assert b'outcome="failed_deadline_exceeded"' in after_body
+    assert b'graph="comparison_explanation"' not in after_body
     assert after_body != before_body
 
 

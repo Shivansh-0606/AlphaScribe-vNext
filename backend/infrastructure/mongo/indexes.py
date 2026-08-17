@@ -130,4 +130,33 @@ async def ensure_indexes(db: AsyncIOMotorDatabase) -> dict[str, list[str]]:
         unique=True, name="I-27_ticker_period_type_statement_unique",
     )
 
+    # --- comparison_explanation_jobs (M9.1 — Document 43 §14/§15, job mirror
+    # for JobKind.COMPARISON_EXPLANATION, mirroring jobs/explanation_jobs'
+    # own shape and TTL convention) ------------------------------------------
+    await _idx("comparison_explanation_jobs", "id", unique=True, name="I-28_id_unique")
+    # Partial unique index: at most one ACTIVE (queued/running) job per
+    # explanation identity, enforced by MongoDB itself (Document 43 §10/§15's
+    # "atomic mechanism appropriate to the existing MongoDB architecture,"
+    # not check;await;insert) — `active_identity_key` is set only while a job
+    # is non-terminal and explicitly nulled on every terminal transition
+    # (server.py::_run_comparison_explanation), so terminal jobs never
+    # collide with a later retry for the same identity.
+    await _idx(
+        "comparison_explanation_jobs", "active_identity_key",
+        unique=True, sparse=True, name="I-29_active_identity_key_unique_partial",
+    )
+    await _idx(
+        "comparison_explanation_jobs", "created_at",
+        expireAfterSeconds=30 * 24 * 3600, name="I-30_created_at_ttl_30d",
+    )
+
+    # --- comparison_explanations (M9.1 — Document 41 §12.1/§14.2, the durable
+    # explanation artifact; identity_key is the canonical explanation identity,
+    # Document 41 §12.2 — never Redis, never a snapshot; no TTL, durable like
+    # reports/explanations) ---------------------------------------------------
+    await _idx(
+        "comparison_explanations", "identity_key",
+        unique=True, name="I-31_identity_key_unique",
+    )
+
     return created

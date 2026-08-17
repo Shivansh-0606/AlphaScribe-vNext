@@ -101,11 +101,6 @@ def test_anonymous_compare_rejected(authed_job_id):
     assert r.status_code == 401
 
 
-def test_anonymous_rescore_rejected():
-    r = requests.post(f"{API}/reports/rescore")
-    assert r.status_code == 401
-
-
 # ---------- Per-user isolation ----------
 
 def test_list_scopes_to_caller(user_cookie, authed_job_id):

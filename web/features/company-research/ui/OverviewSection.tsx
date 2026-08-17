@@ -12,15 +12,26 @@ import { Link } from "@/components/foundation/Link";
 import { Loader } from "@/components/foundation/Loader";
 import { Text } from "@/components/foundation/Text";
 import { Textarea } from "@/components/foundation/Textarea";
+import { useFocusOnChange } from "@/lib/a11y/useFocusOnChange";
 import type { AppError } from "@/lib/errors/app-error";
+import { readSessionValue, removeSessionValue, writeSessionValue } from "@/lib/state/sessionValue";
 import * as companyResearchApi from "../integration/api";
 import type { IngestResult } from "../integration/schemas";
 import { useReport } from "../application/useReport";
 import { useResearchJob } from "../application/useResearchJob";
+import { isUsableReport } from "../internal/reportUsability";
 import { stageLabel } from "../internal/streamStages";
 import { AIResponseCard } from "./AIResponseCard";
 
 const NO_FILINGS_MARKER = "No filings ingested";
+
+/** Namespaced sessionStorage key for a job's original query — read back so
+ * Retry works after a reload/deep-link, since the backend doesn't expose
+ * the original query for a non-completed job and this is otherwise only
+ * ever held in this component's own local state. */
+function retryQueryKey(jobId: string): string {
+  return `company-research:retry-query:${jobId}`;
+}
 
 /**
  * SCR-06 Overview — the core of Phase 4A: ingest-on-demand, research
@@ -40,7 +51,13 @@ export function OverviewSection({
   const job = useResearchJob(ticker);
   const { resume } = job;
   const report = useReport(job.jobId);
-  const [query, setQuery] = useState("");
+  // Seeded from sessionStorage when this mount IS a deep link (reload/shared
+  // URL) — the only way Retry can know what to resubmit, since the backend's
+  // `GET /reports/{job_id}` doesn't expose the original query for a
+  // non-completed job. A fresh visit (`initialJobId` null) has nothing to read.
+  const [query, setQuery] = useState(() =>
+    initialJobId ? (readSessionValue(retryQueryKey(initialJobId)) ?? "") : "",
+  );
   const [pastedText, setPastedText] = useState("");
   const resumedRef = useRef(false);
   // Captured once, at mount, via the lazy initializer — NOT the live
@@ -67,6 +84,25 @@ export function OverviewSection({
     const params = new URLSearchParams({ ticker, job: job.jobId });
     router.replace(`/research?${params.toString()}` as Route);
   }, [job.jobId, router, ticker]);
+
+  // Persist the query the moment a job (fresh start or retry) gets an id —
+  // the only record of it that survives a reload. `query` can't actually
+  // change again while a job is in flight (the composer that edits it isn't
+  // rendered once we leave "idle"), so this fires once per new job, not on
+  // every render.
+  useEffect(() => {
+    if (job.jobId) writeSessionValue(retryQueryKey(job.jobId), query);
+  }, [job.jobId, query]);
+
+  // Clean up once the job produced a genuinely usable report — Retry is no
+  // longer offered past this point, so there's nothing left to resubmit for.
+  // Failed/cancelled jobs deliberately keep their persisted query (Retry
+  // still needs it) until the tab itself closes (sessionStorage's own bound).
+  useEffect(() => {
+    if (job.jobId && report.data && isUsableReport(report.data)) {
+      removeSessionValue(retryQueryKey(job.jobId));
+    }
+  }, [job.jobId, report.data]);
 
   const ingestText = useMutation<IngestResult, AppError, string>({
     mutationFn: (text) =>
@@ -96,6 +132,32 @@ export function OverviewSection({
   const needsIngest = job.startError?.message.includes(NO_FILINGS_MARKER) ?? false;
   const ingestError = ingestEdgar.error ?? ingestText.error ?? ingestSamples.error;
 
+  // Enter submits (Shift+Enter still inserts a newline, native textarea
+  // behavior); guards the exact condition the button's own disabled state
+  // uses, `job.isStarting` included — the button is only visibly disabled by
+  // its `loading` prop during that window, so a keyboard Enter needs its own
+  // check to avoid a double submit before `job.stage` leaves "idle".
+  const handleComposerKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    if (!query.trim() || job.isStarting) return;
+    job.start(query);
+  };
+
+  // Moves focus to the arriving response/status region once a run leaves
+  // "thinking/streaming/grounded" (08_AI_Components.md Prompt Composer:
+  // "submit moves attention to the arriving response region considerately")
+  // — never during the run itself, only on the actual terminal transition.
+  const focusKey =
+    job.stage === "failed" || job.stage === "cancelled"
+      ? job.stage
+      : report.data
+        ? `completed:${report.data.id}`
+        : report.isError
+          ? "completed:error"
+          : null;
+  const focusRef = useFocusOnChange(focusKey);
+
   // --- Idle: query form (+ inline ingest empty-state if the ticker has no filings) ---
   if (job.stage === "idle") {
     return (
@@ -105,6 +167,7 @@ export function OverviewSection({
             <Textarea
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={handleComposerKeyDown}
               placeholder="e.g. Summarize the latest quarterly results and key risks."
               maxLength={2000}
               showCounter
@@ -196,7 +259,7 @@ export function OverviewSection({
   // --- Failed / Cancelled: retain the produced trace, offer retry (Law 6) ---
   if (job.stage === "failed" || job.stage === "cancelled") {
     return (
-      <div className="flex flex-col gap-4">
+      <div ref={focusRef} tabIndex={-1} className="flex flex-col gap-4">
         <Banner
           tone={job.stage === "cancelled" ? "warning" : "error"}
           action={
@@ -228,32 +291,43 @@ export function OverviewSection({
   }
   if (report.isError || !report.data) {
     return (
-      <Banner
-        tone="error"
-        action={
-          <Button variant="secondary" size="sm" onClick={() => report.refetch()}>
-            Retry
-          </Button>
-        }
-      >
-        Couldn&apos;t load the finished report.
-      </Banner>
+      <div ref={focusRef} tabIndex={-1}>
+        <Banner
+          tone="error"
+          action={
+            <Button variant="secondary" size="sm" onClick={() => report.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Couldn&apos;t load the finished report.
+        </Banner>
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={focusRef} tabIndex={-1} className="flex flex-col gap-4">
       <AIResponseCard report={report.data} onRetry={retryAfterIngest} />
-      {/* Frozen entry point (05_Screen_Inventory.md SCR-06/SCR-08): "Company
-          Research (SCR-06, 'Explain This')" into Learning, grounded in this
-          report. Phase 8 scope: Learning itself is built; the backend
-          capability it calls is a proposed contract, not live yet. */}
-      <Link
-        href={`/learning?ticker=${ticker}&job=${report.data.id}` as Route}
-        className="self-start"
-      >
-        Explain a concept from this report
-      </Link>
+      <div className="flex flex-wrap gap-4">
+        {/* Frozen entry point (05_Screen_Inventory.md SCR-06/SCR-08): "Company
+            Research (SCR-06, 'Explain This')" into Learning, grounded in this
+            report. Phase 8 scope: Learning itself is built; the backend
+            capability it calls is a proposed contract, not live yet. */}
+        <Link
+          href={`/learning?ticker=${ticker}&job=${report.data.id}` as Route}
+          className="self-start"
+        >
+          Explain a concept from this report
+        </Link>
+        {/* Frozen action (05_Screen_Inventory.md SCR-06 "Available Actions":
+            "add to comparison") — reuses Comparison's own existing `?ids=`
+            deep-link contract (`app/(workspace)/compare/page.tsx`) verbatim;
+            no new comparison state or data model here. */}
+        <Link href={`/compare?ids=${report.data.id}` as Route} className="self-start">
+          Add to comparison
+        </Link>
+      </div>
     </div>
   );
 }

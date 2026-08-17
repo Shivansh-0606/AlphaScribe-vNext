@@ -43,7 +43,7 @@ from agents import company_index
 from app.api.errors import domain_error_handler
 from app.container import build_container
 from app.settings import load_settings
-from domain.errors import DomainError, InfrastructureError, RateLimitedError, ValidationError
+from domain.errors import DomainError, InfrastructureError, NotFoundError, RateLimitedError, ValidationError
 from domain.financials import AcquisitionOutcome, PeriodType, StatementType
 from domain.models import JobKind
 from infrastructure.mongo.client import ping as mongo_ping
@@ -54,6 +54,7 @@ from infrastructure.observability.metrics import (
     acquisition_request_total,
     auth_failures_total,
     authz_denied_total,
+    comparison_explanation_runs_total,
     deadline_exceeded_total,
     http_request_duration_seconds,
     http_requests_total,
@@ -67,6 +68,14 @@ from infrastructure.observability.tracing import get_tracer, setup_tracing
 from opentelemetry.trace import Status, StatusCode
 from infrastructure.security.authorization import require_admin
 from infrastructure.streaming.sse import sse_response
+from pymongo.errors import DuplicateKeyError
+
+from agents.comparison_explanation import (
+    GroundingError,
+    compute_evidence_fingerprint,
+    compute_identity_key,
+    generate_explanation,
+)
 
 # ---------------------------------------------------------------------------
 # DB / App setup
@@ -1619,30 +1628,6 @@ async def trending_companies(limit: int = 8, user: dict = Depends(current_user))
     return {"trending": trending[:limit]}
 
 
-@api.post("/reports/rescore")
-async def rescore_reports(user: dict = Depends(current_user)):
-    """Recompute scorecards for all reports using full source_documents.
-
-    Useful after upgrading the scoring logic; safe to re-run.
-
-    Admin-gated (EQ-2, 02 §4.5 / 00_README ratification register, 10 §4.3):
-    this rewrites every tenant's `scorecard` in one unbounded, synchronous
-    loop with no frontend consumer — any authenticated caller could
-    previously trigger a full-collection cross-tenant rewrite. Same
-    `require_admin` helper `generate_report`'s custom-provider path and
-    `/llm/validate` already use, with its own message (the default is
-    LLM-provider-specific and doesn't apply here).
-    """
-    require_admin(user, message="This action is restricted to admin accounts.")
-    cursor = db.reports.find({}, {"_id": 0})
-    updated = 0
-    async for doc in cursor:
-        card = compute_scorecard(doc)
-        await db.reports.update_one({"id": doc["id"]}, {"$set": {"scorecard": card}})
-        updated += 1
-    return {"updated": updated}
-
-
 class CompareRequest(BaseModel):
     report_ids: list[str] = Field(min_length=2, max_length=4)
 
@@ -1671,6 +1656,458 @@ async def compare_reports(req: CompareRequest, user: dict = Depends(current_user
     if len(ordered) < 2:
         raise HTTPException(status_code=404, detail="fewer than 2 reports found")
     return {"reports": ordered}
+
+
+# ---------------------------------------------------------------------------
+# M9.1 — Comparison AI explanation (Documents 41/42/43, frozen).
+#
+# A separate, additive capability — /reports/compare above is completely
+# unmodified (Document 41 §10/§11, Document 43 §4/§21). Reuses the existing
+# job infrastructure (JobKind.COMPARISON_EXPLANATION, application/jobs.py's
+# JobLifecycle, unchanged) and the existing chat_json/chat_text LLM
+# abstraction (agents/llm.py, unchanged) exactly as _run_pipeline/
+# _run_explanation already do.
+# ---------------------------------------------------------------------------
+
+
+class ExplainComparisonRequest(BaseModel):
+    report_ids: list[str] = Field(min_length=2, max_length=4)
+    llm_provider: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    llm_model: Optional[str] = None
+
+
+class _InsufficientResolvedReportsError(Exception):
+    """Execution-time resolution (Document 41 §13.2/§16) narrowed the
+    authorized set below 2 — the job fails with the exact same message/
+    posture compare_reports itself already uses for this case (Document 43
+    §12/§16), not a generic AI-failure message."""
+
+
+async def _resolve_authorized_reports(report_ids: list[str], user_id: str) -> list[dict]:
+    """The one EQ-3 owner-or-sample authorization/resolution predicate, reused
+    identically at admission time (fast-fail, non-authoritative) and execution
+    time (authoritative) — Document 41 §13.2/§16, Document 43 §16. Mirrors
+    compare_reports's own query/projection/ordering exactly; never trusts a
+    caller-supplied "already authorized" claim."""
+    rows = await db.reports.find(
+        {"id": {"$in": report_ids}, "$or": [{"user_id": user_id}, {"is_sample": True}]},
+        {"_id": 0, "events": 0, "source_documents": 0},
+    ).to_list(len(report_ids))
+    by_id = {r["id"]: r for r in rows}
+    return [by_id[i] for i in report_ids if i in by_id]
+
+
+def _serialize_explanation_result(artifact: dict, *, id_: str) -> dict:
+    """Exact Document 43 §9 ExplanationResult shape — strips internal-only
+    fields (identity_key, evidence_fingerprint) and always echoes the
+    REQUESTED job id, never whichever job's generation happened to win the
+    persistence race for this identity (Document 43 §9's justified id
+    coupling; §14.1's canonical-identity indirection — the wire-contract
+    `id` is "which job did you ask about," not "what Mongo happened to store")."""
+    return {
+        "id": id_,
+        "comparison_report_ids": artifact["comparison_report_ids"],
+        "narrative": artifact["narrative"],
+        "sources": artifact["sources"],
+        "cited_source_indices": artifact["cited_source_indices"],
+        "limitations": artifact["limitations"],
+        "evidence_completeness": artifact["evidence_completeness"],
+        "generated_at": artifact["generated_at"],
+    }
+
+
+async def _dedup_lookup_or_create_explanation_job(
+    resolved: list[dict], report_ids: list[str], user_id: str, identity_key: str,
+) -> dict:
+    """Document 43 §15/§15.1/§15.2's dedup table, admission-time half —
+    admission-time resolution is sufficient for this INITIAL lookup because it
+    reuses the identical authorization predicate rerun at execution time;
+    execution time remains authoritative and may still diverge, reconciled in
+    _run_comparison_explanation (§14.1's reconciliation invariant). Returns
+    {"id","status","reused"} (Document 43 §7).
+
+    The durable ARTIFACT is shared across users by canonical identity (it has
+    no owner — Document 41 §12.2's identity is report-set + prompt/schema/
+    provider/model, not caller). The client-visible JOB REFERENCE this
+    function returns is never shared: a caller can only GET/stream/cancel a
+    job it owns (server.py's ownership-scoped queries, unchanged), so every
+    branch below either finds or creates a job doc scoped to `user_id` —
+    never hands back another user's job id, even when the underlying work or
+    artifact is legitimately reused across users (e.g. two users comparing
+    the same sample reports)."""
+    now = datetime.now(timezone.utc).isoformat()
+
+    # 1. Reusable existing artifact? (complete always reusable; partial only if
+    #    the evidence state that produced it still matches, §15.1 — never
+    #    unconditionally.) The artifact itself is looked up globally by
+    #    identity_key (shareable), but the job reference handed back is always
+    #    scoped to THIS caller.
+    fingerprint = compute_evidence_fingerprint(resolved)
+    existing_artifact = await db.comparison_explanations.find_one({"identity_key": identity_key}, {"_id": 0})
+    if existing_artifact and (
+        existing_artifact["evidence_completeness"] == "complete"
+        or existing_artifact.get("evidence_fingerprint") == fingerprint
+    ):
+        job_doc = await db.comparison_explanation_jobs.find_one(
+            {"resolved_identity_key": identity_key, "status": "completed", "user_id": user_id}, {"_id": 0}
+        )
+        if job_doc:
+            return {"id": job_doc["id"], "status": "completed", "reused": True}
+        # No job THIS caller owns already points at the shared artifact —
+        # either it outlived its 30-day TTL mirror (I-30), or a DIFFERENT
+        # user's job produced it first. Either way, create a fresh,
+        # already-completed job scoped to the current user pointing at the
+        # same shared artifact, rather than ever handing back a job id this
+        # caller could never GET (the bug this corrective pass fixes).
+        new_id = str(uuid.uuid4())
+        await db.comparison_explanation_jobs.insert_one({
+            "id": new_id, "report_ids": report_ids, "identity_key": identity_key,
+            "active_identity_key": None, "resolved_identity_key": identity_key,
+            "status": "completed", "created_at": now, "updated_at": now,
+            "completed_at": now, "user_id": user_id, "events": [], "error": None,
+        })
+        return {"id": new_id, "status": "completed", "reused": True}
+
+    # 2. No reusable artifact — atomically admit a new job, or attach to one
+    #    already active FOR THIS USER (Step 10: insert_one + a partial unique
+    #    index on active_identity_key, I-29 — not check;await;insert).
+    #
+    #    Scoped per-user (`f"{user_id}:{identity_key}"`), not globally, for
+    #    the same reason as branch 1: a bare identity_key here would let
+    #    dedup hand caller B the job id of caller A's still-running
+    #    generation, which caller B can never GET/stream/cancel (owner-scoped
+    #    by design, unchanged). If two different users' jobs genuinely race
+    #    on the same canonical identity, each gets its own job id and each
+    #    independently reaches the execution-time artifact dedup in
+    #    _run_comparison_explanation (comparison_explanations' own
+    #    identity_key unique index, I-31) — whichever finishes first
+    #    produces the shared artifact; the other adopts it via the existing
+    #    DuplicateKeyError-recovery path there. No job is ever exposed to a
+    #    user who doesn't own it, and the artifact is still shared correctly.
+    job_id = str(uuid.uuid4())
+    active_key = f"{user_id}:{identity_key}"
+    new_job_doc = {
+        "id": job_id, "report_ids": report_ids, "identity_key": identity_key,
+        "active_identity_key": active_key, "resolved_identity_key": None,
+        "status": "queued", "created_at": now, "updated_at": now,
+        "user_id": user_id, "events": [], "error": None,
+    }
+    for _attempt in range(2):
+        try:
+            await db.comparison_explanation_jobs.insert_one(new_job_doc)
+            return {"id": job_id, "status": "queued", "reused": False}
+        except DuplicateKeyError:
+            existing = await db.comparison_explanation_jobs.find_one(
+                {"active_identity_key": active_key}, {"_id": 0}
+            )
+            if existing is not None:
+                return {"id": existing["id"], "status": existing["status"], "reused": True}
+            # The active job that collided with us just turned terminal
+            # between our insert failing and this read — retry once; the
+            # partial index only blocks a second *active* row, and none
+            # exists now.
+    raise InfrastructureError("Could not admit comparison-explanation job.")
+
+
+async def _run_comparison_explanation(
+    job_id: str, report_ids: list[str], user_id: str,
+    llm_provider: str | None = None, llm_api_key: str | None = None,
+    llm_base_url: str | None = None, llm_model: str | None = None,
+) -> None:
+    from agents.llm import _active, reset_llm_context, set_llm_context
+
+    _tok = (
+        set_llm_context(llm_provider, llm_api_key, light_model=llm_model,
+                        heavy_model=llm_model, base_url=llm_base_url)
+        if (llm_provider or llm_api_key) else None
+    )
+    started = asyncio.get_event_loop().time()
+    await container.job_lifecycle.mark_running(job_id)
+    await db.comparison_explanation_jobs.update_one(
+        {"id": job_id}, {"$set": {"status": "running", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    async def push(ev: dict) -> None:
+        await container.job_lifecycle.publish(job_id, ev)
+        await db.comparison_explanation_jobs.update_one(
+            {"id": job_id},
+            {"$push": {"events": ev}, "$set": {"updated_at": ev.get("ts", "")}},
+        )
+
+    _job_span_cm = get_tracer().start_as_current_span(
+        "pipeline.comparison_explanation", attributes={"job_id": job_id}
+    )
+    _job_span = _job_span_cm.__enter__()
+    outcome = "failed"
+    try:
+        await push({"node": "pipeline", "status": "start", "message": "Explaining comparison"})
+
+        # Execution-time authorization — authoritative, never trusts admission
+        # time (Document 41 §13.2/§16, Document 43 §15.2/§16). No snapshot: a
+        # fresh read is safe because reports are immutable after creation.
+        resolved = await _resolve_authorized_reports(report_ids, user_id)
+        if len(resolved) < 2:
+            raise _InsufficientResolvedReportsError("fewer than 2 reports found")
+
+        if await container.job_lifecycle.is_past_deadline(job_id):
+            # NOT deadline_exceeded_total: that metric's graph/node labels are
+            # tied to LangGraph node-boundary semantics (research/learning's
+            # real graph.astream() node names, above) — this capability has no
+            # graph and no nodes, so a graph="comparison_explanation" label
+            # would misrepresent what's running (Document 43 §16/§20,
+            # explicitly rejected). comparison_explanation_runs_total's own
+            # `outcome` label already exists for exactly this kind of
+            # capability-appropriate visibility — reused below via the
+            # `deadline_exceeded` outcome value rather than introducing a new
+            # metric or a graph-shaped one.
+            raise TimeoutError(
+                f"job exceeded its {settings.job_deadline_s['comparison_explanation']}s deadline"
+            )
+
+        cfg = _active()
+        exec_identity_key = compute_identity_key(
+            [r["id"] for r in resolved], provider=cfg["provider"], model=cfg["light"]
+        )
+        fingerprint = compute_evidence_fingerprint(resolved)
+
+        # Reconciliation (Document 41 §14.1, Document 43 §15.2): persistence
+        # is always keyed by the EXECUTION-time identity, never the
+        # admission-time one used only to admit this job. A cheap early read
+        # here is a pure efficiency optimization (skip the LLM call if
+        # someone else already produced this exact canonical artifact) — the
+        # insert-with-DuplicateKeyError-fallback below is what actually
+        # enforces "no two durable artifacts share an identity," atomically.
+        existing_artifact = await db.comparison_explanations.find_one(
+            {"identity_key": exec_identity_key}, {"_id": 0}
+        )
+        if existing_artifact and (
+            existing_artifact["evidence_completeness"] == "complete"
+            or existing_artifact.get("evidence_fingerprint") == fingerprint
+        ):
+            artifact = existing_artifact
+        else:
+            await push({"node": "explainer", "status": "start", "message": "Generating explanation"})
+            explanation = await generate_explanation(resolved)
+            artifact = {
+                "id": job_id,
+                "identity_key": exec_identity_key,
+                "comparison_report_ids": [r["id"] for r in resolved],
+                "evidence_fingerprint": fingerprint,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                **explanation,
+            }
+            try:
+                await db.comparison_explanations.insert_one(artifact)
+            except DuplicateKeyError:
+                # Someone else won the race for this exact execution-time
+                # identity between our read above and our insert — their
+                # artifact answers the exact same authorized question this
+                # generation would have, so adopt it rather than erroring or
+                # duplicating.
+                fresh = await db.comparison_explanations.find_one(
+                    {"identity_key": exec_identity_key}, {"_id": 0}
+                )
+                if fresh and (
+                    fresh["evidence_completeness"] == "complete"
+                    or fresh.get("evidence_fingerprint") == fingerprint
+                ):
+                    artifact = fresh
+                else:
+                    # The pre-existing doc is itself a stale partial — replace
+                    # it. Still a single atomic document write; no lock, no
+                    # transaction.
+                    await db.comparison_explanations.update_one(
+                        {"identity_key": exec_identity_key}, {"$set": artifact}
+                    )
+            await push({"node": "explainer", "status": "ok",
+                       "message": f"Explanation generated ({artifact['evidence_completeness']})"})
+
+        outcome = f"completed_{artifact['evidence_completeness']}"
+        completed_at = datetime.now(timezone.utc).isoformat()
+        await db.comparison_explanation_jobs.update_one(
+            {"id": job_id},
+            {"$set": {"status": "completed", "resolved_identity_key": exec_identity_key,
+                      "active_identity_key": None, "completed_at": completed_at,
+                      "updated_at": completed_at}},
+        )
+        await container.job_lifecycle.complete(job_id)
+        comparison_explanation_runs_total.labels(outcome=outcome).inc()
+    except asyncio.CancelledError:
+        outcome = "cancelled"
+        completed_at = datetime.now(timezone.utc).isoformat()
+        await db.comparison_explanation_jobs.update_one(
+            {"id": job_id},
+            {"$set": {"status": "cancelled", "active_identity_key": None, "updated_at": completed_at}},
+        )
+        # Idempotent — cancel_comparison_explanation may have already called
+        # job_lifecycle.cancel() before interrupting this task; a no-op then.
+        await container.job_lifecycle.cancel(job_id)
+        comparison_explanation_runs_total.labels(outcome=outcome).inc()
+        _job_span.set_status(Status(StatusCode.ERROR, "Job cancelled"))
+    except Exception as e:  # noqa: BLE001 — never leak raw provider/validation text to the client
+        logger.exception("comparison explanation failed")
+        if isinstance(e, _InsufficientResolvedReportsError):
+            outcome = "failed"
+            err = "fewer than 2 reports found"
+        elif isinstance(e, GroundingError):
+            outcome = "failed"
+            err = "The comparison could not be explained with a fully grounded, cited explanation."
+        elif isinstance(e, TimeoutError):
+            # See the is_past_deadline check above: capability-appropriate
+            # deadline visibility via comparison_explanation_runs_total's
+            # `outcome` label, not the graph-shaped deadline_exceeded_total.
+            outcome = "failed_deadline_exceeded"
+            err = "Explanation generation exceeded its time budget and was stopped."
+        else:
+            outcome = "failed"
+            err = "Explanation generation failed. See server logs for details."
+        completed_at = datetime.now(timezone.utc).isoformat()
+        await db.comparison_explanation_jobs.update_one(
+            {"id": job_id},
+            {"$set": {"status": "failed", "error": err, "active_identity_key": None,
+                      "updated_at": completed_at}},
+        )
+        await container.job_lifecycle.fail(job_id, err)
+        comparison_explanation_runs_total.labels(outcome=outcome).inc()
+        _job_span.set_status(Status(StatusCode.ERROR, err))
+    finally:
+        if _tok is not None:
+            reset_llm_context(_tok)
+        RUNNING_TASKS.pop(job_id, None)
+        jobs_active.labels(kind="comparison_explanation").dec()
+        _job_span_cm.__exit__(None, None, None)
+
+
+@api.post("/reports/compare/explain")
+async def explain_comparison(req: ExplainComparisonRequest, user: dict = Depends(current_user)):
+    """M9.1 — separate, additive capability (Document 43 §5-§8). Does not
+    modify /reports/compare in any way."""
+    # Same admin/SSRF gate as /reports/generate and /learning/explain (Document
+    # 43 §6/§19 — inherits the existing BYOK/managed-AI policy verbatim).
+    if req.llm_provider == "custom" or req.llm_base_url:
+        require_admin(user)
+    if req.llm_base_url:
+        from agents.llm import assert_public_url
+        try:
+            assert_public_url(req.llm_base_url)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Custom LLM base URL must be a publicly reachable http(s) "
+                    "address — the server calls it directly, so localhost and "
+                    "private-network addresses aren't allowed."
+                ),
+            )
+
+    # Admission-time authorization/resolution — fast-fail convenience, NOT
+    # authoritative (Document 43 §16; execution time is, §13.2).
+    resolved = await _resolve_authorized_reports(req.report_ids, user["id"])
+    if len(resolved) < 2:
+        raise HTTPException(status_code=404, detail="fewer than 2 reports found")
+
+    from agents.llm import _active, reset_llm_context, set_llm_context
+
+    _tok = (
+        set_llm_context(req.llm_provider, req.llm_api_key, light_model=req.llm_model,
+                        heavy_model=req.llm_model, base_url=req.llm_base_url)
+        if (req.llm_provider or req.llm_api_key) else None
+    )
+    try:
+        cfg = _active()
+        identity_key = compute_identity_key(
+            [r["id"] for r in resolved], provider=cfg["provider"], model=cfg["light"]
+        )
+    finally:
+        if _tok is not None:
+            reset_llm_context(_tok)
+
+    result = await _dedup_lookup_or_create_explanation_job(resolved, req.report_ids, user["id"], identity_key)
+    if not result["reused"]:
+        # Genuinely new work — admit through the existing shared JobLifecycle
+        # budget (Document 41 §5: one MAX_ACTIVE_JOBS ceiling across every
+        # kind) only now, not before the dedup check above, so a reused
+        # response never consumes an admission slot.
+        await container.job_lifecycle.start(
+            result["id"], JobKind.COMPARISON_EXPLANATION, user["id"],
+            deadline_s=settings.job_deadline_s["comparison_explanation"],
+        )
+        jobs_active.labels(kind="comparison_explanation").inc()
+        RUNNING_TASKS[result["id"]] = asyncio.create_task(
+            _run_comparison_explanation(
+                result["id"], req.report_ids, user["id"],
+                llm_provider=req.llm_provider, llm_api_key=req.llm_api_key,
+                llm_base_url=req.llm_base_url, llm_model=req.llm_model,
+            )
+        )
+    return result
+
+
+@api.post("/reports/compare/explain/{id}/cancel")
+async def cancel_comparison_explanation(id: str, user: dict = Depends(current_user)):
+    job_doc = await db.comparison_explanation_jobs.find_one({"id": id, "user_id": user["id"]}, {"_id": 0})
+    if job_doc is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    if job_doc["status"] in ("completed", "failed", "cancelled"):
+        return {"id": id, "status": job_doc["status"]}
+    task = RUNNING_TASKS.get(id)
+    if task and not task.done():
+        task.cancel()
+    try:
+        await container.job_lifecycle.cancel(id)
+    except NotFoundError:
+        pass  # Redis-resident Job already expired/absent; the Mongo mirror below is authoritative
+    await db.comparison_explanation_jobs.update_one(
+        {"id": id}, {"$set": {"status": "cancelled", "active_identity_key": None}}
+    )
+    return {"id": id, "status": "cancelled"}
+
+
+async def _comparison_explanation_stream_events(job_id: str, user_id: str):
+    """Mirrors _learning_stream_events exactly: injects the completed
+    ExplanationResult as a `final` event right after the terminal
+    `pipeline/ok` event (Document 43 §17's frozen SSE contract — the existing
+    convention, unmodified)."""
+    async for ev in container.events.subscribe(job_id):
+        yield ev
+        if ev.get("node") == "pipeline" and ev.get("status") == "ok":
+            job_doc = await db.comparison_explanation_jobs.find_one(
+                {"id": job_id, "user_id": user_id}, {"_id": 0}
+            )
+            if job_doc and job_doc.get("resolved_identity_key"):
+                artifact = await db.comparison_explanations.find_one(
+                    {"identity_key": job_doc["resolved_identity_key"]}, {"_id": 0}
+                )
+                if artifact:
+                    yield {"node": "final", "status": "ok",
+                           "explanation": _serialize_explanation_result(artifact, id_=job_id)}
+
+
+@api.get("/reports/compare/explain/{id}/stream")
+async def stream_comparison_explanation(id: str, user: dict = Depends(current_user)):
+    job_doc = await db.comparison_explanation_jobs.find_one({"id": id, "user_id": user["id"]}, {"_id": 0})
+    if job_doc is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    return sse_response(
+        _comparison_explanation_stream_events(id, user["id"]), stream_name="comparison_explanation"
+    )
+
+
+@api.get("/reports/compare/explain/{id}")
+async def get_comparison_explanation(id: str, user: dict = Depends(current_user)):
+    job_doc = await db.comparison_explanation_jobs.find_one({"id": id, "user_id": user["id"]}, {"_id": 0})
+    if job_doc is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    if job_doc["status"] == "completed" and job_doc.get("resolved_identity_key"):
+        artifact = await db.comparison_explanations.find_one(
+            {"identity_key": job_doc["resolved_identity_key"]}, {"_id": 0}
+        )
+        if artifact:
+            return {"status": "completed", "id": id,
+                    "explanation": _serialize_explanation_result(artifact, id_=id)}
+    return {"status": job_doc["status"], "id": id}
 
 
 # ---------------------------------------------------------------------------

@@ -9,6 +9,7 @@ import { FormField } from "@/components/foundation/FormField";
 import { Loader } from "@/components/foundation/Loader";
 import { Textarea } from "@/components/foundation/Textarea";
 import { useAiAccessStatus } from "@/features/account-setup";
+import { useFocusOnChange } from "@/lib/a11y/useFocusOnChange";
 import { useReport } from "../application/useReport";
 import { useResearchJob } from "../application/useResearchJob";
 import { stageLabel } from "../internal/streamStages";
@@ -52,6 +53,30 @@ export function CopilotPanel({
     if (query.trim()) job.retry(query);
   };
 
+  // Enter submits (Shift+Enter still inserts a newline); guards the exact
+  // condition the Ask button's own disabled state uses, `job.isStarting`
+  // included — the Textarea itself is only disabled by `isRunning`, so a
+  // keyboard Enter needs its own check to avoid a double submit during the
+  // brief window between click and `job.stage` leaving "idle".
+  const handleComposerKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    if (!query.trim() || isRunning || job.isStarting) return;
+    job.start(query);
+  };
+
+  // Moves focus to the arriving response/status region once a run leaves
+  // "thinking/streaming/grounded" (08_AI_Components.md Prompt Composer:
+  // "submit moves attention to the arriving response region considerately")
+  // — never during the run itself, only on the actual terminal transition.
+  const focusKey =
+    job.stage === "failed" || job.stage === "cancelled"
+      ? job.stage
+      : job.stage === "completed" && report.data
+        ? `completed:${report.data.id}`
+        : null;
+  const focusRef = useFocusOnChange(focusKey);
+
   // Disabled/Permission Denied (08_AI_Components.md, Prompt Composer states)
   // — explain and route to AI setup, never a dead field.
   if (aiAccess.state !== "valid") {
@@ -77,6 +102,7 @@ export function CopilotPanel({
           <Textarea
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={handleComposerKeyDown}
             placeholder="e.g. What drove the margin change this quarter?"
             maxLength={2000}
             showCounter
@@ -105,15 +131,19 @@ export function CopilotPanel({
       )}
 
       {(job.stage === "failed" || job.stage === "cancelled") && (
-        <Banner tone={job.stage === "cancelled" ? "warning" : "error"}>
-          {job.stage === "cancelled"
-            ? "Cancelled."
-            : (job.error?.message ?? "The follow-up failed.")}
-        </Banner>
+        <div ref={focusRef} tabIndex={-1}>
+          <Banner tone={job.stage === "cancelled" ? "warning" : "error"}>
+            {job.stage === "cancelled"
+              ? "Cancelled."
+              : (job.error?.message ?? "The follow-up failed.")}
+          </Banner>
+        </div>
       )}
 
       {job.stage === "completed" && report.data && (
-        <AIResponseCard report={report.data} heading="Follow-up answer" onRetry={retry} />
+        <div ref={focusRef} tabIndex={-1}>
+          <AIResponseCard report={report.data} heading="Follow-up answer" onRetry={retry} />
+        </div>
       )}
     </div>
   );

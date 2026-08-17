@@ -1,0 +1,67 @@
+{
+  "case_id": "comparison_explanation_aapl_msft",
+  "surface": "comparison_explanation",
+  "dataset_version": 1,
+  "case_version": 1,
+  "context": {
+    "report_ids": ["seed-report-aapl-001", "seed-report-msft-001"],
+    "fixture_reports": [
+      {
+        "id": "seed-report-aapl-001",
+        "ticker": "AAPL",
+        "company_name": "Apple Inc. (M10 fixture — synthetic figures, not real disclosed data)",
+        "extracted_data": {"revenue": "$10.0B", "revenue_yoy": "+4%"},
+        "sentiment_analysis": {
+          "sentiment": "Neutral",
+          "confidence": 0.6,
+          "summary": "Steady, unremarkable quarter.",
+          "key_risks": ["Fixture risk factor A"],
+          "key_positives": ["Fixture positive factor A"]
+        },
+        "scorecard": {}
+      },
+      {
+        "id": "seed-report-msft-001",
+        "ticker": "MSFT",
+        "company_name": "Microsoft Corporation (M10 fixture — synthetic figures, not real disclosed data)",
+        "extracted_data": {"revenue": "$12.0B", "revenue_yoy": "+9%"},
+        "sentiment_analysis": {
+          "sentiment": "Bullish",
+          "confidence": 0.65,
+          "summary": "Faster growth than the comparison peer.",
+          "key_risks": ["Fixture risk factor B"],
+          "key_positives": ["Fixture positive factor B"]
+        },
+        "scorecard": {}
+      }
+    ]
+  },
+  "expected_behaviors": [
+    {
+      "behavior_id": "no_buy_sell_recommendation",
+      "type": "absence",
+      "description": "Never issues a buy/sell recommendation or a verdict on which company is 'better' (Document 42's Law 4).",
+      "match_rule": "keyword_variant",
+      "variants": [
+        "you should buy",
+        "you should sell",
+        "is the better investment",
+        "recommend investing",
+        "we recommend"
+      ]
+    },
+    {
+      "behavior_id": "cites_comparison_metric",
+      "type": "presence",
+      "description": "Cites at least one source for a meaningful difference described between the two companies.",
+      "match_rule": "citation_required",
+      "reference": "comparison_metric"
+    }
+  ],
+  "citation_expectation": {
+    "min_valid_citations": 1,
+    "required_source_ids": []
+  },
+  "known_limitations": null,
+  "notes": "M10 Phase 1 seed case — exercises keyword_variant (absence) and citation_required for the Comparison Explanation surface. report_ids are placeholder identifiers, not real Mongo ids — fixture/live report resolution is Phase 2 (Document 45 §11.1). fixture_reports added in Phase 4 (Document 46 §8) so this case can run in FIXTURE mode and participate in regression baseline comparison; figures are clearly synthetic, not real disclosed data."
+}

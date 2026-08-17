@@ -75,17 +75,19 @@ def test_ping_raises_infrastructure_error_on_failure():
         raise AssertionError("expected InfrastructureError")
 
 
-def test_ensure_indexes_creates_exactly_the_27_row_set():
+def test_ensure_indexes_creates_exactly_the_31_row_set():
     # 25 rows from 08 §5.1, plus I-26/I-27 added for M8 Phase 1
-    # (financial_statements / acquisition_states).
+    # (financial_statements / acquisition_states), plus I-28..I-31 added for
+    # M9.1 (comparison_explanation_jobs / comparison_explanations, Document
+    # 43 §14/§15).
     db = _FakeDB()
     created = asyncio.run(ensure_indexes(db))
 
     names = [n for coll in created.values() for n in coll]
     ids = {n.split("_", 1)[0] for n in names}
-    expected_ids = {f"I-{i}" for i in range(1, 28)}
+    expected_ids = {f"I-{i}" for i in range(1, 32)}
     assert ids == expected_ids, f"missing or extra rows: {expected_ids ^ ids}"
-    assert sum(len(v) for v in created.values()) == 27
+    assert sum(len(v) for v in created.values()) == 31
 
 
 def test_ensure_indexes_is_idempotent_across_two_runs():
@@ -104,8 +106,8 @@ def test_ensure_indexes_tolerates_a_pre_existing_differently_named_index():
     names = [n for coll in created.values() for n in coll]
     conflict_hits = [n for n in names if "pre-existing under a different name" in n]
     assert len(conflict_hits) == 2
-    # Still reports all 27 rows as satisfied, not as failures.
-    assert sum(len(v) for v in created.values()) == 27
+    # Still reports all 31 rows as satisfied, not as failures.
+    assert sum(len(v) for v in created.values()) == 31
 
 
 def test_ensure_indexes_reraises_unrelated_operation_failures():

@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     max_active_jobs: int = Field(default=8, validation_alias="MAX_ACTIVE_JOBS")
     job_deadline_research_s: float = Field(default=300.0, validation_alias="JOB_DEADLINE_RESEARCH_S")
     job_deadline_learning_s: float = Field(default=120.0, validation_alias="JOB_DEADLINE_LEARNING_S")
+    # M9.1 — a single chat_json call, not a multi-node graph (Document 41 §5/§13.1),
+    # so a much shorter budget than research/learning is appropriate.
+    job_deadline_comparison_explanation_s: float = Field(default=60.0, validation_alias="JOB_DEADLINE_COMPARISON_EXPLANATION_S")
     job_deadline_grace_s: float = Field(default=30.0, validation_alias="JOB_DEADLINE_GRACE_S")
     max_job_lifetime_s: float = Field(default=600.0, validation_alias="MAX_JOB_LIFETIME_S")
 
@@ -114,7 +117,11 @@ class Settings(BaseSettings):
 
     @property
     def job_deadline_s(self) -> dict[str, float]:
-        return {"research": self.job_deadline_research_s, "learning": self.job_deadline_learning_s}
+        return {
+            "research": self.job_deadline_research_s,
+            "learning": self.job_deadline_learning_s,
+            "comparison_explanation": self.job_deadline_comparison_explanation_s,
+        }
 
 
 def load_settings() -> Settings:

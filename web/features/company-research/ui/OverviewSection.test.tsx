@@ -98,6 +98,7 @@ describe("OverviewSection", () => {
     ingestEdgar.mockReset();
     ingestSamples.mockReset();
     openReportStream.mockReset().mockReturnValue(vi.fn());
+    sessionStorage.clear();
   });
 
   it("shows inline ingest actions when the ticker has no filings, and auto-retries after ingesting samples", async () => {
@@ -279,5 +280,200 @@ describe("OverviewSection", () => {
     await screen.findByText("Well-supported");
 
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  describe("retry-after-reload persistence", () => {
+    const RETRY_KEY = "company-research:retry-query:job-1";
+
+    it("persists the query to sessionStorage, keyed by job id, the moment a job starts", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-1" });
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+      await startResearch(user);
+
+      await waitFor(() =>
+        expect(sessionStorage.getItem(RETRY_KEY)).toBe("Summarize the latest quarter"),
+      );
+    });
+
+    it("reload/deep-link into a failed job restores the query, and Retry actually resubmits it", async () => {
+      sessionStorage.setItem(RETRY_KEY, "Summarize the latest quarter");
+      fetchReport.mockResolvedValueOnce({ status: "failed", id: "job-1", events: [] });
+      generateReport.mockResolvedValueOnce({ job_id: "job-2" });
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId="job-1" />);
+
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+      lastStreamHandlers().onEvent({
+        node: "pipeline",
+        status: "error",
+        message: "Pipeline failed",
+      });
+      await screen.findByRole("alert");
+
+      await user.click(screen.getByRole("button", { name: "Retry" }));
+
+      await waitFor(() =>
+        expect(generateReport).toHaveBeenCalledWith(
+          expect.objectContaining({ query: "Summarize the latest quarter" }),
+        ),
+      );
+    });
+
+    it("cleans up the persisted query once the job completes with a usable report", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-1" });
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+      await startResearch(user);
+      await waitFor(() => expect(sessionStorage.getItem(RETRY_KEY)).not.toBeNull());
+
+      lastStreamHandlers().onEvent({ node: "final", status: "ok", report: REPORT });
+      lastStreamHandlers().onEnd();
+      await screen.findByText("Well-supported");
+
+      expect(sessionStorage.getItem(RETRY_KEY)).toBeNull();
+    });
+
+    it("does not crash when sessionStorage is inaccessible (private browsing / quota)", () => {
+      fetchReport.mockResolvedValueOnce({ status: "failed", id: "job-1", events: [] });
+      const throwing: Pick<Storage, "getItem" | "setItem" | "removeItem"> = {
+        getItem: () => {
+          throw new Error("blocked");
+        },
+        setItem: () => {
+          throw new Error("blocked");
+        },
+        removeItem: () => {
+          throw new Error("blocked");
+        },
+      };
+      const original = window.sessionStorage;
+      Object.defineProperty(window, "sessionStorage", { value: throwing, configurable: true });
+
+      try {
+        expect(() =>
+          renderWithProviders(<OverviewSection ticker="AAPL" initialJobId="job-1" />),
+        ).not.toThrow();
+      } finally {
+        Object.defineProperty(window, "sessionStorage", { value: original, configurable: true });
+      }
+    });
+  });
+
+  describe("composer: Enter to send", () => {
+    it("Enter submits the query", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-1" });
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+
+      await user.type(
+        screen.getByLabelText(/What do you want to know/),
+        "Summarize the latest quarter",
+      );
+      await user.keyboard("{Enter}");
+
+      await waitFor(() => expect(generateReport).toHaveBeenCalledTimes(1));
+    });
+
+    it("Shift+Enter inserts a newline instead of submitting", async () => {
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+      const textarea = screen.getByLabelText(/What do you want to know/) as HTMLTextAreaElement;
+
+      await user.type(textarea, "line one");
+      await user.keyboard("{Shift>}{Enter}{/Shift}");
+      await user.type(textarea, "line two");
+
+      expect(textarea.value).toBe("line one\nline two");
+      expect(generateReport).not.toHaveBeenCalled();
+    });
+
+    it("does not double-submit if Enter is pressed again before the request settles", async () => {
+      let resolveGenerate: (value: unknown) => void = () => {};
+      generateReport.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveGenerate = resolve;
+        }),
+      );
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+
+      await user.type(
+        screen.getByLabelText(/What do you want to know/),
+        "Summarize the latest quarter",
+      );
+      await user.keyboard("{Enter}");
+      await user.keyboard("{Enter}");
+
+      resolveGenerate({ job_id: "job-1" });
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+      expect(generateReport).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("focus management on submission", () => {
+    it("moves focus to the failure banner when a run fails", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-1" });
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+      await startResearch(user);
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+
+      lastStreamHandlers().onEvent({
+        node: "pipeline",
+        status: "error",
+        message: "Pipeline failed",
+      });
+
+      const alert = await screen.findByRole("alert");
+      expect(alert.closest('[tabindex="-1"]')).toHaveFocus();
+    });
+
+    it("moves focus to the response card when a run completes", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-1" });
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+      await startResearch(user);
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+
+      lastStreamHandlers().onEvent({ node: "final", status: "ok", report: REPORT });
+      lastStreamHandlers().onEnd();
+
+      const heading = await screen.findByText("Well-supported");
+      expect(heading.closest('[tabindex="-1"]')).toHaveFocus();
+    });
+
+    it("does not steal focus back on an unrelated re-render once already in a terminal state", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-1" });
+      const { user, rerender } = renderWithProviders(
+        <OverviewSection ticker="AAPL" initialJobId={null} />,
+      );
+      await startResearch(user);
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+      lastStreamHandlers().onEvent({ node: "final", status: "ok", report: REPORT });
+      lastStreamHandlers().onEnd();
+      await screen.findByText("Well-supported");
+
+      const learnLink = screen.getByRole("link", { name: "Explain a concept from this report" });
+      learnLink.focus();
+      expect(learnLink).toHaveFocus();
+
+      rerender(<OverviewSection ticker="AAPL" initialJobId={null} />);
+
+      expect(learnLink).toHaveFocus();
+    });
+  });
+
+  describe("Add to comparison", () => {
+    it("offers Add to comparison once a report exists, reusing the existing ?ids= deep link", async () => {
+      generateReport.mockResolvedValueOnce({ job_id: "job-1" });
+      const { user } = renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+      await startResearch(user);
+      await waitFor(() => expect(openReportStream).toHaveBeenCalled());
+      lastStreamHandlers().onEvent({ node: "final", status: "ok", report: REPORT });
+      lastStreamHandlers().onEnd();
+
+      expect(await screen.findByRole("link", { name: "Add to comparison" })).toHaveAttribute(
+        "href",
+        "/compare?ids=job-1",
+      );
+    });
+
+    it("does not offer Add to comparison before a report exists", () => {
+      renderWithProviders(<OverviewSection ticker="AAPL" initialJobId={null} />);
+      expect(screen.queryByRole("link", { name: "Add to comparison" })).not.toBeInTheDocument();
+    });
   });
 });

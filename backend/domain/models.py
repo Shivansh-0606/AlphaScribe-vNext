@@ -20,6 +20,7 @@ from enum import Enum
 class JobKind(str, Enum):
     RESEARCH = "research"
     LEARNING = "learning"
+    COMPARISON_EXPLANATION = "comparison_explanation"
 
 
 class JobStatus(str, Enum):

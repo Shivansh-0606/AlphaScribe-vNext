@@ -101,6 +101,10 @@ credentials.json
 .emergent/
 frontend/.env.local
 
+# M10 evaluation run artifacts (Document 45 §12) — local result records,
+# never committed dataset content, mirroring coverage.xml's treatment
+backend/evaluation/results/
+
 # Local tooling / build-scaffold artifacts (not part of the app)
 .claude/
 memory/

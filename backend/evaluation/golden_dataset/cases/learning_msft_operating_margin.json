@@ -1,0 +1,37 @@
+{
+  "case_id": "learning_msft_operating_margin",
+  "surface": "learning",
+  "dataset_version": 1,
+  "case_version": 1,
+  "context": {
+    "ticker": "MSFT",
+    "concept": "operating margin",
+    "query": "Explain operating margin using Microsoft's numbers"
+  },
+  "expected_behaviors": [
+    {
+      "behavior_id": "explains_operating_margin",
+      "type": "presence",
+      "description": "Explains what operating margin means, not just restates a figure.",
+      "match_rule": "keyword_variant",
+      "variants": [
+        "operating margin",
+        "operating income divided by revenue",
+        "profitability from core operations"
+      ]
+    },
+    {
+      "behavior_id": "acknowledges_missing_figure",
+      "type": "acknowledgment",
+      "description": "Acknowledges when a figure is not disclosed in the source excerpts, instead of inventing one.",
+      "match_rule": "limitation_reference",
+      "reference": "figure_not_disclosed"
+    }
+  ],
+  "citation_expectation": {
+    "min_valid_citations": 1,
+    "required_source_ids": []
+  },
+  "known_limitations": ["figure_not_disclosed"],
+  "notes": "M10 Phase 1 seed case — exercises keyword_variant (presence) and limitation_reference for the Learning surface. Structural only; no adapter/fixture evidence exists yet (Phase 2)."
+}

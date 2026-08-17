@@ -1,0 +1,39 @@
+{
+  "case_id": "research_aapl_revenue_trend",
+  "surface": "research",
+  "dataset_version": 1,
+  "case_version": 1,
+  "context": {
+    "ticker": "AAPL",
+    "query": "How did Apple's revenue perform this quarter?"
+  },
+  "expected_behaviors": [
+    {
+      "behavior_id": "identifies_revenue_trend",
+      "type": "presence",
+      "description": "Identifies a revenue trend (growth or decline), not just a bare number.",
+      "match_rule": "keyword_variant",
+      "variants": [
+        "revenue grew",
+        "revenue increased",
+        "revenue rose",
+        "revenue declined",
+        "revenue decreased",
+        "revenue fell"
+      ]
+    },
+    {
+      "behavior_id": "cites_revenue_figure",
+      "type": "presence",
+      "description": "Cites at least one source for the stated revenue figure.",
+      "match_rule": "citation_required",
+      "reference": "revenue_figure"
+    }
+  ],
+  "citation_expectation": {
+    "min_valid_citations": 1,
+    "required_source_ids": []
+  },
+  "known_limitations": null,
+  "notes": "M10 Phase 1 seed case — exercises keyword_variant (presence) and citation_required for the Research surface. Structural only; no adapter/fixture evidence exists yet (Phase 2)."
+}
