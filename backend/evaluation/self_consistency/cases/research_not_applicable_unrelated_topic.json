@@ -1,0 +1,9 @@
+{
+  "case_id": "research_not_applicable_unrelated_topic",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for M11 self-consistency evaluation (Document 47 Sec9.1). Synthetic figures, not real disclosed data.",
+  "claim": "Management guided to double-digit revenue growth for the next fiscal year.",
+  "evidence": "10-K excerpt, Item 7 (MD&A): Total net sales for the completed fiscal year were $94.9 billion, a 6% increase over the prior year. This section reports only historical results for the fiscal year just ended.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "The claim is about forward-looking guidance; the evidence is explicitly historical-only and contains no forward-looking statement at all. The claim and evidence are not about the same subject, so 'supports/contradicts' does not cleanly apply -- distinct from UNSUPPORTED, where the evidence at least addresses the same topic without confirming the specific claim."
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "diagnostic4_c_explicit_uncertainty",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 four-case contradiction diagnostic. One of four minimal evidence conditions sharing an identical claim, entity, and temporal scope (next quarter) -- differing only in the type of non-support/opposition expressed. This is Case C: explicit uncertainty/non-determinacy about whether guidance will even be issued -- a linguistic construction not previously tested, distinct from B's absence-of-already-nonexistent-guidance framing.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company has not determined whether it will provide revenue guidance for next quarter.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Same entity, same metric (revenue), same period (next quarter) as the claim -- clears relevance; the evidence explicitly engages the exact proposition only to state that whether guidance will be given at all is undetermined. This does not affirm the claim, and does not assert an opposing proposition (it does not say revenue will decline, or that growth is unlikely) -- per Document 47 Rev 5 Sec7.3.1, UNSUPPORTED. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

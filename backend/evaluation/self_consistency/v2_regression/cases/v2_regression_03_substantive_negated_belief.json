@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_03_substantive_negated_belief",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 3 of 9. CRITICAL regression case (per the CTO's own designation): tests whether the v2 remediation correctly distinguishes a substantive negated belief (an affirmative statement about management's actual position, phrased with 'not') from mere absence-of-disclosure language -- the collateral-risk case the v2 wording change was specifically designed to preserve.",
+  "claim": "Management expects revenue to grow next quarter.",
+  "evidence": "Management does not expect revenue to grow next quarter.",
+  "reference_verdict": "CONTRADICTED",
+  "reference_rationale": "This negates the substantive claim proposition itself (management's actual expectation), not the existence of a disclosure -- an affirmative, opposing statement about management's stated position, despite using the word 'not'. Distinct from 'no guidance was provided', which negates only whether a disclosure act occurred. Independently justified from the evidence text alone, assigned before any judge call and never sent to the judge."
+}

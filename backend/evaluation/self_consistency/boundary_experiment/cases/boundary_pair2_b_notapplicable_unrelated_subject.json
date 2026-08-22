@@ -1,0 +1,9 @@
+{
+  "case_id": "boundary_pair2_b_notapplicable_unrelated_subject",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 targeted boundary experiment (paired with boundary_pair2_a_applicable_same_topic_match). Synthetic figures, not real disclosed data. Pair isolates one variable: whether the evidence's subject matter is the same domain as the claim (revenue performance) at all -- here it is a wholly different subject (legal proceedings), the 'textbook' unambiguous NOT_APPLICABLE case, deliberately stronger than Pair 1's temporal-scope-only mismatch to test whether the judge ever uses NOT_APPLICABLE when the mismatch is unambiguous.",
+  "claim": "Revenue grew 6% year-over-year to $94.9B in the quarter.",
+  "evidence": "10-K excerpt, Item 3 (Legal Proceedings): The Company is subject to various legal proceedings, including an antitrust investigation in the European Union related to App Store practices. Management believes the ultimate outcome will not have a material adverse effect on the Company's financial position.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "The evidence concerns legal/regulatory proceedings and contains no revenue figures, no percentage growth, and no reference to the quarter's sales performance at all -- a genuinely different subject from the claim, not merely silent on a specific detail within the same subject. Independently justified from the evidence's own content (it never mentions revenue), not constructed to force a contrast with Case A."
+}

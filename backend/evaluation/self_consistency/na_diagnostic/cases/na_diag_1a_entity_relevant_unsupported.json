@@ -1,0 +1,9 @@
+{
+  "case_id": "na_diag_1a_entity_relevant_unsupported",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-19 for the CTO-authorized N/A-vs-UNSUPPORTED diagnostic. Axis 1 (entity mismatch), Case A control: same claim as v2_regression_08_different_entity (Company X, reused verbatim) but evidence about Company X itself, not Company Y -- tests whether an explicitly-named entity (vs. the generic 'the company' used in the already-stable cases 04/05/06/07) still produces stable UNSUPPORTED for relevant-but-absent evidence. Rules out 'entity is named vs. generic' as a confound for the observed instability.",
+  "claim": "Company X expects revenue growth next quarter.",
+  "evidence": "Company X provides no guidance regarding revenue for next quarter.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1: same entity (Company X), same metric (revenue), same period (next quarter) as the claim -- clears relevance unambiguously. Explicit absence disclaimer about that exact proposition -- UNSUPPORTED, not NOT_APPLICABLE. Not ambiguous under the ratified policy. Independently justified from the evidence text alone, assigned before any judge call and never sent to the judge."
+}

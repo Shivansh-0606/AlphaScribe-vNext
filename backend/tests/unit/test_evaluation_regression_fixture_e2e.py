@@ -43,7 +43,7 @@ _FIXTURE_CASE_ID = "comparison_explanation_aapl_msft"
 def stub_llm(monkeypatch):
     state = {"payload": None}
 
-    def _generate_sync(system, user, model, usage_sink=None):
+    def _generate_sync(system, user, model, usage_sink=None, temperature=None):
         return json.dumps(state["payload"])
 
     monkeypatch.setattr(llm, "_generate_sync", _generate_sync)
@@ -65,7 +65,7 @@ def _valid_payload():
 
 async def _run_and_record(case, results_dir: Path) -> EvaluationResult:
     adapter_result = await comparison_explanation.run(case, mode="fixture")
-    case_result = evaluate_case(case, adapter_result)
+    case_result = await evaluate_case(case, adapter_result)
     verdict, reason = compare(case_result, schema_version=SCHEMA_VERSION, results_dir=results_dir)
     result = EvaluationResult(
         run_id=str(uuid.uuid4()), timestamp=datetime.now(timezone.utc).isoformat(),

@@ -1,0 +1,9 @@
+{
+  "case_id": "learning_contradicted_causal_attribution",
+  "surface": "learning",
+  "provenance": "Hand-authored 2026-08-18 for M11 self-consistency evaluation (Document 47 Sec9.1). Synthetic figures, not real disclosed data.",
+  "claim": "Operating margin improved primarily because of aggressive cost-cutting across the workforce.",
+  "evidence": "Financial excerpt: Operating margin improved to 32.1% from 30.0%, entirely attributable to a one-time favorable tax settlement recorded in the quarter; headcount and operating expenses were flat year-over-year.",
+  "reference_verdict": "CONTRADICTED",
+  "reference_rationale": "The underlying fact (margin improved) is grounded, but the evidence explicitly attributes the improvement to a one-time tax settlement, not cost-cutting, and explicitly states headcount/opex were flat -- a causal contradiction, not just a numeric one."
+}

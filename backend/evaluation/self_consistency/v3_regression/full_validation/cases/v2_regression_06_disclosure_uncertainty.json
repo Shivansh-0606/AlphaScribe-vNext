@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_06_disclosure_uncertainty",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 6 of 9. Uncertainty-about-disclosure -- already 6/6 correct under v1 (per the M11 construction diagnostic); included as a non-regression check.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company has not determined whether it will provide revenue guidance for next quarter.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Same entity/metric/period as the claim -- clears relevance; the evidence states that whether guidance will even be issued is undetermined, neither confirming nor opposing the claim. UNSUPPORTED. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

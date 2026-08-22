@@ -1,0 +1,9 @@
+{
+  "case_id": "na_diag_1b_entity_clearly_irrelevant",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-19 for the CTO-authorized N/A-vs-UNSUPPORTED diagnostic. Axis 1 (entity mismatch), Case B control: same claim as v2_regression_08_different_entity (Company X, reused verbatim), but evidence is doubly irrelevant -- different entity (Company Y, matching case 08's own construction) AND a wholly different disclosure domain (legal proceedings vs. revenue), matching the evidence-type already validated as reliably NOT_APPLICABLE under v1 (boundary_pair2_b_notapplicable_unrelated_subject, 4/4 clean). Tests whether a STRONGER irrelevance signal produces more stable NOT_APPLICABLE than the milder 'different entity, same general revenue topic' signal in case 08 (v2 result: 70% UNSUPPORTED / 30% NOT_APPLICABLE).",
+  "claim": "Company X expects revenue growth next quarter.",
+  "evidence": "Company Y is subject to an antitrust investigation regarding its App Store practices.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1's subject/entity mismatch rule: evidence concerns a different company (Company Y, not Company X) AND a wholly unrelated disclosure domain (legal proceedings, not revenue performance) -- doubly irrelevant, NOT_APPLICABLE regardless of the milder entity-only-mismatch case's instability. Not ambiguous under the ratified policy. Independently justified from the evidence text alone, assigned before any judge call and never sent to the judge."
+}

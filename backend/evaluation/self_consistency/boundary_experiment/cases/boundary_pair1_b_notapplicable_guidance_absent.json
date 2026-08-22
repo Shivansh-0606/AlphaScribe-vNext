@@ -1,0 +1,9 @@
+{
+  "case_id": "boundary_pair1_b_notapplicable_guidance_absent",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 targeted boundary experiment (paired with boundary_pair1_a_applicable_guidance_present). Synthetic figures, not real disclosed data. This case is the identical (claim, evidence) pair as the original 40-call pilot's disputed case (research_not_applicable_unrelated_topic), reused deliberately as Case B so this experiment directly re-probes the exact disagreement the pilot exposed, now under paired controls. Pair isolates one variable: whether the evidence contains ANY forward-looking guidance statement at all -- here it explicitly does not.",
+  "claim": "Management guided to double-digit revenue growth for the next fiscal year.",
+  "evidence": "10-K excerpt, Item 7 (MD&A): Total net sales for the completed fiscal year were $94.9 billion, a 6% increase over the prior year. This section reports only historical results for the fiscal year just ended.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "The claim is about forward-looking guidance; the evidence explicitly self-scopes as historical-only ('reports only historical results') and contains no forward-looking statement at all. The claim and evidence are not about the same subject (guidance vs. actuals) -- distinct from UNSUPPORTED, where evidence at least addresses the same subject without confirming the specific claim. Independently justified from the evidence's own explicit scoping language, not constructed to force a contrast with Case A."
+}

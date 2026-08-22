@@ -1,0 +1,383 @@
+{
+  "generated_at": "2026-08-18T17:27:42.517690+00:00",
+  "repeats_per_case": 15,
+  "held_out_case_count": 2,
+  "note": "EVIDENCE ONLY (Document 47 Sec9.1) -- does not authorize gate promotion. JUDGE_SELF_CONSISTENCY_GATE_VERSION is not read or written by this script; promoting the gate is a separate, explicit CTO/reviewer decision (Sec9.1 step 6).",
+  "measurements": [
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:26:35.583101+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forecast for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:26:36.814816+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:26:40.522955+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forecast for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:26:51.992073+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports that operating margin increased from 30.0% to 32.1% in the completed quarter versus the prior-year quarter, but it does not mention management's expectations for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:26:54.367575+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forward-looking statement about next quarter's margin expansion.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 5,
+      "timestamp": "2026-08-18T17:26:57.390822+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forward-looking statement about next quarter's margin expansion.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 6,
+      "timestamp": "2026-08-18T17:26:59.627591+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures for the completed and prior-year quarters, but it does not mention management's expectations or any forward-looking statement about margin expansion in the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 7,
+      "timestamp": "2026-08-18T17:27:00.930616+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 8,
+      "timestamp": "2026-08-18T17:27:02.780248+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forward-looking statement about next quarter's margin expansion.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 9,
+      "timestamp": "2026-08-18T17:27:04.107587+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forecast for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 10,
+      "timestamp": "2026-08-18T17:27:06.707953+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forecast for the next quarter. Therefore, it neither supports nor contradicts the claim about expected margin expansion.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 11,
+      "timestamp": "2026-08-18T17:27:11.197111+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forecast for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 12,
+      "timestamp": "2026-08-18T17:27:12.873188+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations or any forward-looking statement about next quarter's margin expansion.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 13,
+      "timestamp": "2026-08-18T17:27:14.275010+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures for the completed and prior-year quarters but does not mention management's expectations for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_a_silent",
+      "repetition_index": 14,
+      "timestamp": "2026-08-18T17:27:15.497648+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides historical operating margin figures for the completed and prior-year quarters but does not mention any management expectation about future margin expansion.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:27:19.966692+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:27:21.687155+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:27:23.408262+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:27:24.581654+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:27:26.068426+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 5,
+      "timestamp": "2026-08-18T17:27:27.773717+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 6,
+      "timestamp": "2026-08-18T17:27:30.072958+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 7,
+      "timestamp": "2026-08-18T17:27:31.429210+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 8,
+      "timestamp": "2026-08-18T17:27:32.718646+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 9,
+      "timestamp": "2026-08-18T17:27:34.253433+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 10,
+      "timestamp": "2026-08-18T17:27:36.715627+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 11,
+      "timestamp": "2026-08-18T17:27:38.238147+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 12,
+      "timestamp": "2026-08-18T17:27:39.625951+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 13,
+      "timestamp": "2026-08-18T17:27:40.855852+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 14,
+      "timestamp": "2026-08-18T17:27:42.515667+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    }
+  ],
+  "report": {
+    "cases": [
+      {
+        "case_id": "contradiction_absence_a_silent",
+        "reference_verdict": "UNSUPPORTED",
+        "repetitions": 15,
+        "verdict_distribution": {
+          "UNSUPPORTED": 15
+        },
+        "successes": 15,
+        "failures": 0,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "contradiction_absence_b_explicit_opposite",
+        "reference_verdict": "CONTRADICTED",
+        "repetitions": 15,
+        "verdict_distribution": {
+          "CONTRADICTED": 2
+        },
+        "successes": 2,
+        "failures": 13,
+        "agreement_rate": 1.0,
+        "modal_verdict": "CONTRADICTED",
+        "matches_reference": true
+      }
+    ],
+    "total_cases": 2,
+    "total_invocations": 30,
+    "total_successes": 17,
+    "total_failures": 13,
+    "overall_verdict_distribution": {
+      "UNSUPPORTED": 15,
+      "CONTRADICTED": 2
+    },
+    "overall_agreement_rate_mean": 1.0,
+    "judge_models": [
+      "nvidia/nemotron-3-super-120b-a12b"
+    ],
+    "judge_prompt_versions": [
+      "v1"
+    ]
+  }
+}

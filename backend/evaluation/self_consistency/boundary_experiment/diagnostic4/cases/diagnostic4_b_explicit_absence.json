@@ -1,0 +1,9 @@
+{
+  "case_id": "diagnostic4_b_explicit_absence",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 four-case contradiction diagnostic. One of four minimal evidence conditions sharing an identical claim, entity, and temporal scope (next quarter) -- differing only in the type of non-support/opposition expressed. This is Case B: explicit category absence -- the same direct-negation-of-category construction ('provides no guidance') already implicated in the prior diagnostic's confirmed defect pattern, now re-tested within this four-way controlled set alongside uncertainty (C) and silence (D).",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company provides no guidance regarding revenue for next quarter.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Same entity, same metric (revenue), same period (next quarter) as the claim -- clears relevance; the evidence explicitly engages that exact proposition only to state no guidance exists for it. Per Document 47 Rev 5 Sec7.3.1's explicit-absence rule, this is UNSUPPORTED, not NOT_APPLICABLE (it is relevant) and not CONTRADICTED (absence is not opposition). Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_09_unrelated_disclosure",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 9 of 9. Unrelated disclosure category -- an already-validated NOT_APPLICABLE pattern (boundary_pair4_b_notapplicable_different_subject); non-regression check for the metric/disclosure-relevance boundary, which the v2 CONTRADICTED/UNSUPPORTED remediation does not touch.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company's primary business is manufacturing consumer electronics.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1's metric/disclosure relevance rule: a product/business description is a different disclosure category from a revenue-expectation claim, not merely a different specific figure within the same category. NOT_APPLICABLE. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

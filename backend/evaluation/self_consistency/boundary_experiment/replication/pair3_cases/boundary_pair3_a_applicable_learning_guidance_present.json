@@ -1,0 +1,9 @@
+{
+  "case_id": "boundary_pair3_a_applicable_learning_guidance_present",
+  "surface": "learning",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 targeted boundary experiment (paired with boundary_pair3_b_notapplicable_learning_guidance_absent). Synthetic figures, not real disclosed data. Pair replicates Pair 1's temporal-scope-mismatch axis on the Learning surface instead of Research, to test whether the pattern generalizes across surfaces. Case A is the 'applicable' member -- evidence directly addresses the claim's forward-looking subject.",
+  "claim": "Management indicated operating margin will continue to expand next quarter.",
+  "evidence": "Financial excerpt: Management guidance for next quarter projects operating margin expansion of 50-70 basis points, driven by continued mix shift toward higher-margin services.",
+  "reference_verdict": "SUPPORTED",
+  "reference_rationale": "The evidence directly states forward guidance of continued margin expansion for next quarter, matching the claim exactly. Independently justified from the evidence text alone, not constructed to force a contrast with Case B."
+}

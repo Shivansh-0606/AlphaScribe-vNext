@@ -1,0 +1,9 @@
+{
+  "case_id": "three_way_b_explicit_relevant_absence",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 final three-way experiment (paired with contradiction_absence_a_silent as Case A and contradiction_absence_b_explicit_opposite as Case C -- both reused unmodified from the already-approved contradiction-vs-absence experiment, same claim). This is the 'Case B' condition: evidence explicitly relevant to the claim's exact subject/entity/metric/period, stating that no guidance exists for it. Reference verdict assigned per Document 47 Rev 5 Sec7.3.1's explicit-absence rule, independent of and prior to any judge call.",
+  "claim": "Management expects operating margin to expand next quarter.",
+  "evidence": "No guidance on operating margin was provided for next quarter.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1: the evidence is about the same subject (operating margin), the same period (next quarter) named in the claim, and explicitly engages with that exact proposition only to state that no guidance exists for it. This is 'explicitly relevant absence' -- it clears the relevance test (same subject/entity/metric/period) and therefore cannot be NOT_APPLICABLE; it does not affirm the claim's proposition and therefore is UNSUPPORTED, not SUPPORTED; it does not assert an opposing proposition and therefore is not CONTRADICTED. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

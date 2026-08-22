@@ -1,0 +1,9 @@
+{
+  "case_id": "research_supported_revenue_match",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for M11 self-consistency evaluation (Document 47 Sec9.1). Synthetic figures, not real disclosed data. Authored independently of evaluation/core/judge.py's prompt text -- no wording overlap intended.",
+  "claim": "Revenue grew 6% year-over-year to $94.9B in the quarter.",
+  "evidence": "10-K excerpt, Item 7 (MD&A): Total net sales increased 6% year-over-year to $94.9 billion, driven primarily by strength in Services and continued iPhone demand.",
+  "reference_verdict": "SUPPORTED",
+  "reference_rationale": "The claim's figures ($94.9B, +6% YoY) directly match the evidence's stated figures -- a clear, unambiguous case."
+}

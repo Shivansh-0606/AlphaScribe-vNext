@@ -1,0 +1,9 @@
+{
+  "case_id": "contradiction_absence_a_silent",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized narrowly-scoped contradiction-vs-absence experiment (paired with contradiction_absence_b_explicit_opposite). Synthetic figures, not real disclosed data. Pair isolates exactly one variable: whether the evidence says anything at all about next quarter, holding the claim byte-identical. Deliberately kept simple (no explicit self-scoping disclaimer, no cross-domain subject) to avoid reintroducing the separate NOT_APPLICABLE-boundary question investigated elsewhere -- this pair targets only the CONTRADICTED-vs-UNSUPPORTED distinction.",
+  "claim": "Management expects operating margin to expand next quarter.",
+  "evidence": "Operating margin was 32.1% in the completed quarter, compared to 30.0% in the prior-year quarter.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "The evidence states historical margin figures for the completed quarter only and says nothing about next quarter at all -- no forward statement, no guidance, no next-quarter figure. It neither confirms nor conflicts with the claim; it is simply silent on the claimed period. Independently justified from the evidence text alone, assigned before any judge call was made and never sent to the judge."
+}

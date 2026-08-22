@@ -1,0 +1,9 @@
+{
+  "case_id": "research_contradicted_revenue_direction",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for M11 self-consistency evaluation (Document 47 Sec9.1). Synthetic figures, not real disclosed data.",
+  "claim": "Revenue increased 4% year-over-year, reflecting steady demand.",
+  "evidence": "10-K excerpt, Item 7 (MD&A): Total net sales decreased 4% year-over-year, reflecting softer demand in the company's largest product segment.",
+  "reference_verdict": "CONTRADICTED",
+  "reference_rationale": "The claim states revenue INCREASED 4%; the evidence states revenue DECREASED 4% -- a direct directional contradiction on the same figure, not merely unsupported."
+}

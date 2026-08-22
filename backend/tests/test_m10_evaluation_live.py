@@ -77,7 +77,7 @@ def test_live_mode_evaluation_produces_result_and_is_never_a_comparison_target(t
         adapter_result = await research.run(case, mode="live")
         assert adapter_result.mode == "live"
 
-        case_result = evaluate_case(case, adapter_result)
+        case_result = await evaluate_case(case, adapter_result)
         # The EvaluationResult contract: a real, three-state status, not a
         # crash and not a silently-invented fourth state.
         assert case_result.status in ("PASS", "FAIL", "INCONCLUSIVE")

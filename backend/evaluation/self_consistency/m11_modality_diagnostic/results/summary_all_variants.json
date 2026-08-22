@@ -1,0 +1,319 @@
+{
+  "generated_at": "2026-08-21T09:33:12.704055+00:00",
+  "note": "M11 modality instruction-salience DIAGNOSTIC (CTO-authorized live execution). EVIDENCE ONLY -- not JUDGE_PROMPT_VERSION lineage, not v3-na5, does not touch JUDGE_SELF_CONSISTENCY_GATE_VERSION or case-level PASS/FAIL.",
+  "repeats_per_case": 5,
+  "cases": [
+    "v2_regression_06_disclosure_uncertainty",
+    "v2_regression_07_relevant_silence",
+    "v2_regression_08_different_entity",
+    "v2_regression_09_unrelated_disclosure"
+  ],
+  "variants": {
+    "B_position": {
+      "prompt_sha256": "79d79860dfe7e235f08f060da39f5a45ed87cf7057709b1b28d374da6d88a343",
+      "result_file": "evaluation\\self_consistency\\m11_modality_diagnostic\\results\\B_position_run1.json",
+      "report": {
+        "cases": [
+          {
+            "case_id": "v2_regression_06_disclosure_uncertainty",
+            "reference_verdict": "UNSUPPORTED",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 3,
+              "UNSUPPORTED": 1
+            },
+            "successes": 4,
+            "failures": 1,
+            "agreement_rate": 0.75,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": false
+          },
+          {
+            "case_id": "v2_regression_07_relevant_silence",
+            "reference_verdict": "UNSUPPORTED",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "UNSUPPORTED": 5
+            },
+            "successes": 5,
+            "failures": 0,
+            "agreement_rate": 1.0,
+            "modal_verdict": "UNSUPPORTED",
+            "matches_reference": true
+          },
+          {
+            "case_id": "v2_regression_08_different_entity",
+            "reference_verdict": "NOT_APPLICABLE",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 5
+            },
+            "successes": 5,
+            "failures": 0,
+            "agreement_rate": 1.0,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": true
+          },
+          {
+            "case_id": "v2_regression_09_unrelated_disclosure",
+            "reference_verdict": "NOT_APPLICABLE",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 4
+            },
+            "successes": 4,
+            "failures": 1,
+            "agreement_rate": 1.0,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": true
+          }
+        ],
+        "total_cases": 4,
+        "total_invocations": 20,
+        "total_successes": 18,
+        "total_failures": 2,
+        "overall_verdict_distribution": {
+          "NOT_APPLICABLE": 12,
+          "UNSUPPORTED": 6
+        },
+        "overall_agreement_rate_mean": 0.9375,
+        "judge_models": [
+          "nvidia/nemotron-3-super-120b-a12b"
+        ],
+        "judge_prompt_versions": [
+          "m11-diagnostic-B_position"
+        ]
+      },
+      "supplementary_recovered_verdicts": [
+        {
+          "case_id": "v2_regression_06_disclosure_uncertainty",
+          "repetition_index": 0,
+          "recovered_verdict": "UNSUPPORTED"
+        },
+        {
+          "case_id": "v2_regression_09_unrelated_disclosure",
+          "repetition_index": 0,
+          "recovered_verdict": "NOT_APPLICABLE"
+        }
+      ]
+    },
+    "C_explicit_procedure": {
+      "prompt_sha256": "73822fb8957065b20040053ed999ff2192c57f108ba7e6b995df8f6bf11e76d8",
+      "result_file": "evaluation\\self_consistency\\m11_modality_diagnostic\\results\\C_explicit_procedure_run1.json",
+      "report": {
+        "cases": [
+          {
+            "case_id": "v2_regression_06_disclosure_uncertainty",
+            "reference_verdict": "UNSUPPORTED",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 5
+            },
+            "successes": 5,
+            "failures": 0,
+            "agreement_rate": 1.0,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": false
+          },
+          {
+            "case_id": "v2_regression_07_relevant_silence",
+            "reference_verdict": "UNSUPPORTED",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "UNSUPPORTED": 5
+            },
+            "successes": 5,
+            "failures": 0,
+            "agreement_rate": 1.0,
+            "modal_verdict": "UNSUPPORTED",
+            "matches_reference": true
+          },
+          {
+            "case_id": "v2_regression_08_different_entity",
+            "reference_verdict": "NOT_APPLICABLE",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 4
+            },
+            "successes": 4,
+            "failures": 1,
+            "agreement_rate": 1.0,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": true
+          },
+          {
+            "case_id": "v2_regression_09_unrelated_disclosure",
+            "reference_verdict": "NOT_APPLICABLE",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 4
+            },
+            "successes": 4,
+            "failures": 1,
+            "agreement_rate": 1.0,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": true
+          }
+        ],
+        "total_cases": 4,
+        "total_invocations": 20,
+        "total_successes": 18,
+        "total_failures": 2,
+        "overall_verdict_distribution": {
+          "NOT_APPLICABLE": 13,
+          "UNSUPPORTED": 5
+        },
+        "overall_agreement_rate_mean": 1.0,
+        "judge_models": [
+          "nvidia/nemotron-3-super-120b-a12b"
+        ],
+        "judge_prompt_versions": [
+          "m11-diagnostic-C_explicit_procedure"
+        ]
+      },
+      "supplementary_recovered_verdicts": []
+    },
+    "D_minimal_modality": {
+      "prompt_sha256": "8669d2d0677c39a2dc68d0f99b34063180d86c71d115bae5d791a634793aabe7",
+      "result_file": "evaluation\\self_consistency\\m11_modality_diagnostic\\results\\D_minimal_modality_run1.json",
+      "report": {
+        "cases": [
+          {
+            "case_id": "v2_regression_06_disclosure_uncertainty",
+            "reference_verdict": "UNSUPPORTED",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 3,
+              "UNSUPPORTED": 1
+            },
+            "successes": 4,
+            "failures": 1,
+            "agreement_rate": 0.75,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": false
+          },
+          {
+            "case_id": "v2_regression_07_relevant_silence",
+            "reference_verdict": "UNSUPPORTED",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "UNSUPPORTED": 5
+            },
+            "successes": 5,
+            "failures": 0,
+            "agreement_rate": 1.0,
+            "modal_verdict": "UNSUPPORTED",
+            "matches_reference": true
+          },
+          {
+            "case_id": "v2_regression_08_different_entity",
+            "reference_verdict": "NOT_APPLICABLE",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 5
+            },
+            "successes": 5,
+            "failures": 0,
+            "agreement_rate": 1.0,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": true
+          },
+          {
+            "case_id": "v2_regression_09_unrelated_disclosure",
+            "reference_verdict": "NOT_APPLICABLE",
+            "repetitions": 5,
+            "verdict_distribution": {
+              "NOT_APPLICABLE": 4
+            },
+            "successes": 4,
+            "failures": 1,
+            "agreement_rate": 1.0,
+            "modal_verdict": "NOT_APPLICABLE",
+            "matches_reference": true
+          }
+        ],
+        "total_cases": 4,
+        "total_invocations": 20,
+        "total_successes": 18,
+        "total_failures": 2,
+        "overall_verdict_distribution": {
+          "NOT_APPLICABLE": 12,
+          "UNSUPPORTED": 6
+        },
+        "overall_agreement_rate_mean": 0.9375,
+        "judge_models": [
+          "nvidia/nemotron-3-super-120b-a12b"
+        ],
+        "judge_prompt_versions": [
+          "m11-diagnostic-D_minimal_modality"
+        ]
+      },
+      "supplementary_recovered_verdicts": [
+        {
+          "case_id": "v2_regression_06_disclosure_uncertainty",
+          "repetition_index": 1,
+          "recovered_verdict": "NOT_APPLICABLE"
+        },
+        {
+          "case_id": "v2_regression_09_unrelated_disclosure",
+          "repetition_index": 1,
+          "recovered_verdict": "NOT_APPLICABLE"
+        }
+      ]
+    }
+  },
+  "control_v3na4_case_06_09": {
+    "v2_regression_06_disclosure_uncertainty": {
+      "case_id": "v2_regression_06_disclosure_uncertainty",
+      "reference_verdict": "UNSUPPORTED",
+      "repetitions": 5,
+      "verdict_distribution": {
+        "NOT_APPLICABLE": 3
+      },
+      "successes": 3,
+      "failures": 2,
+      "agreement_rate": 1.0,
+      "modal_verdict": "NOT_APPLICABLE",
+      "matches_reference": false
+    },
+    "v2_regression_07_relevant_silence": {
+      "case_id": "v2_regression_07_relevant_silence",
+      "reference_verdict": "UNSUPPORTED",
+      "repetitions": 5,
+      "verdict_distribution": {
+        "UNSUPPORTED": 5
+      },
+      "successes": 5,
+      "failures": 0,
+      "agreement_rate": 1.0,
+      "modal_verdict": "UNSUPPORTED",
+      "matches_reference": true
+    },
+    "v2_regression_08_different_entity": {
+      "case_id": "v2_regression_08_different_entity",
+      "reference_verdict": "NOT_APPLICABLE",
+      "repetitions": 5,
+      "verdict_distribution": {
+        "NOT_APPLICABLE": 5
+      },
+      "successes": 5,
+      "failures": 0,
+      "agreement_rate": 1.0,
+      "modal_verdict": "NOT_APPLICABLE",
+      "matches_reference": true
+    },
+    "v2_regression_09_unrelated_disclosure": {
+      "case_id": "v2_regression_09_unrelated_disclosure",
+      "reference_verdict": "NOT_APPLICABLE",
+      "repetitions": 5,
+      "verdict_distribution": {
+        "NOT_APPLICABLE": 4
+      },
+      "successes": 4,
+      "failures": 1,
+      "agreement_rate": 1.0,
+      "modal_verdict": "NOT_APPLICABLE",
+      "matches_reference": true
+    }
+  }
+}

@@ -83,7 +83,7 @@ def stub_llm(monkeypatch):
     # stub_llm fixture — the one LLM stub point in this codebase.
     state = {"text": None}
 
-    def _generate_sync(system, user, model, usage_sink=None):
+    def _generate_sync(system, user, model, usage_sink=None, temperature=None):
         if state["text"] is None:
             raise AssertionError("stub_llm() was not configured with a response")
         return state["text"]

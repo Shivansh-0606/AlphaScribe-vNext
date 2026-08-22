@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_07_relevant_silence",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 7 of 9. Plain relevant silence -- already 20/20 correct under v1 (per the M11 four-case diagnostic); included as a non-regression check.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company's revenue this quarter was $50 million.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1's temporal rule: same entity/metric as the claim (temporal-mismatch alone does not trigger NOT_APPLICABLE) -- clears relevance; the evidence states only this quarter's actual figure and makes no statement about next quarter at all. UNSUPPORTED. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

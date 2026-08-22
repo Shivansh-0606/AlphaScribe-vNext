@@ -1,0 +1,728 @@
+{
+  "generated_at": "2026-08-19T12:19:53.449455+00:00",
+  "repeats_per_case": 20,
+  "held_out_case_count": 3,
+  "note": "EVIDENCE ONLY (Document 47 Sec9.1) -- does not authorize gate promotion. JUDGE_SELF_CONSISTENCY_GATE_VERSION is not read or written by this script; promoting the gate is a separate, explicit CTO/reviewer decision (Sec9.1 step 6).",
+  "measurements": [
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 0,
+      "timestamp": "2026-08-19T12:16:32.237625+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no revenue guidance for next quarter, which neither confirms nor denies an expectation of revenue growth. It merely lacks information about the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 1,
+      "timestamp": "2026-08-19T12:16:34.806395+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 2,
+      "timestamp": "2026-08-19T12:16:36.915464+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no guidance regarding revenue for next quarter, which neither confirms nor contradicts the claim that Company X expects revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 3,
+      "timestamp": "2026-08-19T12:16:38.697080+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 4,
+      "timestamp": "2026-08-19T12:16:40.380821+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no guidance about next-quarter revenue, which neither confirms nor denies an expectation of revenue growth. It does not support the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 5,
+      "timestamp": "2026-08-19T12:16:42.835791+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no revenue guidance for next quarter, which neither confirms nor contradicts the claim that it expects revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 6,
+      "timestamp": "2026-08-19T12:16:45.205661+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 7,
+      "timestamp": "2026-08-19T12:16:48.882287+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no guidance regarding revenue for next quarter, which neither confirms nor contradicts the claim that it expects revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 8,
+      "timestamp": "2026-08-19T12:16:50.950150+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no guidance regarding revenue for next quarter, which neither confirms nor contradicts the claim that Company X expects revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 9,
+      "timestamp": "2026-08-19T12:16:52.873016+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no guidance about next quarter's revenue, which neither confirms nor denies an expectation of revenue growth. It does not support the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 10,
+      "timestamp": "2026-08-19T12:16:54.500360+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 11,
+      "timestamp": "2026-08-19T12:16:55.961649+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no revenue guidance for next quarter, which neither confirms nor denies an expectation of revenue growth. It merely lacks information about the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 12,
+      "timestamp": "2026-08-19T12:16:57.826382+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no revenue guidance for next quarter, which neither confirms nor denies an expectation of revenue growth. It merely indicates a lack of disclosed guidance, so it does not support the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 13,
+      "timestamp": "2026-08-19T12:16:59.893017+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 14,
+      "timestamp": "2026-08-19T12:17:01.582401+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 15,
+      "timestamp": "2026-08-19T12:17:05.921176+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no guidance regarding revenue for next quarter, which neither confirms nor contradicts the claim that Company X expects revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 16,
+      "timestamp": "2026-08-19T12:17:27.425995+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 17,
+      "timestamp": "2026-08-19T12:17:29.590812+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 18,
+      "timestamp": "2026-08-19T12:17:32.151020+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no guidance regarding revenue for next quarter, which neither confirms nor contradicts the claim that it expects revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1a_entity_relevant_unsupported",
+      "repetition_index": 19,
+      "timestamp": "2026-08-19T12:17:34.154268+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that Company X provides no guidance regarding revenue for next quarter, which neither confirms nor contradicts the claim that it expects revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 0,
+      "timestamp": "2026-08-19T12:17:37.885609+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y's App Store practices, which does not mention Company X, its revenue expectations, or the next quarter. Therefore, the evidence does not address the claim's subject and cannot be meaningfully compared to it.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 1,
+      "timestamp": "2026-08-19T12:17:55.150035+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's antitrust investigation and does not mention Company X or its revenue expectations, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 2,
+      "timestamp": "2026-08-19T12:17:59.130885+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y's App Store practices, which does not mention Company X, revenue growth, or the next quarter, and therefore does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 3,
+      "timestamp": "2026-08-19T12:18:02.718545+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's antitrust investigation and does not mention Company X, its revenue expectations, or next quarter, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 4,
+      "timestamp": "2026-08-19T12:18:05.593996+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's antitrust investigation and does not mention Company X, revenue growth, or the next quarter, so it does not address the claim's subject at all.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 5,
+      "timestamp": "2026-08-19T12:18:07.421025+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y and its App Store practices, which does not mention Company X, revenue growth, or expectations for the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 6,
+      "timestamp": "2026-08-19T12:18:10.151126+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence concerns Company Y's antitrust investigation and does not mention Company X or its revenue expectations, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 7,
+      "timestamp": "2026-08-19T12:18:14.371813+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's antitrust investigation and does not mention Company X, its revenue expectations, or next quarter, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 8,
+      "timestamp": "2026-08-19T12:18:17.977783+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y and its App Store practices, which is unrelated to Company X's expected revenue growth next quarter. Since the evidence does not address the claim's subject at all, the claim and evidence cannot be meaningfully compared.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 9,
+      "timestamp": "2026-08-19T12:18:19.972292+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y and provides no information about Company X's revenue expectations for next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 10,
+      "timestamp": "2026-08-19T12:18:29.967988+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence concerns Company Y's antitrust investigation and does not mention Company X or any expectation of revenue growth next quarter, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 11,
+      "timestamp": "2026-08-19T12:18:32.695831+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y and its App Store practices, which does not mention Company X, its revenue expectations, or the next quarter. Therefore, the evidence does not address the claim's subject at all.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 12,
+      "timestamp": "2026-08-19T12:18:35.264109+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y and its App Store practices, which does not mention Company X, revenue growth, or the next quarter, so it does not address the claim's subject at all.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 13,
+      "timestamp": "2026-08-19T12:18:39.247094+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation of Company Y and does not mention Company X, its revenue expectations, or any information about next quarter's growth, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 14,
+      "timestamp": "2026-08-19T12:18:43.963830+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's antitrust investigation and does not mention Company X, revenue growth, or next quarter, so it does not address the claim's subject at all.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 15,
+      "timestamp": "2026-08-19T12:18:47.089978+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's antitrust investigation and does not mention Company X, its revenue expectations, or next quarter's performance, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 16,
+      "timestamp": "2026-08-19T12:18:53.842857+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y and makes no mention of Company X, its revenue expectations, or the next quarter, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 17,
+      "timestamp": "2026-08-19T12:18:55.369012+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses Company Y's antitrust investigation and provides no information about Company X's revenue expectations, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 18,
+      "timestamp": "2026-08-19T12:18:57.644172+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation involving Company Y and its App Store practices, which does not address Company X's expected revenue growth next quarter. Since the evidence does not pertain to the claim's subject, the two cannot be meaningfully compared.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_1b_entity_clearly_irrelevant",
+      "repetition_index": 19,
+      "timestamp": "2026-08-19T12:19:00.594831+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence concerns Company Y's antitrust investigation and does not mention Company X or its revenue growth expectations, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 0,
+      "timestamp": "2026-08-19T12:19:04.499674+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's expectations for revenue growth next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 1,
+      "timestamp": "2026-08-19T12:19:06.563760+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's expectations for revenue growth next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 2,
+      "timestamp": "2026-08-19T12:19:07.932131+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 3,
+      "timestamp": "2026-08-19T12:19:10.595675+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 4,
+      "timestamp": "2026-08-19T12:19:17.601418+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 5,
+      "timestamp": "2026-08-19T12:19:24.366616+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's revenue growth expectations for next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 6,
+      "timestamp": "2026-08-19T12:19:26.611611+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 7,
+      "timestamp": "2026-08-19T12:19:29.425204+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's expectations for revenue growth next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 8,
+      "timestamp": "2026-08-19T12:19:31.879649+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 9,
+      "timestamp": "2026-08-19T12:19:33.722707+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's revenue growth expectations for next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 10,
+      "timestamp": "2026-08-19T12:19:35.836610+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 11,
+      "timestamp": "2026-08-19T12:19:37.447705+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 12,
+      "timestamp": "2026-08-19T12:19:39.205187+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's expectations for revenue growth next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 13,
+      "timestamp": "2026-08-19T12:19:41.047092+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's revenue growth expectations for next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 14,
+      "timestamp": "2026-08-19T12:19:43.005658+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 15,
+      "timestamp": "2026-08-19T12:19:44.888915+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 16,
+      "timestamp": "2026-08-19T12:19:46.755396+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 17,
+      "timestamp": "2026-08-19T12:19:50.049938+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's revenue growth expectations for next quarter, so it does not address the claim's subject.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 18,
+      "timestamp": "2026-08-19T12:19:51.922442+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+      "repetition_index": 19,
+      "timestamp": "2026-08-19T12:19:53.449455+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses an antitrust investigation and does not mention the company's expectations for revenue growth next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v2",
+      "error": null
+    }
+  ],
+  "report": {
+    "cases": [
+      {
+        "case_id": "na_diag_1a_entity_relevant_unsupported",
+        "reference_verdict": "UNSUPPORTED",
+        "repetitions": 20,
+        "verdict_distribution": {
+          "UNSUPPORTED": 12
+        },
+        "successes": 12,
+        "failures": 8,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "na_diag_1b_entity_clearly_irrelevant",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 20,
+        "verdict_distribution": {
+          "NOT_APPLICABLE": 17,
+          "UNSUPPORTED": 3
+        },
+        "successes": 20,
+        "failures": 0,
+        "agreement_rate": 0.85,
+        "modal_verdict": "NOT_APPLICABLE",
+        "matches_reference": true
+      },
+      {
+        "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 20,
+        "verdict_distribution": {
+          "UNSUPPORTED": 8,
+          "NOT_APPLICABLE": 1
+        },
+        "successes": 9,
+        "failures": 11,
+        "agreement_rate": 0.8888888888888888,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": false
+      }
+    ],
+    "total_cases": 3,
+    "total_invocations": 60,
+    "total_successes": 41,
+    "total_failures": 19,
+    "overall_verdict_distribution": {
+      "UNSUPPORTED": 23,
+      "NOT_APPLICABLE": 18
+    },
+    "overall_agreement_rate_mean": 0.912962962962963,
+    "judge_models": [
+      "nvidia/nemotron-3-super-120b-a12b"
+    ],
+    "judge_prompt_versions": [
+      "v2"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "diagnostic4_d_plain_silence",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 four-case contradiction diagnostic. One of four minimal evidence conditions sharing an identical claim, entity, and temporal scope (next quarter) -- differing only in the type of non-support/opposition expressed. This is Case D: plain silence -- the control condition, relevant to the same entity/metric but containing no statement, disclaimer, or uncertainty language about next quarter at all.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company's revenue this quarter was $50 million.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Same entity, same metric (revenue) as the claim -- clears relevance (temporal-mismatch-alone does not trigger NOT_APPLICABLE per Document 47 Rev 5 Sec7.3.1's temporal rule). The evidence states only this quarter's actual figure and makes no statement, explicit or implicit, about next quarter -- no disclaimer, no uncertainty language, pure silence. Neither confirms nor opposes the claim -- UNSUPPORTED. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

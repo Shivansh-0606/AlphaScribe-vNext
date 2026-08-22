@@ -1,0 +1,9 @@
+{
+  "case_id": "v3_regression_c_temporal_mismatch_not_applicable",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-19 for the CTO-authorized M11 Judge v3 implementation. No live-tested temporal-mismatch NOT_APPLICABLE case exists anywhere in this engagement's prior history -- a gap flagged in the M11 v3 Remediation Design. Grounded directly in Document 47 Rev 5 Sec7.3.1's own existing temporal-applicability example ('a divested or not-yet-existing business unit') -- no new temporal taxonomy invented; this is that exact example instantiated as a concrete case.",
+  "claim": "The company's cloud services division expects revenue growth next quarter.",
+  "evidence": "Two years before the cloud services division was created, the company's total revenue grew 4% year-over-year.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1's temporal rule: this is not an ordinary historical-vs-forward mismatch (which would be UNSUPPORTED) -- the evidence's period predates the cloud services division's existence entirely, so continuity of the claim's own subject (that division) breaks down structurally. The TIME applicability test fails, matching Sec7.3.1's own 'not-yet-existing business unit' example verbatim. NOT_APPLICABLE. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

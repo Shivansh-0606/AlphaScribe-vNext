@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_01_genuine_contradiction",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 1 of 9. Must remain CONTRADICTED after the v2 prompt/schema change -- a non-regression check for the already-correct behavior (17/17 under v1).",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company expects revenue to decline next quarter.",
+  "reference_verdict": "CONTRADICTED",
+  "reference_rationale": "Affirmative, directly opposing statement about the same entity/metric/period as the claim -- a genuine contradiction, not mere absence. Independently justified from the evidence text alone, assigned before any judge call and never sent to the judge."
+}

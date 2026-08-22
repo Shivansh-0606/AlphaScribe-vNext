@@ -16,18 +16,59 @@ adapters already wrapped all three (Document 45 §14) to produce the
 surface-blind NormalizedOutput this module consumes. Calling them a second
 time here would duplicate Phase 2's own job and reintroduce the report-shape
 coupling Document 45 §6 principle 3 explicitly rejects.
+
+M11 Phase C: `evaluate_case` is `async` because `evaluate_behavior` may make
+a real `chat_json` call for `model_judged_support` behaviors (Document 47
+§7.2) — the four Document 45 §13 metrics and their meanings are otherwise
+completely unchanged. A `model_judged_support` result is recorded (§8) but
+excluded from `_characteristic_coverage_metric`/`_overall_status`'s
+aggregation while `JUDGE_SELF_CONSISTENCY_GATE_VERSION == 0` (§7.4/§9.1) —
+see `_counts_toward_aggregation` below, the one new filter this phase adds.
 """
 from __future__ import annotations
 
 from evaluation.adapters.types import AdapterResult, NormalizedOutput
 from evaluation.core.behaviors import evaluate_behavior, no_output_reason
+from evaluation.core.judge_gate import JUDGE_SELF_CONSISTENCY_GATE_VERSION
 from evaluation.core.types import BehaviorEvaluation, CaseEvaluationResult, MetricResult, Status
 from evaluation.golden_dataset.models import BenchmarkCase
 
 # Bumped when this module's metric/status logic changes — Document 45 §12/§17's
 # evaluation_version, so a metric-definition change is distinguishable from a
 # model/prompt change in any later (Phase 4) comparison.
-EVALUATION_VERSION = "v1"
+#
+# v2 supersedes v1: Document 47 §8's own recommendation — "bump
+# EVALUATION_VERSION whenever judge_prompt_version changes, exactly as it
+# would for any other evaluator-logic change" — applied here because the
+# structured-applicability-v1 Stage-1 applicability prompt (evaluation/core/
+# judge.py::_APPLICABILITY_SYSTEM_PROMPT) changed to encode Document 47
+# §7.3.1 Revision 6's already-ratified component/aggregate granularity rule.
+# This is the first bump since EVALUATION_VERSION was introduced (M11 Phase
+# C, commit d80e105) — "v1" -> "v2" follows the same plain sequential-integer
+# convention already used by PROMPT_VERSION/SCHEMA_VERSION in
+# agents/comparison_explanation.py (both start at "v1"), not the unrelated
+# "v3-naN" suffix scheme, which is specific to JUDGE_PROMPT_VERSION's own
+# lineage. Document 46 §5's five-field baseline key (case_id, dataset_version,
+# case_version, evaluation_version, schema_version) already treats a changed
+# evaluation_version as baseline-incompatible with zero further schema
+# change — see test_incompatible_evaluation_version_excluded
+# (test_evaluation_regression_baseline.py), which already exercises "v1" vs
+# "v2" as its own incompatibility example.
+EVALUATION_VERSION = "v2"
+
+
+def _counts_toward_aggregation(b: BehaviorEvaluation) -> bool:
+    """Document 47 §7.4/§9.1's pre-gate exclusion, the one new rule M11
+    Phase C adds to this module. A model-judged behavior's `status` is
+    recorded and disclosed (judged_by/judge_detail, §8) unconditionally, but
+    must not influence case-level PASS/FAIL/INCONCLUSIVE until the
+    self-consistency gate (evaluation/core/judge_gate.py) has been bumped
+    past 0 by a separate, explicit, reviewed decision — never inferred here.
+    Deterministic behaviors (judged_by == "deterministic") always count,
+    exactly as before this phase."""
+    if b.judged_by == "model":
+        return JUDGE_SELF_CONSISTENCY_GATE_VERSION > 0
+    return True
 
 
 def _citation_expectation_metric(case: BenchmarkCase, output: NormalizedOutput) -> MetricResult:
@@ -93,7 +134,9 @@ def _grounding_status_metric(output: NormalizedOutput) -> MetricResult:
 
 
 def _characteristic_coverage_metric(behavior_evals: list[BehaviorEvaluation]) -> MetricResult:
-    determinable = [b for b in behavior_evals if b.status != "INCONCLUSIVE"]
+    determinable = [
+        b for b in behavior_evals if b.status != "INCONCLUSIVE" and _counts_toward_aggregation(b)
+    ]
     if not determinable:
         return MetricResult("expected_characteristic_coverage", None, "INCONCLUSIVE",
                              "no expected_behaviors could be determined")
@@ -111,7 +154,13 @@ def _overall_status(
     # grounding status = grounded, all required expected_behaviors satisfied.
     # FAIL takes priority over INCONCLUSIVE (this task's §12): a definite,
     # known problem must not be masked by an unrelated unknown elsewhere.
-    fail_reasons = [f"{b.behavior_id}: {b.reason}" for b in behavior_evals if b.status == "FAIL"]
+    # M11 Phase C: _counts_toward_aggregation excludes gate=0 model-judged
+    # behaviors from both lists below — their own status (whatever it is)
+    # must not move the case's overall PASS/FAIL/INCONCLUSIVE (§7.4).
+    fail_reasons = [
+        f"{b.behavior_id}: {b.reason}" for b in behavior_evals
+        if b.status == "FAIL" and _counts_toward_aggregation(b)
+    ]
     if citation_metric.status == "FAIL":
         fail_reasons.append(f"citation_expectation: {citation_metric.detail}")
     if grounding_metric.status == "FAIL":
@@ -119,7 +168,10 @@ def _overall_status(
     if fail_reasons:
         return "FAIL", fail_reasons
 
-    inconclusive_reasons = [f"{b.behavior_id}: {b.reason}" for b in behavior_evals if b.status == "INCONCLUSIVE"]
+    inconclusive_reasons = [
+        f"{b.behavior_id}: {b.reason}" for b in behavior_evals
+        if b.status == "INCONCLUSIVE" and _counts_toward_aggregation(b)
+    ]
     if citation_metric.status == "INCONCLUSIVE":
         inconclusive_reasons.append(f"citation_expectation: {citation_metric.detail}")
     if grounding_metric.status == "INCONCLUSIVE":
@@ -130,11 +182,18 @@ def _overall_status(
     return "PASS", []
 
 
-def evaluate_case(case: BenchmarkCase, adapter_result: AdapterResult) -> CaseEvaluationResult:
+async def evaluate_case(case: BenchmarkCase, adapter_result: AdapterResult) -> CaseEvaluationResult:
     """The Phase 3 entry point: one BenchmarkCase + the AdapterResult Phase 2
-    produced for it -> one CaseEvaluationResult. Deterministic — identical
-    inputs always produce an identical result; no randomness, no network
-    call, no LLM call anywhere in this function or anything it calls."""
+    produced for it -> one CaseEvaluationResult.
+
+    M11 Phase C: `async` because a `model_judged_support` behavior makes a
+    real `chat_json` call (Document 47 §7.2) — every other behavior/metric
+    in this function remains exactly as deterministic as before; identical
+    inputs still produce an identical result for every deterministic
+    evaluator, and a judge-execution failure still deterministically maps to
+    INCONCLUSIVE (never a random/varying outcome at the wrapper level, per
+    §7.3), even though the underlying model call itself is not guaranteed
+    reproducible (§9)."""
     if case.case_id != adapter_result.case_id or case.surface != adapter_result.surface:
         raise ValueError(
             f"case/adapter_result mismatch: case={case.case_id!r}/{case.surface!r} vs "
@@ -143,7 +202,14 @@ def evaluate_case(case: BenchmarkCase, adapter_result: AdapterResult) -> CaseEva
 
     output = adapter_result.output
     behavior_evals = [
-        evaluate_behavior(b, output, surface=case.surface) for b in case.expected_behaviors
+        # Document 47 §7.1/§7.2: numeric_consistency and model_judged_support
+        # both resolve against case.context — threaded through here, the one
+        # call site (this task's own required proof: no other line in this
+        # module changes; the four Document 45 §13 metrics below are
+        # untouched in meaning, only _characteristic_coverage_metric's and
+        # _overall_status's determinable-set filtering gained the gate check).
+        await evaluate_behavior(b, output, surface=case.surface, context=case.context)
+        for b in case.expected_behaviors
     ]
     citation_metric = _citation_expectation_metric(case, output)
     coverage_metric = _citation_coverage_metric(output)

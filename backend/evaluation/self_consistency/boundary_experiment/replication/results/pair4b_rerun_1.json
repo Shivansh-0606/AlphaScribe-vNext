@@ -1,0 +1,369 @@
+{
+  "generated_at": "2026-08-18T17:18:14.440605+00:00",
+  "repeats_per_case": 30,
+  "held_out_case_count": 1,
+  "note": "EVIDENCE ONLY (Document 47 Sec9.1) -- does not authorize gate promotion. JUDGE_SELF_CONSISTENCY_GATE_VERSION is not read or written by this script; promoting the gate is a separate, explicit CTO/reviewer decision (Sec9.1 step 6).",
+  "measurements": [
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:17:00.603666+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:17:03.193755+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence describes the company's business and products and contains no financial information, including EPS figures or expectations. Therefore it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:17:04.882760+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a business description and contains no financial information, so it does not address the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:17:09.191240+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a description of the company's products and services and contains no financial data or EPS figures, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:17:10.737535+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a business description and contains no financial information or EPS figure, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 5,
+      "timestamp": "2026-08-18T17:17:17.565210+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a business description and contains no financial results or EPS figures, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 6,
+      "timestamp": "2026-08-18T17:17:19.619735+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a description of the company's products and services and contains no financial results or EPS information, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 7,
+      "timestamp": "2026-08-18T17:17:23.799039+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence describes the company's business and products and contains no financial information or mention of diluted EPS, so it neither supports nor contradicts the claim about EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 8,
+      "timestamp": "2026-08-18T17:17:27.029420+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence describes the company's business and products but contains no financial results or EPS information, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 9,
+      "timestamp": "2026-08-18T17:17:30.687543+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a description of the company's products and services and contains no financial information, including diluted EPS figures. Therefore it neither supports nor contradicts the claim about EPS beating expectations.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 10,
+      "timestamp": "2026-08-18T17:17:35.084310+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a business description and contains no financial results or EPS information, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 11,
+      "timestamp": "2026-08-18T17:17:36.376637+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a description of the company's products and services and contains no financial results or EPS figures, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 12,
+      "timestamp": "2026-08-18T17:17:39.324420+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence describes the company's business and products and contains no financial information, including diluted EPS or expectations, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 13,
+      "timestamp": "2026-08-18T17:17:41.068037+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a description of the company's products and services and contains no financial information, including diluted EPS figures or expectations. Therefore it neither supports nor contradicts the claim about EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 14,
+      "timestamp": "2026-08-18T17:17:42.480700+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a business description and contains no financial results or EPS figures, so it does not support the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 15,
+      "timestamp": "2026-08-18T17:17:43.949660+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a description of the company's products and services and contains no financial results or EPS information, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 16,
+      "timestamp": "2026-08-18T17:17:46.301062+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a description of the company's products and services and contains no financial results or EPS information, so it does not address the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 17,
+      "timestamp": "2026-08-18T17:17:48.056449+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 18,
+      "timestamp": "2026-08-18T17:17:49.284814+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 19,
+      "timestamp": "2026-08-18T17:17:54.469978+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a business description and contains no financial results or EPS information, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 20,
+      "timestamp": "2026-08-18T17:17:55.937193+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence describes the company's business and products but contains no financial results or EPS figures, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 21,
+      "timestamp": "2026-08-18T17:17:57.700977+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 22,
+      "timestamp": "2026-08-18T17:17:59.176786+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 23,
+      "timestamp": "2026-08-18T17:18:01.194554+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 24,
+      "timestamp": "2026-08-18T17:18:02.850811+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 25,
+      "timestamp": "2026-08-18T17:18:05.576594+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a business description and contains no financial results or EPS information, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 26,
+      "timestamp": "2026-08-18T17:18:08.676044+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 27,
+      "timestamp": "2026-08-18T17:18:10.434393+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 28,
+      "timestamp": "2026-08-18T17:18:12.178697+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 29,
+      "timestamp": "2026-08-18T17:18:14.439607+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    }
+  ],
+  "report": {
+    "cases": [
+      {
+        "case_id": "boundary_pair4_b_notapplicable_different_subject",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 30,
+        "verdict_distribution": {
+          "UNSUPPORTED": 19
+        },
+        "successes": 19,
+        "failures": 11,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": false
+      }
+    ],
+    "total_cases": 1,
+    "total_invocations": 30,
+    "total_successes": 19,
+    "total_failures": 11,
+    "overall_verdict_distribution": {
+      "UNSUPPORTED": 19
+    },
+    "overall_agreement_rate_mean": 1.0,
+    "judge_models": [
+      "nvidia/nemotron-3-super-120b-a12b"
+    ],
+    "judge_prompt_versions": [
+      "v1"
+    ]
+  }
+}

@@ -157,6 +157,90 @@ def test_limitation_reference_rejects_wrong_type():
 
 
 # ---------------------------------------------------------------------------
+# ExpectedBehavior — numeric_consistency (Document 47 §7.1, Phase A)
+# ---------------------------------------------------------------------------
+
+def test_numeric_consistency_is_valid():
+    b = ExpectedBehavior(behavior_id="b1", type="presence", description="d",
+                          match_rule="numeric_consistency", reference="source_documents[0].revenue",
+                          tolerance=0.01)
+    assert b.tolerance == 0.01
+    assert b.variants is None
+
+
+def test_numeric_consistency_rejects_missing_reference():
+    try:
+        ExpectedBehavior(behavior_id="b1", type="presence", description="d",
+                          match_rule="numeric_consistency", tolerance=0.01)
+    except ValidationError as e:
+        assert "non-empty 'reference'" in str(e)
+    else:
+        raise AssertionError("expected ValidationError for missing reference")
+
+
+def test_numeric_consistency_rejects_missing_tolerance():
+    try:
+        ExpectedBehavior(behavior_id="b1", type="presence", description="d",
+                          match_rule="numeric_consistency", reference="source_documents[0].revenue")
+    except ValidationError as e:
+        assert "requires 'tolerance'" in str(e)
+    else:
+        raise AssertionError("expected ValidationError for missing tolerance")
+
+
+def test_numeric_consistency_rejects_negative_tolerance():
+    try:
+        ExpectedBehavior(behavior_id="b1", type="presence", description="d",
+                          match_rule="numeric_consistency", reference="source_documents[0].revenue",
+                          tolerance=-0.01)
+    except ValidationError as e:
+        assert "'tolerance' must be >= 0" in str(e)
+    else:
+        raise AssertionError("expected ValidationError for negative tolerance")
+
+
+def test_numeric_consistency_rejects_variants_set():
+    try:
+        ExpectedBehavior(behavior_id="b1", type="presence", description="d",
+                          match_rule="numeric_consistency", reference="r", tolerance=0.01, variants=["x"])
+    except ValidationError as e:
+        assert "forbids 'variants'" in str(e)
+    else:
+        raise AssertionError("expected ValidationError for variants set on numeric_consistency")
+
+
+def test_numeric_consistency_rejects_wrong_type():
+    try:
+        ExpectedBehavior(behavior_id="b1", type="absence", description="d",
+                          match_rule="numeric_consistency", reference="r", tolerance=0.01)
+    except ValidationError as e:
+        assert "type in" in str(e)
+    else:
+        raise AssertionError("expected ValidationError for absence+numeric_consistency")
+
+
+def test_other_rules_reject_tolerance_set():
+    # Document 47's new field must not silently become usable by the three
+    # frozen Document 45 rules — each still forbids it, exactly like variants
+    # is forbidden for citation_required/limitation_reference.
+    try:
+        ExpectedBehavior(behavior_id="b1", type="presence", description="d",
+                          match_rule="keyword_variant", variants=["x"], tolerance=0.01)
+    except ValidationError as e:
+        assert "forbids 'tolerance'" in str(e)
+    else:
+        raise AssertionError("expected ValidationError for tolerance set on keyword_variant")
+
+    try:
+        ExpectedBehavior(behavior_id="b1", type="presence", description="d",
+                          match_rule="citation_required", reference="r", tolerance=0.01)
+    except ValidationError as e:
+        assert "forbids 'tolerance'" in str(e)
+    else:
+        raise AssertionError("expected ValidationError for tolerance set on citation_required")
+
+
+# ---------------------------------------------------------------------------
 # BenchmarkCase
 # ---------------------------------------------------------------------------
 
@@ -282,6 +366,45 @@ def test_limitation_reference_must_resolve_against_known_limitations():
     assert case.known_limitations == ["gap_x"]
 
 
+def test_numeric_consistency_rejected_for_comparison_explanation():
+    # Document 47 §7.0 (Revision 4): Comparison Explanation's Citation.source_id
+    # is not positional — numeric_consistency must be rejected at construction,
+    # not silently mis-evaluated.
+    payload = _base_case(
+        surface="comparison_explanation", context={"report_ids": ["r1", "r2"]},
+        expected_behaviors=[
+            {"behavior_id": "b1", "type": "presence", "description": "d",
+             "match_rule": "numeric_consistency", "reference": "fixture_reports[0].revenue",
+             "tolerance": 0.01},
+        ],
+    )
+    try:
+        BenchmarkCase.model_validate(payload)
+    except ValidationError as e:
+        assert "not supported for surface='comparison_explanation'" in str(e)
+    else:
+        raise AssertionError("expected ValidationError for numeric_consistency on comparison_explanation")
+
+
+def test_numeric_consistency_allowed_for_research_and_learning():
+    research = BenchmarkCase.model_validate(_base_case(expected_behaviors=[
+        {"behavior_id": "b1", "type": "presence", "description": "d",
+         "match_rule": "numeric_consistency", "reference": "source_documents[0].revenue",
+         "tolerance": 0.01},
+    ]))
+    assert research.expected_behaviors[0].match_rule == "numeric_consistency"
+
+    learning = BenchmarkCase.model_validate(_base_case(
+        surface="learning", context={"ticker": "MSFT", "concept": "operating margin"},
+        expected_behaviors=[
+            {"behavior_id": "b1", "type": "presence", "description": "d",
+             "match_rule": "numeric_consistency", "reference": "source_documents[0].margin",
+             "tolerance": 0.01},
+        ],
+    ))
+    assert learning.expected_behaviors[0].match_rule == "numeric_consistency"
+
+
 if __name__ == "__main__":
     test_keyword_variant_presence_is_valid()
     test_keyword_variant_absence_is_valid()
@@ -297,6 +420,13 @@ if __name__ == "__main__":
     test_limitation_reference_rejects_missing_reference()
     test_limitation_reference_rejects_variants_set()
     test_limitation_reference_rejects_wrong_type()
+    test_numeric_consistency_is_valid()
+    test_numeric_consistency_rejects_missing_reference()
+    test_numeric_consistency_rejects_missing_tolerance()
+    test_numeric_consistency_rejects_negative_tolerance()
+    test_numeric_consistency_rejects_variants_set()
+    test_numeric_consistency_rejects_wrong_type()
+    test_other_rules_reject_tolerance_set()
     test_valid_case_for_each_surface()
     test_invalid_case_missing_required_field()
     test_unsupported_surface_rejected()
@@ -305,6 +435,8 @@ if __name__ == "__main__":
     test_context_missing_surface_required_key_rejected()
     test_duplicate_behavior_id_rejected()
     test_limitation_reference_must_resolve_against_known_limitations()
+    test_numeric_consistency_rejected_for_comparison_explanation()
+    test_numeric_consistency_allowed_for_research_and_learning()
     print("ok: ExpectedBehavior cross-field invariants (keyword_variant/citation_required/"
-          "limitation_reference); BenchmarkCase schema, surface/context, version, and "
-          "behavior-integrity validation")
+          "limitation_reference/numeric_consistency); BenchmarkCase schema, surface/context, "
+          "version, and behavior-integrity validation")

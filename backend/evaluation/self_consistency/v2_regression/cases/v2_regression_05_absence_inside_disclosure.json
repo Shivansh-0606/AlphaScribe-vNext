@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_05_absence_inside_disclosure",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 5 of 9. Same absence pattern as case 4 with different surface wording ('does not include a specific figure' vs. 'provides no guidance') -- tests whether the v2 remediation's semantic (not lexical) framing generalizes beyond the exact tested phrase.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company's revenue guidance for next quarter does not include a specific figure.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Same entity/metric/period as the claim -- clears relevance; the evidence states guidance exists but lacks a specific figure, still an absence-of-confirming-content pattern, not an opposing proposition. UNSUPPORTED, not CONTRADICTED. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

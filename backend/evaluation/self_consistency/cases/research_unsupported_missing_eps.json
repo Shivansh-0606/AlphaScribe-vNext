@@ -1,0 +1,9 @@
+{
+  "case_id": "research_unsupported_missing_eps",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for M11 self-consistency evaluation (Document 47 Sec9.1). Synthetic figures, not real disclosed data.",
+  "claim": "Diluted EPS came in at $1.64 for the quarter, beating expectations.",
+  "evidence": "10-K excerpt, Item 7 (MD&A): Total net sales increased 6% year-over-year to $94.9 billion, driven primarily by strength in Services and continued iPhone demand. Gross margin was 46.2%.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "The evidence discusses revenue and gross margin only -- no EPS figure, beaten or otherwise, appears anywhere in it. The claim is not contradicted (nothing says EPS was NOT $1.64), it is simply absent from the offered evidence."
+}

@@ -1,0 +1,259 @@
+{
+  "generated_at": "2026-08-19T07:51:34.794503+00:00",
+  "repeats_per_case": 20,
+  "held_out_case_count": 1,
+  "note": "EVIDENCE ONLY (Document 47 Sec9.1) -- does not authorize gate promotion. JUDGE_SELF_CONSISTENCY_GATE_VERSION is not read or written by this script; promoting the gate is a separate, explicit CTO/reviewer decision (Sec9.1 step 6).",
+  "measurements": [
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 0,
+      "timestamp": "2026-08-19T07:50:46.710325+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence only provides historical operating margin results for the completed quarter and does not mention management's expectations for next quarter, so it does not support the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 1,
+      "timestamp": "2026-08-19T07:50:50.074092+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 2,
+      "timestamp": "2026-08-19T07:50:53.869230+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 3,
+      "timestamp": "2026-08-19T07:50:56.215956+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses only historical operating margin results and contains no information about management's expectations for future margin expansion.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 4,
+      "timestamp": "2026-08-19T07:50:58.046179+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence only provides historical operating margin results for the completed quarter and contains no information about management's expectations for next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 5,
+      "timestamp": "2026-08-19T07:51:00.176569+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 6,
+      "timestamp": "2026-08-19T07:51:02.000616+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence only provides historical operating margin results for the completed quarter and does not mention management's expectations for next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 7,
+      "timestamp": "2026-08-19T07:51:04.555647+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 8,
+      "timestamp": "2026-08-19T07:51:06.395356+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 9,
+      "timestamp": "2026-08-19T07:51:09.670838+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 10,
+      "timestamp": "2026-08-19T07:51:11.649234+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 11,
+      "timestamp": "2026-08-19T07:51:13.394258+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 12,
+      "timestamp": "2026-08-19T07:51:15.804596+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 13,
+      "timestamp": "2026-08-19T07:51:19.698765+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 14,
+      "timestamp": "2026-08-19T07:51:21.531812+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence only provides historical operating margin data for the completed quarter and contains no information about management's expectations for next quarter's operating margin.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 15,
+      "timestamp": "2026-08-19T07:51:23.026482+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 16,
+      "timestamp": "2026-08-19T07:51:24.976318+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 17,
+      "timestamp": "2026-08-19T07:51:30.111632+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 18,
+      "timestamp": "2026-08-19T07:51:32.650358+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only historical operating margin results and does not mention management's expectations for next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "diagnostic_a_stable_construction",
+      "repetition_index": 19,
+      "timestamp": "2026-08-19T07:51:34.787561+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    }
+  ],
+  "report": {
+    "cases": [
+      {
+        "case_id": "diagnostic_a_stable_construction",
+        "reference_verdict": "UNSUPPORTED",
+        "repetitions": 20,
+        "verdict_distribution": {
+          "UNSUPPORTED": 6
+        },
+        "successes": 6,
+        "failures": 14,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": true
+      }
+    ],
+    "total_cases": 1,
+    "total_invocations": 20,
+    "total_successes": 6,
+    "total_failures": 14,
+    "overall_verdict_distribution": {
+      "UNSUPPORTED": 6
+    },
+    "overall_agreement_rate_mean": 1.0,
+    "judge_models": [
+      "nvidia/nemotron-3-super-120b-a12b"
+    ],
+    "judge_prompt_versions": [
+      "v1"
+    ]
+  }
+}

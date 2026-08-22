@@ -1,0 +1,9 @@
+{
+  "case_id": "boundary_pair4_a_applicable_silent_same_subject",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 targeted boundary experiment (paired with boundary_pair4_b_notapplicable_different_subject). Synthetic figures, not real disclosed data. Pair sharpens the core UNSUPPORTED-vs-NOT_APPLICABLE discrimination directly: Case A is silent on the claimed detail but stays within the same subject (quarterly earnings performance) -- the same shape as the original pilot's research_unsupported_missing_eps case (judge agreed UNSUPPORTED 5/5).",
+  "claim": "Diluted EPS came in at $1.64 for the quarter, beating expectations.",
+  "evidence": "10-K excerpt, Item 7 (MD&A): Total net sales increased 6% year-over-year to $94.9 billion. Gross margin was 46.2%. Net income for the quarter was $23.4 billion.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "The evidence is clearly about the same subject as the claim -- this quarter's earnings/profitability -- and discusses net sales, gross margin, and net income, but never states diluted EPS or whether expectations were beaten. It is silent on the specific detail without disclaiming its own scope, unlike Case B. Independently justified: the evidence neither confirms nor denies the EPS figure. Not constructed to force a contrast with Case B."
+}

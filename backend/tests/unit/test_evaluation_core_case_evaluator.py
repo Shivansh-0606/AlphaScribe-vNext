@@ -3,8 +3,13 @@
 Pure, dependency-free — no DB, no network, no LLM. Repeated-call determinism
 is asserted directly (this task's §13): same inputs -> byte-identical result.
 
+M11 Phase C: `evaluate_case` became `async` (Document 47 §7.2's judge call) —
+every call site below is wrapped in `asyncio.run(...)`. No behavior asserted
+by these tests changed; only the call mechanics did.
+
     python backend/tests/unit/test_evaluation_core_case_evaluator.py
 """
+import asyncio
 import os
 import sys
 
@@ -48,9 +53,13 @@ def _adapter_result(case: BenchmarkCase, **overrides) -> AdapterResult:
     )
 
 
+def _evaluate(case, adapter_result):
+    return asyncio.run(evaluate_case(case, adapter_result))
+
+
 def test_all_rules_pass_yields_overall_pass():
     case = _case()
-    result = evaluate_case(case, _adapter_result(case))
+    result = _evaluate(case, _adapter_result(case))
     assert result.status == "PASS"
     assert result.failure_reasons == []
     assert result.evaluation_version == EVALUATION_VERSION
@@ -61,7 +70,7 @@ def test_one_rule_failing_yields_overall_fail():
         {"behavior_id": "b1", "type": "presence", "description": "d",
          "match_rule": "keyword_variant", "variants": ["revenue declined"]},  # won't match
     ])
-    result = evaluate_case(case, _adapter_result(case))
+    result = _evaluate(case, _adapter_result(case))
     assert result.status == "FAIL"
     assert any("b1" in r for r in result.failure_reasons)
 
@@ -73,7 +82,7 @@ def test_multiple_failures_all_reported():
         {"behavior_id": "b2", "type": "presence", "description": "d",
          "match_rule": "citation_required", "reference": "x"},
     ], citation_expectation={"min_valid_citations": 5})  # unmeetable floor
-    result = evaluate_case(case, _adapter_result(case))
+    result = _evaluate(case, _adapter_result(case))
     assert result.status == "FAIL"
     reasons = " ".join(result.failure_reasons)
     assert "b1" in reasons
@@ -86,7 +95,7 @@ def test_inconclusive_rule_yields_overall_inconclusive_when_nothing_fails():
          "match_rule": "limitation_reference", "reference": "gap"},
     ], known_limitations=["gap"])
     adapter_result = _adapter_result(case, output={"text": "explained [1]"})  # Learning -> always inconclusive
-    result = evaluate_case(case, adapter_result)
+    result = _evaluate(case, adapter_result)
     assert result.status == "INCONCLUSIVE"
 
 
@@ -98,14 +107,14 @@ def test_fail_takes_priority_over_unrelated_inconclusive():
          "match_rule": "limitation_reference", "reference": "gap"},  # Learning -> INCONCLUSIVE
     ], known_limitations=["gap"])
     adapter_result = _adapter_result(case, output={"text": "explained clearly [1]"})
-    result = evaluate_case(case, adapter_result)
+    result = _evaluate(case, adapter_result)
     assert result.status == "FAIL"  # not masked by b2's inconclusive
     assert any("b1" in r for r in result.failure_reasons)
 
 
 def test_mixed_results_pass_fail_inconclusive_metrics_all_present():
     case = _case()
-    result = evaluate_case(case, _adapter_result(case))
+    result = _evaluate(case, _adapter_result(case))
     metric_names = {m.name for m in result.metrics}
     assert metric_names == {
         "citation_expectation", "citation_coverage", "grounding_status", "expected_characteristic_coverage",
@@ -116,7 +125,7 @@ def test_case_adapter_result_mismatch_raises():
     case = _case()
     other = _case(case_id="different")
     try:
-        evaluate_case(case, _adapter_result(other))
+        _evaluate(case, _adapter_result(other))
     except ValueError:
         pass
     else:
@@ -126,14 +135,14 @@ def test_case_adapter_result_mismatch_raises():
 def test_deterministic_repeated_evaluation():
     case = _case()
     adapter_result = _adapter_result(case)
-    r1 = evaluate_case(case, adapter_result)
-    r2 = evaluate_case(case, adapter_result)
+    r1 = _evaluate(case, adapter_result)
+    r2 = _evaluate(case, adapter_result)
     assert r1 == r2  # frozen dataclasses compare structurally
 
 
 def test_grounding_error_yields_case_inconclusive():
     case = _case()
-    result = evaluate_case(case, _adapter_result(case, output={
+    result = _evaluate(case, _adapter_result(case, output={
         "text": "", "citations": [], "grounding_verdict": "error", "limitations_stated": [],
     }))
     assert result.status == "INCONCLUSIVE"
@@ -141,7 +150,7 @@ def test_grounding_error_yields_case_inconclusive():
 
 def test_grounding_ungrounded_yields_case_fail():
     case = _case()
-    result = evaluate_case(case, _adapter_result(case, output={
+    result = _evaluate(case, _adapter_result(case, output={
         "text": "Revenue grew [1].",
         "citations": [Citation(source_id="1", eligible=True, referenced=True, valid=True)],
         "grounding_verdict": "ungrounded",
@@ -165,7 +174,7 @@ def test_citation_coverage_inconclusive_when_no_output_despite_eligible_citation
     # would misrepresent "no attempt was made" as "output existed and cited
     # none of the eligible evidence".
     case = _case()
-    result = evaluate_case(case, _adapter_result(case, output={
+    result = _evaluate(case, _adapter_result(case, output={
         "text": "",
         "citations": [Citation(source_id=str(i), eligible=True, referenced=False, valid=False)
                       for i in range(1, 6)],
@@ -184,7 +193,7 @@ def test_citation_coverage_zero_when_genuine_output_cites_nothing_valid():
     # only on whether it was computable) rather than collapsing into the
     # no-output INCONCLUSIVE case above.
     case = _case()
-    result = evaluate_case(case, _adapter_result(case, output={
+    result = _evaluate(case, _adapter_result(case, output={
         "text": "Revenue grew this quarter.",
         "citations": [Citation(source_id=str(i), eligible=True, referenced=False, valid=False)
                       for i in range(1, 6)],

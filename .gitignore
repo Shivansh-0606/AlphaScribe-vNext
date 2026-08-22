@@ -105,6 +105,11 @@ frontend/.env.local
 # never committed dataset content, mirroring coverage.xml's treatment
 backend/evaluation/results/
 
+# M11 self-consistency evaluation run artifacts (Document 47 §9.1) — the
+# same treatment as backend/evaluation/results/ above: local measurement
+# output, not committed dataset content.
+backend/evaluation/self_consistency/results/
+
 # Local tooling / build-scaffold artifacts (not part of the app)
 .claude/
 memory/

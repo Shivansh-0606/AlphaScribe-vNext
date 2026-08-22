@@ -22,14 +22,68 @@ Status = Literal["PASS", "FAIL", "INCONCLUSIVE"]
 
 
 @dataclass(frozen=True)
+class JudgeDetail:
+    """Document 47 §8 — reproducibility/disclosure metadata for a
+    model-judged BehaviorEvaluation. Populated only when
+    BehaviorEvaluation.judged_by == "model". `rationale` is the judge's own
+    explanation — documentation only, never re-parsed or matched, the same
+    discipline ExpectedBehavior.description already follows.
+
+    M11 Phase E: `applicability`/`applicability_rationale` are additive,
+    defaulted (None) fields for the structured-applicability architecture
+    (Document 47 Phase D's Option B) — None for every v3-naN single-call
+    result and for any record persisted before Phase E, so old result files
+    keep loading unchanged. When populated: `applicability`/
+    `applicability_rationale` are Stage 1's own decision/rationale;
+    `verdict`/`rationale` remain the terminal decision as before — Stage 1's
+    when NOT_APPLICABLE (Stage 2 never ran), Stage 2's otherwise.
+    `judge_prompt_version` then carries JUDGE_ARCHITECTURE_VERSION rather
+    than a v3-naN prompt-text version — same field, a version identity
+    either way.
+
+    M11 Phase H governance correction (Document 47 §9.1 step 4):
+    `applicability_prompt_version`/`support_prompt_version` are additive,
+    defaulted (None) fields carrying `evaluation.core.judge.
+    APPLICABILITY_PROMPT_VERSION`/`SUPPORT_PROMPT_VERSION` — None for every
+    v3-naN single-call result and for any record persisted before this
+    change (including every Phase E/G/H self-consistency artifact already on
+    disk), so old result files keep loading unchanged, the same discipline
+    `applicability`/`applicability_rationale` already established one phase
+    earlier. They exist because `judge_prompt_version` (carrying
+    JUDGE_ARCHITECTURE_VERSION) does not, and structurally cannot, reflect a
+    Stage 1- or Stage 2-only wording change — these two fields are what does.
+    `support_prompt_version` is populated only when Stage 2 actually ran
+    (mirroring `verdict`/`rationale`'s own Stage-1-vs-Stage-2 split above);
+    it stays None on a NOT_APPLICABLE (Stage 1 terminal) result."""
+
+    judge_model: str | None
+    judge_prompt_version: str
+    verdict: Literal["SUPPORTED", "CONTRADICTED", "UNSUPPORTED", "NOT_APPLICABLE"]
+    rationale: str
+    applicability: Literal["APPLICABLE", "NOT_APPLICABLE"] | None = None
+    applicability_rationale: str | None = None
+    applicability_prompt_version: str | None = None
+    support_prompt_version: str | None = None
+
+
+@dataclass(frozen=True)
 class BehaviorEvaluation:
     """The outcome of evaluating one ExpectedBehavior (Document 45 §7)
-    against a NormalizedOutput."""
+    against a NormalizedOutput.
+
+    `judged_by`/`judge_detail` (Document 47 §8, M11 Phase C): additive,
+    defaulted fields — every existing deterministic evaluator's construction
+    call is unaffected (`judged_by` defaults to "deterministic",
+    `judge_detail` to None). They exist purely for disclosure/audit; a
+    model-judged result must never render or persist indistinguishably from
+    a deterministic one (Document 47 §10's non-negotiable requirement)."""
 
     behavior_id: str
     match_rule: str
     status: Status
     reason: str
+    judged_by: Literal["deterministic", "model"] = "deterministic"
+    judge_detail: JudgeDetail | None = None
 
 
 @dataclass(frozen=True)

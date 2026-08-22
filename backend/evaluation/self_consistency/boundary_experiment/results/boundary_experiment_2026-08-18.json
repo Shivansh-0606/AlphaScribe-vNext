@@ -1,0 +1,574 @@
+{
+  "generated_at": "2026-08-18T17:06:49.524228+00:00",
+  "repeats_per_case": 5,
+  "held_out_case_count": 8,
+  "note": "EVIDENCE ONLY (Document 47 Sec9.1) -- does not authorize gate promotion. JUDGE_SELF_CONSISTENCY_GATE_VERSION is not read or written by this script; promoting the gate is a separate, explicit CTO/reviewer decision (Sec9.1 step 6).",
+  "measurements": [
+    {
+      "case_id": "boundary_pair1_a_applicable_guidance_present",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:05:06.414334+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that management expects net sales growth of 10% to 12% for the next fiscal year, which is double-digit growth, directly supporting the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_a_applicable_guidance_present",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:05:07.795259+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that management expects net sales growth of 10% to 12% for the next fiscal year, which is double-digit growth. This directly supports the claim that management guided to double-digit revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_a_applicable_guidance_present",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:05:09.267371+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that management expects net sales growth of 10% to 12% for the next fiscal year, which is double-digit growth. This directly supports the claim that management guided to double-digit revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_a_applicable_guidance_present",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:05:10.622635+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that management expects net sales growth of 10% to 12% for the next fiscal year, which is double-digit growth, directly supporting the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_a_applicable_guidance_present",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:05:12.178121+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that management expects net sales growth of 10% to 12% for the next fiscal year, which is double-digit growth, directly supporting the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_b_notapplicable_guidance_absent",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:05:13.814954+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only historical sales growth of 6% for the completed fiscal year and explicitly states it reports historical results, with no mention of management guidance for double-digit revenue growth in the next fiscal year.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_b_notapplicable_guidance_absent",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:05:16.440191+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses only historical net sales growth of 6% for the completed fiscal year and explicitly states that the section reports historical results, providing no information about management's guidance for double-digit revenue growth in the next fiscal year.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_b_notapplicable_guidance_absent",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:05:18.904345+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses only historical net sales growth of 6% for the completed fiscal year and explicitly states that the section reports historical results, providing no information about management's guidance for double-digit revenue growth in the next fiscal year.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_b_notapplicable_guidance_absent",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:05:21.751306+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence discusses only historical net sales growth of 6% for the completed fiscal year and explicitly states that the section reports historical results, providing no information about management's guidance for double-digit revenue growth in the next fiscal year.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair1_b_notapplicable_guidance_absent",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:05:34.573168+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only historical net sales figures and states that the section reports historical results, with no mention of management's guidance or any projection of double-digit revenue growth for the next fiscal year.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_a_applicable_same_topic_match",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:05:35.701270+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that total net sales increased 6% year-over-year to $94.9 billion, which directly matches the claim about revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_a_applicable_same_topic_match",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:05:36.923057+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that total net sales increased 6% year-over-year to $94.9 billion, which directly matches the claim about revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_a_applicable_same_topic_match",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:05:38.291056+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that total net sales increased 6% year-over-year to $94.9 billion, which directly matches the claim about revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_a_applicable_same_topic_match",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:05:39.325216+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that total net sales increased 6% year-over-year to $94.9 billion, which directly matches the claim about revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_a_applicable_same_topic_match",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:05:41.498654+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that total net sales increased 6% year-over-year to $94.9 billion, which directly matches the claim that revenue grew 6% year-over-year to $94.9B in the quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_b_notapplicable_unrelated_subject",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:05:46.192326+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses legal proceedings and does not mention revenue, year-over-year growth, or the $94.9B figure, so it does not address the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_b_notapplicable_unrelated_subject",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:05:48.057422+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair2_b_notapplicable_unrelated_subject",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:05:48.955923+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses legal proceedings and does not mention revenue, year-over-year growth, or any financial figures, so it does not address the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_b_notapplicable_unrelated_subject",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:05:50.393348+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses legal proceedings and does not mention revenue, year-over-year growth, or the $94.9B figure, so it does not address the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair2_b_notapplicable_unrelated_subject",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:05:55.624010+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses legal proceedings and does not mention revenue, year-over-year growth, or the $94.9B figure, so it does not address the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair3_a_applicable_learning_guidance_present",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:05:56.881586+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that management guidance projects operating margin expansion for next quarter, which directly supports the claim that management indicated operating margin will continue to expand next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair3_a_applicable_learning_guidance_present",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:05:58.031347+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 43)"
+    },
+    {
+      "case_id": "boundary_pair3_a_applicable_learning_guidance_present",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:05:59.375040+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 43)"
+    },
+    {
+      "case_id": "boundary_pair3_a_applicable_learning_guidance_present",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:06:01.871745+00:00",
+      "success": true,
+      "verdict": "SUPPORTED",
+      "rationale": "The evidence states that management guidance projects operating margin expansion for next quarter, which directly supports the claim that management indicated operating margin will continue to expand next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair3_a_applicable_learning_guidance_present",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:06:03.240673+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 43)"
+    },
+    {
+      "case_id": "boundary_pair3_b_notapplicable_learning_guidance_absent",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:06:08.217259+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence shows operating margin increased year-over-year but explicitly states the disclosure does not include forward guidance, providing no indication about next quarter's margin, which contradicts the claim that management indicated margin will continue to expand next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair3_b_notapplicable_learning_guidance_absent",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:06:11.015486+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures and explicitly states that the disclosure does not include forward guidance, so it does not provide any indication that management expects the margin to continue expanding next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair3_b_notapplicable_learning_guidance_absent",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:06:13.466709+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence reports historical operating margin figures and explicitly states that the disclosure does not include forward guidance, so it does not provide any indication that management expects the margin to expand next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair3_b_notapplicable_learning_guidance_absent",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:06:17.223317+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "boundary_pair3_b_notapplicable_learning_guidance_absent",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:06:19.272882+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence explicitly states that the disclosure covers only the completed quarter and does not include forward guidance, which contradicts the claim that management indicated operating margin will continue to expand next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_a_applicable_silent_same_subject",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:06:21.493255+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides net sales, gross margin, and net income figures but does not mention diluted EPS, the $1.64 value, or any expectation comparison, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_a_applicable_silent_same_subject",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:06:28.783800+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides net sales, gross margin, and net income figures but does not mention diluted EPS or whether it beat expectations, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_a_applicable_silent_same_subject",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:06:30.903795+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides net sales, gross margin, and net income figures but does not mention diluted EPS, the $1.64 amount, or whether expectations were beaten.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_a_applicable_silent_same_subject",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:06:32.262509+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides net sales, gross margin, and net income figures but does not mention diluted EPS or whether it beat expectations, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_a_applicable_silent_same_subject",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:06:34.237376+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides net sales, gross margin, and net income figures but does not mention diluted EPS or whether it beat expectations, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:06:35.887189+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence provides only a description of the company's products and services and contains no financial results or EPS information, so it neither supports nor contradicts the claim about diluted EPS.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:06:41.635400+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:06:42.927835+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:06:47.819902+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    },
+    {
+      "case_id": "boundary_pair4_b_notapplicable_different_subject",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:06:49.524228+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 45)"
+    }
+  ],
+  "report": {
+    "cases": [
+      {
+        "case_id": "boundary_pair1_a_applicable_guidance_present",
+        "reference_verdict": "SUPPORTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "SUPPORTED": 5
+        },
+        "successes": 5,
+        "failures": 0,
+        "agreement_rate": 1.0,
+        "modal_verdict": "SUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "boundary_pair1_b_notapplicable_guidance_absent",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "UNSUPPORTED": 5
+        },
+        "successes": 5,
+        "failures": 0,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": false
+      },
+      {
+        "case_id": "boundary_pair2_a_applicable_same_topic_match",
+        "reference_verdict": "SUPPORTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "SUPPORTED": 5
+        },
+        "successes": 5,
+        "failures": 0,
+        "agreement_rate": 1.0,
+        "modal_verdict": "SUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "boundary_pair2_b_notapplicable_unrelated_subject",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "NOT_APPLICABLE": 4
+        },
+        "successes": 4,
+        "failures": 1,
+        "agreement_rate": 1.0,
+        "modal_verdict": "NOT_APPLICABLE",
+        "matches_reference": true
+      },
+      {
+        "case_id": "boundary_pair3_a_applicable_learning_guidance_present",
+        "reference_verdict": "SUPPORTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "SUPPORTED": 2
+        },
+        "successes": 2,
+        "failures": 3,
+        "agreement_rate": 1.0,
+        "modal_verdict": "SUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "boundary_pair3_b_notapplicable_learning_guidance_absent",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "CONTRADICTED": 2,
+          "UNSUPPORTED": 2
+        },
+        "successes": 4,
+        "failures": 1,
+        "agreement_rate": 0.5,
+        "modal_verdict": "CONTRADICTED",
+        "matches_reference": false
+      },
+      {
+        "case_id": "boundary_pair4_a_applicable_silent_same_subject",
+        "reference_verdict": "UNSUPPORTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "UNSUPPORTED": 5
+        },
+        "successes": 5,
+        "failures": 0,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "boundary_pair4_b_notapplicable_different_subject",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "UNSUPPORTED": 1
+        },
+        "successes": 1,
+        "failures": 4,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": false
+      }
+    ],
+    "total_cases": 8,
+    "total_invocations": 40,
+    "total_successes": 31,
+    "total_failures": 9,
+    "overall_verdict_distribution": {
+      "SUPPORTED": 12,
+      "UNSUPPORTED": 13,
+      "NOT_APPLICABLE": 4,
+      "CONTRADICTED": 2
+    },
+    "overall_agreement_rate_mean": 0.9375,
+    "judge_models": [
+      "nvidia/nemotron-3-super-120b-a12b"
+    ],
+    "judge_prompt_versions": [
+      "v1"
+    ]
+  }
+}

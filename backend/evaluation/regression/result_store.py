@@ -14,7 +14,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from evaluation.adapters.types import ExecutionMetadata
-from evaluation.core.types import BehaviorEvaluation, CaseEvaluationResult, MetricResult
+from evaluation.core.types import BehaviorEvaluation, CaseEvaluationResult, JudgeDetail, MetricResult
 from evaluation.regression.types import EvaluationResult
 
 RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
@@ -22,6 +22,24 @@ RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
 
 def _case_to_dict(case: CaseEvaluationResult) -> dict:
     return asdict(case)  # every field is itself a (nested) dataclass -> asdict recurses cleanly
+
+
+def _behavior_evaluation_from_dict(data: dict) -> BehaviorEvaluation:
+    # M11 Phase C: judge_detail is itself a nested dataclass (JudgeDetail),
+    # same shape-of-problem `execution`/ExecutionMetadata already has below —
+    # asdict() flattens it to a plain dict on save, so it must be explicitly
+    # reconstructed on load, not left as a dict inside BehaviorEvaluation(**b).
+    # .get(...) tolerates result files saved before judged_by/judge_detail
+    # existed (this file's own existing precedent: schema_version below).
+    judge_detail = data.get("judge_detail")
+    return BehaviorEvaluation(
+        behavior_id=data["behavior_id"],
+        match_rule=data["match_rule"],
+        status=data["status"],
+        reason=data["reason"],
+        judged_by=data.get("judged_by", "deterministic"),
+        judge_detail=JudgeDetail(**judge_detail) if judge_detail is not None else None,
+    )
 
 
 def _case_from_dict(data: dict) -> CaseEvaluationResult:
@@ -33,7 +51,7 @@ def _case_from_dict(data: dict) -> CaseEvaluationResult:
         mode=data["mode"],
         evaluation_version=data["evaluation_version"],
         execution=ExecutionMetadata(**data["execution"]),
-        behavior_evaluations=[BehaviorEvaluation(**b) for b in data["behavior_evaluations"]],
+        behavior_evaluations=[_behavior_evaluation_from_dict(b) for b in data["behavior_evaluations"]],
         metrics=[MetricResult(**m) for m in data["metrics"]],
         status=data["status"],
         failure_reasons=list(data["failure_reasons"]),

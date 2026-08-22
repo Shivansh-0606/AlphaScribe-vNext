@@ -62,7 +62,7 @@ def _forbidden_recommendation_payload():
 def stub_llm(monkeypatch):
     state = {"payload": None}
 
-    def _generate_sync(system, user, model, usage_sink=None):
+    def _generate_sync(system, user, model, usage_sink=None, temperature=None):
         return json.dumps(state["payload"])
 
     monkeypatch.setattr(llm, "_generate_sync", _generate_sync)

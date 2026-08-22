@@ -10,6 +10,7 @@ exactly like test_llm_retry.py / test_llm_validate.py.
     python backend/tests/unit/test_llm_json_repair.py
 """
 import asyncio
+import json
 import os
 import sys
 
@@ -40,6 +41,14 @@ class _Nested(BaseModel):
     inners: list[_Inner]
 
 
+class _VerdictLike(BaseModel):
+    """Mirrors the two-field shape the M11 provider failures were produced
+    against (a verdict token plus a free-text rationale). Declared here rather
+    than imported so this suite does not depend on evaluation code."""
+    verdict: str
+    rationale: str
+
+
 def _chat_json_with_raw(raw: str, schema=_Simple):
     """Drive chat_json end-to-end through its real parsing logic by stubbing
     the one point that would otherwise touch a network."""
@@ -47,8 +56,10 @@ def _chat_json_with_raw(raw: str, schema=_Simple):
     # M6: chat_text now calls _generate_sync(..., usage_sink=...) to collect
     # token-usage metrics — the stub's signature must accept (and ignore)
     # that keyword-only arg, same as the real function does when a provider
-    # doesn't report usage.
-    llm._generate_sync = lambda system, user, model, *, usage_sink=None: raw
+    # doesn't report usage. Document 47: chat_json/chat_text also now pass
+    # temperature=... (default None, unused by every existing caller) —
+    # same tolerance, same reason.
+    llm._generate_sync = lambda system, user, model, *, usage_sink=None, temperature=None: raw
     try:
         return asyncio.run(chat_json("sys", "user", schema))
     finally:
@@ -132,6 +143,86 @@ def test_schema_hint_recurses_into_nested_and_list_of_models():
     assert '"label": str (required) - a label' in hint
 
 
+# --- M11 Phase 1: the regex-extraction strategy must contain its own error ---
+# Reproduces the malformation behind all 11 structured-output failures in the
+# v2 live self-consistency run: a valid "verdict" line followed by a bare,
+# unquoted "rationale" value. json.loads(raw) fails, the brace regex matches
+# the span, and json.loads(span) raises at line 3 column 16 — which previously
+# escaped chat_json entirely, skipping the brace-wrap fallback and the readable
+# "did not return JSON" error that carries the raw output.
+_M11_RAW = (
+    'Here is my assessment:\n'
+    '{\n'
+    '  "verdict": "UNSUPPORTED",\n'
+    '  "rationale": The evidence does not address the claim.\n'
+    '}'
+)
+
+
+def test_regex_extraction_jsondecodeerror_does_not_escape():
+    import json as _json
+    import re as _re
+
+    # Preconditions: this raw really does exercise strategy 2's failure path.
+    try:
+        _json.loads(_M11_RAW)
+    except _json.JSONDecodeError:
+        pass
+    else:
+        raise AssertionError("fixture should not parse directly")
+    m = _re.search(r"\{.*\}|\[.*\]", _M11_RAW, _re.DOTALL)
+    assert m, "fixture should match the brace-extraction regex"
+    try:
+        _json.loads(m.group(0))
+    except _json.JSONDecodeError as e:
+        assert "line 3 column 16" in str(e)  # the M11 signature
+    else:
+        raise AssertionError("extracted span should not parse")
+
+    try:
+        _chat_json_with_raw(_M11_RAW, schema=_VerdictLike)
+    except json.JSONDecodeError:  # noqa: F821 — see import below
+        raise AssertionError("JSONDecodeError escaped strategy 2 instead of being contained")
+    except ValueError as e:
+        assert "did not return JSON" in str(e)
+    else:
+        raise AssertionError("expected ValueError for unparseable output")
+
+
+def test_final_error_carries_bounded_raw_output():
+    try:
+        _chat_json_with_raw(_M11_RAW, schema=_VerdictLike)
+    except ValueError as e:
+        msg = str(e)
+        # The fragment needed to diagnose the malformation is present...
+        assert '"verdict": "UNSUPPORTED"' in msg
+        assert '"rationale": The evidence' in msg
+        # ...along with the decoder's own position, so the failure stays
+        # traceable to the same signature recorded in the experiment artifacts.
+        assert "line 3 column 16" in msg
+    else:
+        raise AssertionError("expected ValueError for unparseable output")
+
+
+def test_final_error_raw_output_is_capped():
+    raw = "not json at all " + ("x" * 5000)
+    try:
+        _chat_json_with_raw(raw)
+    except ValueError as e:
+        assert "did not return JSON" in str(e)
+        assert str(e).count("x") <= 400  # raw[:400], not the whole response
+    else:
+        raise AssertionError("expected ValueError for unparseable output")
+
+
+def test_valid_verdict_shaped_json_still_parses():
+    raw = '{"verdict": "UNSUPPORTED", "rationale": "The evidence does not confirm the claim."}'
+    result = _chat_json_with_raw(raw, schema=_VerdictLike)
+    assert result == _VerdictLike(
+        verdict="UNSUPPORTED", rationale="The evidence does not confirm the claim."
+    )
+
+
 if __name__ == "__main__":
     test_clean_json_no_fence()
     test_json_wrapped_in_markdown_fence()
@@ -141,6 +232,10 @@ if __name__ == "__main__":
     test_bare_array_wraps_into_the_single_list_field()
     test_non_json_garbage_raises_with_a_readable_message()
     test_schema_validation_failure_is_wrapped_with_context()
+    test_regex_extraction_jsondecodeerror_does_not_escape()
+    test_final_error_carries_bounded_raw_output()
+    test_final_error_raw_output_is_capped()
+    test_valid_verdict_shaped_json_still_parses()
     test_strip_code_fence_variants()
     test_retry_after_seconds_parses_gemini_and_generic_shapes()
     test_schema_hint_recurses_into_nested_and_list_of_models()

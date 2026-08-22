@@ -1,0 +1,9 @@
+{
+  "case_id": "v3_regression_a_genuine_supported",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-19 for the CTO-authorized M11 Judge v3 implementation. SUPPORTED has zero live validation under any post-v1 JUDGE_PROMPT_VERSION anywhere in this engagement (a gap flagged in the M11 v3 Remediation Design). This is a direct, unambiguous confirming-evidence case, required as a first SUPPORTED regression anchor for v3.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company expects revenue growth of 8% to 10% next quarter, citing strong demand.",
+  "reference_verdict": "SUPPORTED",
+  "reference_rationale": "Same entity, same metric (revenue), same period (next quarter) as the claim -- clears all four applicability tests. The evidence directly affirms the claim's proposition (growth, quantified at 8-10%). SUPPORTED. Independently justified from the evidence text alone, assigned before any judge call and never sent to the judge."
+}

@@ -6,7 +6,11 @@ contextvar (so users can bring their own key in the UI), falling back to
 environment variables for local/dev use.
 
 Public surface (`chat_text`, `chat_json`, `DEFAULT_LIGHT_MODEL`,
-`DEFAULT_HEAVY_MODEL`) is unchanged, so the agent nodes need no modification.
+`DEFAULT_HEAVY_MODEL`) is unchanged for every existing caller, so the agent
+nodes need no modification. `chat_text`/`chat_json` gained one additive,
+optional `temperature` kwarg (default `None` = each provider's pre-existing
+behavior, untouched) for Document 47's model-assisted evaluator — no
+existing call site passes it.
 """
 from __future__ import annotations
 import asyncio
@@ -183,7 +187,8 @@ def _record_usage(usage_sink: dict | None, *, input_tokens, output_tokens) -> No
         pass
 
 
-def _gen_gemini(system: str, user: str, model: str, key: str, *, usage_sink: dict | None = None) -> str:
+def _gen_gemini(system: str, user: str, model: str, key: str, *, usage_sink: dict | None = None,
+                 temperature: float | None = None) -> str:
     import google.generativeai as genai
     # google.generativeai.configure() sets a PROCESS-GLOBAL key, so two
     # concurrent requests with different keys would clobber each other and a
@@ -191,10 +196,16 @@ def _gen_gemini(system: str, user: str, model: str, key: str, *, usage_sink: dic
     # Hold the lock across configure+generate so the key can't change mid-call.
     # ponytail: global lock serializes all Gemini traffic; upgrade path is the
     # newer google-genai SDK whose Client(api_key=...) takes a per-call key.
+    # temperature=None (every existing caller) passes no generation_config at
+    # all — identical to this function's behavior before Document 47's judge
+    # path existed. Only an explicit caller (the judge) gets one.
+    gen_config = genai.GenerationConfig(temperature=temperature) if temperature is not None else None
     with GEMINI_LOCK:
         genai.configure(api_key=key)
         gm = genai.GenerativeModel(model_name=model, system_instruction=system)
-        resp = gm.generate_content(user, request_options={"timeout": _REQUEST_TIMEOUT})
+        resp = gm.generate_content(
+            user, request_options={"timeout": _REQUEST_TIMEOUT}, generation_config=gen_config,
+        )
     cand = (getattr(resp, "candidates", None) or [None])[0]
     if getattr(getattr(cand, "finish_reason", None), "name", "") == "MAX_TOKENS":
         # Truncated brief — don't let a cut-off draft reach the fact-checker.
@@ -217,7 +228,7 @@ def _gen_gemini(system: str, user: str, model: str, key: str, *, usage_sink: dic
 
 
 def _gen_openai_compatible(system: str, user: str, model: str, key: str, base_url: str | None,
-                            *, usage_sink: dict | None = None) -> str:
+                            *, usage_sink: dict | None = None, temperature: float | None = None) -> str:
     # openai>=1.0 SDK; Groq is OpenAI-compatible via base_url.
     from openai import OpenAI
     # max_retries=0: chat_text already owns the retry/backoff loop. The SDK's
@@ -229,7 +240,10 @@ def _gen_openai_compatible(system: str, user: str, model: str, key: str, base_ur
         model=model,
         messages=[{"role": "system", "content": system},
                   {"role": "user", "content": user}],
-        temperature=0.3,
+        # 0.3 is every existing caller's unchanged default; temperature=None
+        # (the default) preserves it exactly. Only an explicit caller (the
+        # Document 47 judge) overrides it.
+        temperature=temperature if temperature is not None else 0.3,
         # Cap output: without this, OpenRouter reserves the model's max output
         # (e.g. 64K) from your credit balance and 402s on low-credit accounts.
         # The pipeline's largest output (the brief) is prompted to <500 words
@@ -253,14 +267,20 @@ def _gen_openai_compatible(system: str, user: str, model: str, key: str, base_ur
     return choice.message.content or ""
 
 
-def _gen_anthropic(system: str, user: str, model: str, key: str, *, usage_sink: dict | None = None) -> str:
+def _gen_anthropic(system: str, user: str, model: str, key: str, *, usage_sink: dict | None = None,
+                    temperature: float | None = None) -> str:
     import anthropic
     # max_retries=0 for the same reason as the OpenAI path: chat_text owns retries,
     # the SDK default (2) would compound multiplicatively.
     client = anthropic.Anthropic(api_key=key, timeout=_REQUEST_TIMEOUT, max_retries=0)
+    # temperature=None (every existing caller) omits the kwarg entirely, same
+    # as before Document 47's judge path existed — the Anthropic SDK's own
+    # provider default applies unchanged. Only an explicit caller overrides it.
+    extra = {"temperature": temperature} if temperature is not None else {}
     resp = client.messages.create(
         model=model, max_tokens=4096, system=system,
         messages=[{"role": "user", "content": user}],
+        **extra,
     )
     if resp.stop_reason == "max_tokens":
         # Same truncation guard as the other providers (was missing here).
@@ -274,7 +294,8 @@ def _gen_anthropic(system: str, user: str, model: str, key: str, *, usage_sink: 
     return "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
 
 
-def _generate_sync(system: str, user: str, model: str, *, usage_sink: dict | None = None) -> str:
+def _generate_sync(system: str, user: str, model: str, *, usage_sink: dict | None = None,
+                    temperature: float | None = None) -> str:
     cfg = _active()
     provider, key = cfg["provider"], cfg["api_key"]
     if not key:
@@ -288,7 +309,7 @@ def _generate_sync(system: str, user: str, model: str, *, usage_sink: dict | Non
             provider, system, user, real_model, key, cfg["base_url"],
             gen_gemini=_gen_gemini, gen_anthropic=_gen_anthropic,
             gen_openai_compatible=_gen_openai_compatible,
-            usage_sink=usage_sink,
+            usage_sink=usage_sink, temperature=temperature,
         )
     except ValueError as e:
         # dispatch() raises ValueError for an unknown provider; this call
@@ -359,7 +380,8 @@ def _retry_after_seconds(err: Exception) -> float | None:
 _TIER_LABELS = {DEFAULT_LIGHT_MODEL: "light", DEFAULT_HEAVY_MODEL: "heavy"}
 
 
-async def chat_text(system: str, user: str, *, model: str = DEFAULT_HEAVY_MODEL) -> str:
+async def chat_text(system: str, user: str, *, model: str = DEFAULT_HEAVY_MODEL,
+                     temperature: float | None = None) -> str:
     # The one shared call site behind every node's chat_text/chat_json call
     # (chat_json delegates to this) — instrumenting here covers both graphs
     # (report + Learning) without a per-node metrics call.
@@ -379,7 +401,9 @@ async def chat_text(system: str, user: str, *, model: str = DEFAULT_HEAVY_MODEL)
         ):
             try:
                 usage: dict = {}
-                result = await asyncio.to_thread(_generate_sync, system, user, model, usage_sink=usage)
+                result = await asyncio.to_thread(
+                    _generate_sync, system, user, model, usage_sink=usage, temperature=temperature,
+                )
                 llm_calls_total.labels(**labels, outcome="success").inc()
                 if usage.get("input_tokens") is not None:
                     llm_tokens_total.labels(provider=labels["provider"], model=labels["model"],
@@ -447,6 +471,7 @@ async def chat_json(
     schema: Type[T],
     *,
     model: str = DEFAULT_LIGHT_MODEL,
+    temperature: float | None = None,
 ) -> T:
     """Ask the LLM for a JSON object and validate it against a Pydantic schema."""
     # Describe the fields directly instead of dumping the JSON Schema. The raw
@@ -467,20 +492,33 @@ async def chat_json(
     # (Ollama, vLLM, native API) since it's trained into the chat template.
     real_model = _resolve_model(model, _active())
     user_msg = f"{user}\n/no_think" if "qwen" in real_model.lower() else user
-    raw = await chat_text(system + guardrail, user_msg, model=model)
+    raw = await chat_text(system + guardrail, user_msg, model=model, temperature=temperature)
     raw = _strip_code_fence(raw)
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
+        data, recovered, span_err = None, False, None
         m = re.search(r"\{.*\}|\[.*\]", raw, re.DOTALL)
         if m:
-            data = json.loads(m.group(0))
-        else:
+            # This strategy's own JSONDecodeError must not escape. A response
+            # whose *first* field is well-formed and whose second one is not
+            # (M11: a valid "verdict" line followed by a bare, unquoted
+            # "rationale" value) still matches this regex, so the span parses no
+            # better than `raw` did — and letting the error propagate skipped
+            # both the fallback below and the readable message that carries the
+            # raw output needed to diagnose it.
+            try:
+                data, recovered = json.loads(m.group(0)), True
+            except json.JSONDecodeError as e:
+                span_err = e  # keep it: this attempt parsed furthest
+        if not recovered:
             # Model sometimes drops the outer braces, returning bare "k": v pairs.
             try:
                 data = json.loads("{" + raw.strip().rstrip(",") + "}")
-            except json.JSONDecodeError:
-                raise ValueError(f"LLM did not return JSON: {raw[:400]}")
+            except json.JSONDecodeError as e:
+                raise ValueError(
+                    f"LLM did not return JSON ({span_err or e}): {raw[:400]}"
+                ) from (span_err or e)
     # Model sometimes echoes the JSON Schema envelope instead of an instance,
     # e.g. {"properties": {<real values>}, "type": "object"}. Unwrap it when the
     # top level has none of the expected fields but does carry "properties".

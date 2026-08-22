@@ -1,0 +1,9 @@
+{
+  "case_id": "v3_regression_b_paraphrased_supported",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-19 for the CTO-authorized M11 Judge v3 implementation. Second SUPPORTED regression anchor -- same claim as case A, but evidence confirms via paraphrase ('sales will rise' / 'coming quarter' / 'confident' rather than the claim's own wording) rather than restating the claim's exact terms, testing whether v3's applicability decomposition still recognizes a semantically equivalent, non-literal confirmation.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "Management is confident that sales will rise significantly in the coming quarter, driven by robust order volumes.",
+  "reference_verdict": "SUPPORTED",
+  "reference_rationale": "Same entity and period (implied continuity of 'the company'/'management', 'coming quarter' = 'next quarter'), same property (sales/revenue) -- clears all four applicability tests. 'Sales will rise significantly' is a paraphrase of 'revenue growth', and 'confident' affirms an expectation, matching the claim's proposition despite non-identical wording. SUPPORTED. Independently justified from the evidence text alone, assigned before any judge call and never sent to the judge."
+}

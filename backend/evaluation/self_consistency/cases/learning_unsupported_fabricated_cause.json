@@ -1,0 +1,9 @@
+{
+  "case_id": "learning_unsupported_fabricated_cause",
+  "surface": "learning",
+  "provenance": "Hand-authored 2026-08-18 for M11 self-consistency evaluation (Document 47 Sec9.1). Synthetic figures, not real disclosed data.",
+  "claim": "Operating margin improved to 32.1%, driven by increased pricing power in the company's cloud services offering.",
+  "evidence": "Financial excerpt: Operating margin improved to 32.1% from 30.0% in the prior-year quarter. The filing does not break out the specific drivers of the improvement by segment.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "The margin figure (32.1%) is grounded, but the evidence explicitly states drivers are not broken out -- the 'cloud services pricing power' explanation is fabricated, not present in or inferable from the evidence. Tests whether the judge flags an embellished causal claim even when the underlying number is correct."
+}

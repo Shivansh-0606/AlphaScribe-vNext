@@ -1,6 +1,12 @@
-"""Pydantic schemas used by extractor, tone, and fact-checker nodes."""
+"""Pydantic schemas used by extractor, tone, and fact-checker nodes.
+
+JudgeVerdictSchema (bottom of file) is the one exception — Document 47 §9
+names `agents/schemas.py`'s existing convention as where the M11 Phase C
+judge's structured-output schema belongs, even though the judge is
+evaluation infrastructure, not a production pipeline node. Purely additive;
+no schema above it is touched."""
 from __future__ import annotations
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -64,4 +70,78 @@ class ComparisonExplanationSchema(BaseModel):
     )
     limitations: list[ComparisonLimitationSchema] = Field(
         default_factory=list, description="Explicit evidence gaps for data that is missing or non-comparable — never invent a value to fill these"
+    )
+
+
+class JudgeVerdictSchema(BaseModel):
+    """M11 Phase C — Document 47 §7.2/§7.3/§9's model-judged-support judge.
+    Evaluates ONLY whether the supplied evidence supports the supplied claim
+    — the judge never selects which claim or evidence to look at (§7.0's own
+    load-bearing rule; that selection is done deterministically before this
+    schema is ever populated), and is never asked for investment advice,
+    general fact-checking, or open-ended quality scoring."""
+    verdict: Literal["SUPPORTED", "CONTRADICTED", "UNSUPPORTED", "NOT_APPLICABLE"] = Field(
+        description="SUPPORTED: the evidence directly supports the claim. CONTRADICTED: the evidence "
+                    "itself states a fact or substantive position incompatible with the claim. Mere "
+                    "absence of information, guidance, disclosure, or a stated position is UNSUPPORTED, "
+                    "not CONTRADICTED. A substantive negation of the claim's proposition may still be "
+                    "CONTRADICTED. UNSUPPORTED: the evidence neither supports nor contradicts the claim. "
+                    "NOT_APPLICABLE: the evidence concerns a different entity, or a genuinely different "
+                    "underlying quantity or business fact than the claim asserts — not merely similar "
+                    "wording, topic, or numbers, and not merely a difference in tense, modality, or "
+                    "polarity — including a reported level versus that same quantity's change or "
+                    "expected change over time, or a statement of fact versus an expectation, plan, "
+                    "or disclosure-existence statement about that same fact, all of which remain the "
+                    "same underlying quantity. Evidence "
+                    "about the same underlying quantity or business fact remains "
+                    "applicable even when it differs from the claim in those ways. Evidence that is "
+                    "relevant in that sense but simply fails to confirm the claim is UNSUPPORTED, not "
+                    "NOT_APPLICABLE."
+    )
+    rationale: str = Field(
+        description="One or two sentences explaining the verdict — documentation only, never re-parsed "
+                    "or matched as structured truth (Document 47 §7.3)"
+    )
+
+
+class ApplicabilityVerdictSchema(BaseModel):
+    """M11 Phase E — Document 47 §7.3.1's relevance-first applicability
+    decision as its own, structurally separate output (Phase D's Option B:
+    a genuine control-flow boundary, not a field added to JudgeVerdictSchema).
+    Evaluates ONLY whether EVIDENCE is genuinely relevant to CLAIM — never
+    whether it supports, contradicts, or fails to confirm CLAIM; that
+    decision belongs to SupportVerdictSchema, reached only when applicability
+    is APPLICABLE."""
+    applicability: Literal["APPLICABLE", "NOT_APPLICABLE"] = Field(
+        description="APPLICABLE: EVIDENCE concerns the same underlying entity/subject and the same "
+                    "underlying quantity or business fact CLAIM asserts something about — even when it "
+                    "differs from CLAIM in tense, time period, modality, or polarity (a reported level vs. "
+                    "that quantity's change, or a statement of fact vs. an expectation, plan, or "
+                    "disclosure-existence statement about the same fact, are the same underlying quantity, "
+                    "not different ones). Evidence that is applicable in this sense but simply fails to "
+                    "confirm CLAIM is still APPLICABLE. NOT_APPLICABLE: EVIDENCE concerns a different "
+                    "entity, or a genuinely different underlying quantity or business fact than CLAIM "
+                    "asserts — not merely similar wording, topic, or numbers."
+    )
+    rationale: str = Field(
+        description="One or two sentences explaining the applicability decision — documentation only, "
+                    "never re-parsed or matched as structured truth (Document 47 §7.3)"
+    )
+
+
+class SupportVerdictSchema(BaseModel):
+    """M11 Phase E — the support-classification stage, invoked only after
+    ApplicabilityVerdictSchema has already determined EVIDENCE is APPLICABLE.
+    Never outputs NOT_APPLICABLE: that decision has already been made by a
+    separate, prior call and is structurally unreachable here."""
+    verdict: Literal["SUPPORTED", "UNSUPPORTED", "CONTRADICTED"] = Field(
+        description="SUPPORTED: the evidence directly supports the claim. CONTRADICTED: the evidence "
+                    "itself states a fact or substantive position incompatible with the claim. Mere "
+                    "absence of information, guidance, disclosure, or a stated position is UNSUPPORTED, "
+                    "not CONTRADICTED. A substantive negation of the claim's proposition may still be "
+                    "CONTRADICTED. UNSUPPORTED: the evidence neither supports nor contradicts the claim."
+    )
+    rationale: str = Field(
+        description="One or two sentences explaining the verdict — documentation only, never re-parsed "
+                    "or matched as structured truth (Document 47 §7.3)"
     )

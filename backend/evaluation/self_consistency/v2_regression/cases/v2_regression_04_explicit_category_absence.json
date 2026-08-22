@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_04_explicit_category_absence",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 4 of 9. This is the confirmed defect case itself (8/15 erroneously CONTRADICTED under v1, per the M11 four-case diagnostic) -- the primary target the v2 remediation exists to fix.",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company provides no guidance regarding revenue for next quarter.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1: same entity/metric/period as the claim -- clears relevance; the evidence explicitly engages that exact proposition only to state no guidance exists for it. Explicitly relevant absence, not an opposing proposition -- UNSUPPORTED. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

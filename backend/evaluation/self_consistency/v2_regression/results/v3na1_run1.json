@@ -1,0 +1,639 @@
+{
+  "generated_at": "2026-08-20T13:31:43.673107+00:00",
+  "repeats_per_case": 5,
+  "held_out_case_count": 9,
+  "note": "EVIDENCE ONLY (Document 47 Sec9.1) -- does not authorize gate promotion. JUDGE_SELF_CONSISTENCY_GATE_VERSION is not read or written by this script; promoting the gate is a separate, explicit CTO/reviewer decision (Sec9.1 step 6).",
+  "measurements": [
+    {
+      "case_id": "v2_regression_01_genuine_contradiction",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:29:16.323625+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that the company expects revenue to decline next quarter, which directly opposes the claim that the company expects revenue growth next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_01_genuine_contradiction",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:29:18.667911+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that the company expects revenue to decline next quarter, which directly opposes the claim that the company expects revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_01_genuine_contradiction",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:29:20.618980+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that the company expects revenue to decline next quarter, which directly opposes the claim that the company expects revenue growth next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_01_genuine_contradiction",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:29:29.110923+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that the company expects revenue to decline next quarter, which directly opposes the claim that the company expects revenue growth next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_01_genuine_contradiction",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:29:30.742622+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that the company expects revenue to decline next quarter, which directly opposes the claim that the company expects revenue growth next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_02_genuine_contradiction_alt_wording",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:29:32.270255+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that revenue will decrease next quarter, which directly opposes the claim that revenue will increase next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_02_genuine_contradiction_alt_wording",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:29:33.352931+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that revenue will decrease next quarter, which directly opposes the claim that revenue will increase next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_02_genuine_contradiction_alt_wording",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:29:34.755587+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that revenue will decrease next quarter, which directly opposes the claim that revenue will increase next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_02_genuine_contradiction_alt_wording",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:29:36.623331+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that revenue will decrease next quarter, which directly opposes the claim that revenue will increase next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_02_genuine_contradiction_alt_wording",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:29:39.366557+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that revenue will decrease next quarter, which directly opposes the claim that revenue will increase next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_03_substantive_negated_belief",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:29:43.324326+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that management does not expect revenue to grow next quarter, which directly opposes the claim that management expects revenue to grow next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_03_substantive_negated_belief",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:29:45.178565+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that management does not expect revenue to grow next quarter, which directly contradicts the claim that management expects revenue to grow next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_03_substantive_negated_belief",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:29:46.962899+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that management does not expect revenue to grow next quarter, which directly opposes the claim that management expects revenue to grow next quarter.\"\n}"
+    },
+    {
+      "case_id": "v2_regression_03_substantive_negated_belief",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:29:48.566849+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence directly states that management does not expect revenue to grow next quarter, which is the opposite of the claim that management expects revenue to grow next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_03_substantive_negated_belief",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:29:50.204871+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 46)): {\n  \"verdict\": \"CONTRADICTED\",\n  \"rationale\": The evidence states that management does not expect revenue to grow next quarter, which directly opposes the claim that management expects revenue to grow next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_04_explicit_category_absence",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:29:52.853102+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 45)): {\n  \"verdict\": \"UNSUPPORTED\",\n  \"rationale\": The evidence states that the company provides no guidance about next quarter's revenue, which neither confirms nor denies the claim that the company expects revenue growth. It is relevant but does not support the claim.\n}"
+    },
+    {
+      "case_id": "v2_regression_04_explicit_category_absence",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:29:55.968376+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states that the company provides no guidance on next quarter's revenue, which neither confirms nor denies the claim that the company expects revenue growth. It is relevant but does not support the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_04_explicit_category_absence",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:29:58.208494+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 45)): {\n  \"verdict\": \"UNSUPPORTED\",\n  \"rationale\": The evidence states that the company provides no guidance on next-quarter revenue, which neither confirms nor contradicts the claim that the company expects revenue growth next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_04_explicit_category_absence",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:30:00.160913+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 45)): {\n  \"verdict\": \"UNSUPPORTED\",\n  \"rationale\": The evidence states that the company provides no revenue guidance for next quarter, which neither confirms nor denies the claim that the company expects revenue growth. It is relevant but does not support the claim.\n}"
+    },
+    {
+      "case_id": "v2_regression_04_explicit_category_absence",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:30:04.314527+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 45)): {\n  \"verdict\": \"UNSUPPORTED\",\n  \"rationale\": The evidence states that the company provides no guidance on next-quarter revenue, which does not confirm or deny an expectation of revenue growth; it merely lacks information on the claim.\n}"
+    },
+    {
+      "case_id": "v2_regression_05_absence_inside_disclosure",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:30:08.473851+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence notes that the company's revenue guidance for next quarter lacks a specific figure, which does not confirm or deny an expectation of revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_05_absence_inside_disclosure",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:30:11.417930+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 45)): {\n  \"verdict\": \"UNSUPPORTED\",\n  \"rationale\": The evidence states that the company's revenue guidance for next quarter lacks a specific figure, which does not confirm or deny an expectation of revenue growth. It is relevant to the same subject but does not support the claim.\n}"
+    },
+    {
+      "case_id": "v2_regression_05_absence_inside_disclosure",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:30:14.035000+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 45)): {\n  \"verdict\": \"UNSUPPORTED\",\n  \"rationale\": The evidence states that the company's revenue guidance for next quarter lacks a specific figure, which does not confirm or deny the claim that the company expects revenue growth next quarter. It is relevant to revenue expectations but does not support the specific growth expectation.\n}"
+    },
+    {
+      "case_id": "v2_regression_05_absence_inside_disclosure",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:30:19.354127+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence notes that the company's revenue guidance for next quarter lacks a specific figure, which does not confirm or deny an expectation of revenue growth.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_05_absence_inside_disclosure",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:30:21.638540+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence notes that the company's revenue guidance for next quarter lacks a specific figure, which does not confirm or deny an expectation of revenue growth; it merely provides no specific number.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_06_disclosure_uncertainty",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:30:33.005154+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 45)): {\n  \"verdict\": \"UNSUPPORTED\",\n  \"rationale\": The evidence states that the company has not decided whether to provide revenue guidance for next quarter, which does not address or confirm the company's expectation of revenue growth next quarter.\n}"
+    },
+    {
+      "case_id": "v2_regression_06_disclosure_uncertainty",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:30:42.733152+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The claim concerns the company's expectation of revenue growth next quarter, while the evidence addresses whether the company will provide revenue guidance for next quarter. These are distinct underlying properties, making the evidence not applicable to the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_06_disclosure_uncertainty",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:30:45.514862+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses whether the company will provide revenue guidance, which is a different underlying property from the claim about expecting revenue growth. Therefore, it does not pertain to the same fact asserted in the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_06_disclosure_uncertainty",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:30:53.342640+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "LLM did not return JSON (Expecting value: line 3 column 16 (char 45)): {\n  \"verdict\": \"UNSUPPORTED\",\n  \"rationale\": The evidence states that the company has not decided whether to provide revenue guidance for next quarter, which does not confirm or deny an expectation of revenue growth; it merely lacks information about the claim's expectation.\n}"
+    },
+    {
+      "case_id": "v2_regression_06_disclosure_uncertainty",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:30:57.057388+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence concerns whether the company will provide revenue guidance, not its expectation of revenue growth, which is a different underlying business fact.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_07_relevant_silence",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:30:59.723785+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states the company's revenue for the current quarter but does not provide any information about the company's expectations for revenue growth in the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_07_relevant_silence",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:31:02.334505+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states the company's revenue for the current quarter, which does not address the company's expectation of revenue growth in the next quarter. It neither confirms nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_07_relevant_silence",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:31:06.194707+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The claim concerns the company's expectation of revenue growth next quarter, while the evidence provides only the actual revenue figure for the current quarter. These refer to different underlying properties (expectation vs. actual, future vs. present).",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_07_relevant_silence",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:31:09.520957+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states the company's revenue for the current quarter but provides no information about expectations for revenue growth in the next quarter, so it neither supports nor contradicts the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_07_relevant_silence",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:31:11.756707+00:00",
+      "success": true,
+      "verdict": "UNSUPPORTED",
+      "rationale": "The evidence states the company's revenue for the current quarter, which does not provide information about the company's expectation of revenue growth in the next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_08_different_entity",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:31:15.253689+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's revenue increase this quarter, which pertains to a different entity and a different time period than the claim about Company X's expected revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_08_different_entity",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:31:19.158372+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence concerns Company Y's revenue increase this quarter, which is a different entity and time period than Company X's expected revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_08_different_entity",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:31:21.505202+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's revenue increase this quarter, which pertains to a different entity and a different time period than the claim about Company X's expected revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_08_different_entity",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:31:27.427745+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence discusses Company Y's revenue increase this quarter, which pertains to a different entity and a different time period than the claim about Company X's expected revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_08_different_entity",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:31:28.976685+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence concerns Company Y's revenue increase this quarter, which is a different entity and a different time period than Company X's expected revenue growth next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_09_unrelated_disclosure",
+      "repetition_index": 0,
+      "timestamp": "2026-08-20T13:31:32.635862+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence describes the company's primary business as manufacturing consumer electronics, which does not address the company's expectation of revenue growth next quarter. It concerns a different underlying property than the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_09_unrelated_disclosure",
+      "repetition_index": 1,
+      "timestamp": "2026-08-20T13:31:34.163022+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence describes the company's primary business as manufacturing consumer electronics, which does not address the company's expectation of revenue growth next quarter. It concerns a different underlying fact than the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_09_unrelated_disclosure",
+      "repetition_index": 2,
+      "timestamp": "2026-08-20T13:31:38.537845+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence describes the company's primary business but does not mention any expectation of revenue growth next quarter, so it concerns a different underlying fact than the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_09_unrelated_disclosure",
+      "repetition_index": 3,
+      "timestamp": "2026-08-20T13:31:42.135972+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence describes the company's primary business as manufacturing consumer electronics, which does not address the company's expectation of revenue growth next quarter. It concerns a different underlying fact than the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    },
+    {
+      "case_id": "v2_regression_09_unrelated_disclosure",
+      "repetition_index": 4,
+      "timestamp": "2026-08-20T13:31:43.671115+00:00",
+      "success": true,
+      "verdict": "NOT_APPLICABLE",
+      "rationale": "The evidence describes the company's primary business as manufacturing consumer electronics, which does not address the company's expectation of revenue growth next quarter. It concerns a different underlying fact than the claim.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v3-na1",
+      "error": null
+    }
+  ],
+  "report": {
+    "cases": [
+      {
+        "case_id": "v2_regression_01_genuine_contradiction",
+        "reference_verdict": "CONTRADICTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "CONTRADICTED": 1
+        },
+        "successes": 1,
+        "failures": 4,
+        "agreement_rate": 1.0,
+        "modal_verdict": "CONTRADICTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "v2_regression_02_genuine_contradiction_alt_wording",
+        "reference_verdict": "CONTRADICTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "CONTRADICTED": 4
+        },
+        "successes": 4,
+        "failures": 1,
+        "agreement_rate": 1.0,
+        "modal_verdict": "CONTRADICTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "v2_regression_03_substantive_negated_belief",
+        "reference_verdict": "CONTRADICTED",
+        "repetitions": 5,
+        "verdict_distribution": {},
+        "successes": 0,
+        "failures": 5,
+        "agreement_rate": null,
+        "modal_verdict": null,
+        "matches_reference": null
+      },
+      {
+        "case_id": "v2_regression_04_explicit_category_absence",
+        "reference_verdict": "UNSUPPORTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "UNSUPPORTED": 1
+        },
+        "successes": 1,
+        "failures": 4,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "v2_regression_05_absence_inside_disclosure",
+        "reference_verdict": "UNSUPPORTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "UNSUPPORTED": 3
+        },
+        "successes": 3,
+        "failures": 2,
+        "agreement_rate": 1.0,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "v2_regression_06_disclosure_uncertainty",
+        "reference_verdict": "UNSUPPORTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "NOT_APPLICABLE": 3
+        },
+        "successes": 3,
+        "failures": 2,
+        "agreement_rate": 1.0,
+        "modal_verdict": "NOT_APPLICABLE",
+        "matches_reference": false
+      },
+      {
+        "case_id": "v2_regression_07_relevant_silence",
+        "reference_verdict": "UNSUPPORTED",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "UNSUPPORTED": 4,
+          "NOT_APPLICABLE": 1
+        },
+        "successes": 5,
+        "failures": 0,
+        "agreement_rate": 0.8,
+        "modal_verdict": "UNSUPPORTED",
+        "matches_reference": true
+      },
+      {
+        "case_id": "v2_regression_08_different_entity",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "NOT_APPLICABLE": 5
+        },
+        "successes": 5,
+        "failures": 0,
+        "agreement_rate": 1.0,
+        "modal_verdict": "NOT_APPLICABLE",
+        "matches_reference": true
+      },
+      {
+        "case_id": "v2_regression_09_unrelated_disclosure",
+        "reference_verdict": "NOT_APPLICABLE",
+        "repetitions": 5,
+        "verdict_distribution": {
+          "NOT_APPLICABLE": 5
+        },
+        "successes": 5,
+        "failures": 0,
+        "agreement_rate": 1.0,
+        "modal_verdict": "NOT_APPLICABLE",
+        "matches_reference": true
+      }
+    ],
+    "total_cases": 9,
+    "total_invocations": 45,
+    "total_successes": 27,
+    "total_failures": 18,
+    "overall_verdict_distribution": {
+      "CONTRADICTED": 5,
+      "UNSUPPORTED": 8,
+      "NOT_APPLICABLE": 14
+    },
+    "overall_agreement_rate_mean": 0.975,
+    "judge_models": [
+      "nvidia/nemotron-3-super-120b-a12b"
+    ],
+    "judge_prompt_versions": [
+      "v3-na1"
+    ]
+  }
+}

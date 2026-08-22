@@ -1,0 +1,9 @@
+{
+  "case_id": "contradiction_absence_b_explicit_opposite",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized narrowly-scoped contradiction-vs-absence experiment (paired with contradiction_absence_a_silent). Synthetic figures, not real disclosed data. Pair isolates exactly one variable: whether the evidence says anything at all about next quarter, holding the claim byte-identical -- here the evidence makes an explicit next-quarter statement that is the direct opposite of the claim. Deliberately kept simple (no explicit self-scoping disclaimer, no cross-domain subject) to avoid reintroducing the separate NOT_APPLICABLE-boundary question investigated elsewhere -- this pair targets only the CONTRADICTED-vs-UNSUPPORTED distinction.",
+  "claim": "Management expects operating margin to expand next quarter.",
+  "evidence": "Management expects operating margin to decline by 100 basis points next quarter, citing rising input costs.",
+  "reference_verdict": "CONTRADICTED",
+  "reference_rationale": "The evidence explicitly states management's next-quarter expectation is a margin DECLINE, directly opposing the claim's assertion of margin EXPANSION for the same period -- a direct, explicit factual conflict, not merely an absence of support. Independently justified from the evidence text alone, assigned before any judge call was made and never sent to the judge."
+}

@@ -65,7 +65,7 @@ async def run_case(
     except AdapterError as e:
         return None, f"{case.case_id}: adapter error — {e}"
 
-    case_result = evaluate_case(case, adapter_result)
+    case_result = await evaluate_case(case, adapter_result)
     schema_version = _schema_version_for(case.surface)
     verdict, reason = compare(case_result, schema_version=schema_version, results_dir=results_dir)
 

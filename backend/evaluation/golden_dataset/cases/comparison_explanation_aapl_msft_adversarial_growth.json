@@ -1,0 +1,69 @@
+{
+  "case_id": "comparison_explanation_aapl_msft_adversarial_growth",
+  "surface": "comparison_explanation",
+  "dataset_version": 1,
+  "case_version": 1,
+  "context": {
+    "report_ids": ["seed-report-aapl-002", "seed-report-msft-002"],
+    "fixture_reports": [
+      {
+        "id": "seed-report-aapl-002",
+        "ticker": "AAPL",
+        "company_name": "Apple Inc. (M11 Phase B fixture — synthetic figures, not real disclosed data)",
+        "extracted_data": {"revenue": "$10.0B", "revenue_yoy": "+4%"},
+        "sentiment_analysis": {
+          "sentiment": "Neutral",
+          "confidence": 0.6,
+          "summary": "Steady, unremarkable quarter.",
+          "key_risks": ["Fixture risk factor A"],
+          "key_positives": ["Fixture positive factor A"]
+        },
+        "scorecard": {}
+      },
+      {
+        "id": "seed-report-msft-002",
+        "ticker": "MSFT",
+        "company_name": "Microsoft Corporation (M11 Phase B fixture — synthetic figures, not real disclosed data)",
+        "extracted_data": {"revenue": "$12.0B", "revenue_yoy": "+9%"},
+        "sentiment_analysis": {
+          "sentiment": "Bullish",
+          "confidence": 0.65,
+          "summary": "Faster growth than the comparison peer.",
+          "key_risks": ["Fixture risk factor B"],
+          "key_positives": ["Fixture positive factor B"]
+        },
+        "scorecard": {}
+      }
+    ]
+  },
+  "expected_behaviors": [
+    {
+      "behavior_id": "does_not_invert_growth_comparison",
+      "type": "absence",
+      "description": "Adversarial known-trap (Document 47 Sec5-B/Sec7.4): the fixture evidence gives AAPL the slower growth rate (+4% YoY) and MSFT the faster one (+9% YoY) - the narrative must not invert this into a claim that Apple grew faster, which a model anchoring on Apple being mentioned first could fabricate.",
+      "match_rule": "keyword_variant",
+      "variants": [
+        "Apple grew faster",
+        "AAPL grew faster",
+        "Apple's growth rate exceeded Microsoft",
+        "Apple had the stronger growth",
+        "Apple outpaced Microsoft in growth",
+        "Apple's revenue grew faster than Microsoft",
+        "Apple's revenue growth outpaced Microsoft"
+      ]
+    },
+    {
+      "behavior_id": "cites_growth_comparison",
+      "type": "presence",
+      "description": "Cites at least one source for the growth-rate comparison it describes (reuses the existing citation_required rule, unmodified — not new Phase B behavior).",
+      "match_rule": "citation_required",
+      "reference": "growth_comparison"
+    }
+  ],
+  "citation_expectation": {
+    "min_valid_citations": 1,
+    "required_source_ids": []
+  },
+  "known_limitations": null,
+  "notes": "M11 Phase B adversarial case (Document 47 Sec19 step 2, Sec5-B, Sec7.4) - dataset content only, zero new evaluator code. Reuses M10 Phase 3's existing keyword_variant(absence) rule with deliberately adversarial fixture content: MSFT's +9% YoY growth exceeds AAPL's +4% YoY growth, testing whether the model correctly reads the smaller-revenue, faster-growing company rather than fabricating a growth-comparison conclusion that contradicts the offered evidence. A separate case_id from comparison_explanation_aapl_msft.json (own report_ids/fixture content) so this addition does not alter that case's version or behavior count. citation_required behavior included only to mirror the existing seed case's own pattern, not new Phase B logic."
+}

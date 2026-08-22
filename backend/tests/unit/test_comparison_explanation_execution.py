@@ -126,7 +126,7 @@ def stub_llm(monkeypatch):
     output. Call the returned setter with the desired payload per test."""
     state = {"text": None}
 
-    def _generate_sync(system, user, model, usage_sink=None):
+    def _generate_sync(system, user, model, usage_sink=None, temperature=None):
         if state["text"] is None:
             raise AssertionError("stub_llm() was not configured with a response")
         return state["text"]

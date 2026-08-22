@@ -51,6 +51,7 @@ def dispatch(
     gen_anthropic,
     gen_openai_compatible,
     usage_sink: dict | None = None,
+    temperature: float | None = None,
 ) -> str:
     """The one place a provider name maps to a call. Adding a provider means
     adding one branch here — not one branch in two different functions.
@@ -67,11 +68,17 @@ def dispatch(
     whichever `gen_*` is called. `validate_key`'s call site doesn't pass one
     (usage during key validation isn't tracked — it's not a real generation),
     so this stays fully backward compatible.
+
+    `temperature` (Document 47 §9's model-assisted evaluator, the only
+    intended caller): optional, forwarded unchanged. `None` (the default,
+    and every existing caller's implicit value) means "each gen_* function's
+    own current default" — this parameter changes nothing for any call site
+    that doesn't pass it explicitly.
     """
     if provider == "gemini":
-        return gen_gemini(system, user, model, key, usage_sink=usage_sink)
+        return gen_gemini(system, user, model, key, usage_sink=usage_sink, temperature=temperature)
     if provider == "anthropic":
-        return gen_anthropic(system, user, model, key, usage_sink=usage_sink)
+        return gen_anthropic(system, user, model, key, usage_sink=usage_sink, temperature=temperature)
     if provider in _OPENAI_COMPATIBLE_PROVIDERS:
-        return gen_openai_compatible(system, user, model, key, base_url, usage_sink=usage_sink)
+        return gen_openai_compatible(system, user, model, key, base_url, usage_sink=usage_sink, temperature=temperature)
     raise ValueError(f"Unknown LLM provider: {provider}")

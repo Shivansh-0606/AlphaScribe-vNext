@@ -1,0 +1,9 @@
+{
+  "case_id": "diagnostic_a_stable_construction",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 final diagnostic experiment. Isolates ONE variable against the already-unstable three_way_b_explicit_relevant_absence case (same claim, reused unmodified as this diagnostic's Case B): the linguistic construction of the absence statement. This case mirrors boundary_pair1_b_notapplicable_guidance_absent's 'reports only historical results' disclosure-self-scoping phrasing -- a construction that was stable (100% UNSUPPORTED) across every prior trial (original pilot 5/5, boundary-experiment replication 5/5+) -- but rewritten onto the SAME claim/subject/entity/metric/period as the unstable three-way Case B, removing the claim-subject confound that made Pair 1-B vs Pair 3-B not a clean single-variable contrast.",
+  "claim": "Management expects operating margin to expand next quarter.",
+  "evidence": "This disclosure reports only historical operating margin results for the completed quarter.",
+  "reference_verdict": "UNSUPPORTED",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1: same subject/entity (implied continuity with the claim), same metric (operating margin), and the evidence explicitly engages the claim's general topic only to scope itself to historical/completed-quarter results -- explicitly relevant absence, clears the relevance test, does not affirm or oppose the claim's next-quarter proposition. UNSUPPORTED, identical reference classification to this diagnostic's Case B -- the point of this diagnostic is to test judge STABILITY across two constructions sharing the same correct reference, not to test a different reference outcome. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

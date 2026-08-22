@@ -1,0 +1,9 @@
+{
+  "case_id": "learning_ambiguous_marginal_improvement",
+  "surface": "learning",
+  "provenance": "Hand-authored 2026-08-18 for M11 self-consistency evaluation (Document 47 Sec9.1), deliberately borderline. Synthetic figures, not real disclosed data.",
+  "claim": "Operating margin improved slightly this quarter.",
+  "evidence": "Financial excerpt: Operating margin was 30.1% in the current quarter, compared to 30.0% in the prior-year quarter.",
+  "reference_verdict": "SUPPORTED",
+  "reference_rationale": "Genuinely borderline by design, not a manufactured easy case: a 0.1 percentage-point move is technically an improvement and 'slightly' is a fair characterization, but it is small enough that a reasonable judge could plausibly call it NOT_APPLICABLE (too marginal to characterize) or even hesitate on precision grounds. Included specifically to observe judge stability on a hard case, per this task's own instruction not to manufacture only easy cases."
+}

@@ -1,0 +1,699 @@
+{
+  "generated_at": "2026-08-18T17:30:39.448782+00:00",
+  "repeats_per_case": 60,
+  "held_out_case_count": 1,
+  "note": "EVIDENCE ONLY (Document 47 Sec9.1) -- does not authorize gate promotion. JUDGE_SELF_CONSISTENCY_GATE_VERSION is not read or written by this script; promoting the gate is a separate, explicit CTO/reviewer decision (Sec9.1 step 6).",
+  "measurements": [
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 0,
+      "timestamp": "2026-08-18T17:28:13.793593+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 1,
+      "timestamp": "2026-08-18T17:28:15.328111+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 2,
+      "timestamp": "2026-08-18T17:28:16.563575+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly conflicts with the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 3,
+      "timestamp": "2026-08-18T17:28:17.962440+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 4,
+      "timestamp": "2026-08-18T17:28:24.359132+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 5,
+      "timestamp": "2026-08-18T17:28:25.807856+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 6,
+      "timestamp": "2026-08-18T17:28:28.117373+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline by 100 basis points next quarter, which directly contradicts the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 7,
+      "timestamp": "2026-08-18T17:28:29.375264+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 8,
+      "timestamp": "2026-08-18T17:28:31.241397+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 9,
+      "timestamp": "2026-08-18T17:28:32.720711+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 10,
+      "timestamp": "2026-08-18T17:28:34.678570+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 11,
+      "timestamp": "2026-08-18T17:28:36.301200+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence indicates management expects operating margin to decline by 100 basis points next quarter, which directly contradicts the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 12,
+      "timestamp": "2026-08-18T17:28:39.347988+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline by 100 basis points next quarter, which directly opposes the claim that management expects operating margin to expand next quarter.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 13,
+      "timestamp": "2026-08-18T17:28:40.638879+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 14,
+      "timestamp": "2026-08-18T17:28:41.841442+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 15,
+      "timestamp": "2026-08-18T17:28:48.352731+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 16,
+      "timestamp": "2026-08-18T17:28:51.459932+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 17,
+      "timestamp": "2026-08-18T17:28:52.435591+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 18,
+      "timestamp": "2026-08-18T17:28:53.860413+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 19,
+      "timestamp": "2026-08-18T17:28:55.761960+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 20,
+      "timestamp": "2026-08-18T17:28:56.968757+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 21,
+      "timestamp": "2026-08-18T17:28:58.445582+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 22,
+      "timestamp": "2026-08-18T17:28:59.789976+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 23,
+      "timestamp": "2026-08-18T17:29:02.477414+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 24,
+      "timestamp": "2026-08-18T17:29:03.862785+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence indicates that management expects operating margin to decline by 100 basis points next quarter, which directly contradicts the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 25,
+      "timestamp": "2026-08-18T17:29:05.509079+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 26,
+      "timestamp": "2026-08-18T17:29:07.355669+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 27,
+      "timestamp": "2026-08-18T17:29:09.428200+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 28,
+      "timestamp": "2026-08-18T17:29:11.220144+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline by 100 basis points next quarter, which directly conflicts with the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 29,
+      "timestamp": "2026-08-18T17:29:12.739248+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 30,
+      "timestamp": "2026-08-18T17:29:14.258177+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 31,
+      "timestamp": "2026-08-18T17:29:15.561550+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 32,
+      "timestamp": "2026-08-18T17:29:19.208440+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 33,
+      "timestamp": "2026-08-18T17:29:21.581670+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 34,
+      "timestamp": "2026-08-18T17:29:23.676071+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 35,
+      "timestamp": "2026-08-18T17:29:25.892022+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 36,
+      "timestamp": "2026-08-18T17:29:28.092604+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 37,
+      "timestamp": "2026-08-18T17:29:44.501555+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 38,
+      "timestamp": "2026-08-18T17:29:47.402732+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 39,
+      "timestamp": "2026-08-18T17:29:49.711421+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 40,
+      "timestamp": "2026-08-18T17:29:52.510872+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 41,
+      "timestamp": "2026-08-18T17:29:54.654276+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 42,
+      "timestamp": "2026-08-18T17:29:58.689078+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline by 100 basis points next quarter, which directly conflicts with the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 43,
+      "timestamp": "2026-08-18T17:30:02.602397+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 44,
+      "timestamp": "2026-08-18T17:30:03.850055+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 45,
+      "timestamp": "2026-08-18T17:30:05.150091+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline by 100 basis points next quarter, which directly conflicts with the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 46,
+      "timestamp": "2026-08-18T17:30:06.944292+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 47,
+      "timestamp": "2026-08-18T17:30:11.798991+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 48,
+      "timestamp": "2026-08-18T17:30:14.126387+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 49,
+      "timestamp": "2026-08-18T17:30:15.515230+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 50,
+      "timestamp": "2026-08-18T17:30:17.119557+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 51,
+      "timestamp": "2026-08-18T17:30:18.399273+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 52,
+      "timestamp": "2026-08-18T17:30:20.141399+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 53,
+      "timestamp": "2026-08-18T17:30:21.982105+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 54,
+      "timestamp": "2026-08-18T17:30:23.322786+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 55,
+      "timestamp": "2026-08-18T17:30:25.348886+00:00",
+      "success": true,
+      "verdict": "CONTRADICTED",
+      "rationale": "The evidence states that management expects operating margin to decline, which directly opposes the claim that management expects operating margin to expand.",
+      "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+      "judge_prompt_version": "v1",
+      "error": null
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 56,
+      "timestamp": "2026-08-18T17:30:27.947260+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 57,
+      "timestamp": "2026-08-18T17:30:29.643326+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 58,
+      "timestamp": "2026-08-18T17:30:31.153131+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    },
+    {
+      "case_id": "contradiction_absence_b_explicit_opposite",
+      "repetition_index": 59,
+      "timestamp": "2026-08-18T17:30:39.446798+00:00",
+      "success": false,
+      "verdict": null,
+      "rationale": null,
+      "judge_model": null,
+      "judge_prompt_version": null,
+      "error": "Expecting value: line 3 column 16 (char 46)"
+    }
+  ],
+  "report": {
+    "cases": [
+      {
+        "case_id": "contradiction_absence_b_explicit_opposite",
+        "reference_verdict": "CONTRADICTED",
+        "repetitions": 60,
+        "verdict_distribution": {
+          "CONTRADICTED": 18
+        },
+        "successes": 18,
+        "failures": 42,
+        "agreement_rate": 1.0,
+        "modal_verdict": "CONTRADICTED",
+        "matches_reference": true
+      }
+    ],
+    "total_cases": 1,
+    "total_invocations": 60,
+    "total_successes": 18,
+    "total_failures": 42,
+    "overall_verdict_distribution": {
+      "CONTRADICTED": 18
+    },
+    "overall_agreement_rate_mean": 1.0,
+    "judge_models": [
+      "nvidia/nemotron-3-super-120b-a12b"
+    ],
+    "judge_prompt_versions": [
+      "v1"
+    ]
+  }
+}

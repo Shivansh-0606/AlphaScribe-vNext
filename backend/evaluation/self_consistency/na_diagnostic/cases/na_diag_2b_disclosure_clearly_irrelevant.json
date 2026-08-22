@@ -1,0 +1,9 @@
+{
+  "case_id": "na_diag_2b_disclosure_clearly_irrelevant",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-19 for the CTO-authorized N/A-vs-UNSUPPORTED diagnostic. Axis 2 (metric/disclosure-category mismatch), Case B control: same claim as v2_regression_04/09 ('the company', reused verbatim), evidence is a wholly different disclosure domain (legal proceedings), matching the evidence-type already validated as reliably NOT_APPLICABLE under v1 (boundary_pair2_b_notapplicable_unrelated_subject, 4/4 clean). Tests whether a STRONGER irrelevance signal produces more stable NOT_APPLICABLE than the milder 'different disclosure category, same entity' signal in case 09 (v2 result: 81% UNSUPPORTED / 19% NOT_APPLICABLE).",
+  "claim": "The company expects revenue growth next quarter.",
+  "evidence": "The company is subject to an antitrust investigation regarding its App Store practices.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1's subject/entity and metric/disclosure rules: legal-proceedings evidence is a wholly unrelated disclosure domain from a revenue-performance claim, never mentioning revenue at all -- NOT_APPLICABLE, and materially more clear-cut than case 09's product/business-description evidence (which at least stays within general company-disclosure territory). Not ambiguous under the ratified policy. Independently justified from the evidence text alone, assigned before any judge call and never sent to the judge."
+}

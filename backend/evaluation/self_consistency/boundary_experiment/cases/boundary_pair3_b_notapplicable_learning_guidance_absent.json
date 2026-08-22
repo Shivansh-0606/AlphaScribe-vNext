@@ -1,0 +1,9 @@
+{
+  "case_id": "boundary_pair3_b_notapplicable_learning_guidance_absent",
+  "surface": "learning",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 targeted boundary experiment (paired with boundary_pair3_a_applicable_learning_guidance_present). Synthetic figures, not real disclosed data. Pair replicates Pair 1's temporal-scope-mismatch axis on the Learning surface instead of Research, to test whether the pattern generalizes across surfaces. Case B is the 'not applicable' member -- evidence explicitly self-scopes away from the claim's forward-looking subject.",
+  "claim": "Management indicated operating margin will continue to expand next quarter.",
+  "evidence": "Financial excerpt: Operating margin was 32.1% in the current quarter, compared to 30.0% in the prior-year quarter. This disclosure covers only the quarter just completed and does not include forward guidance.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "The claim is about forward-looking management guidance; the evidence explicitly self-scopes as covering only the completed quarter and states it does not include forward guidance. The claim and evidence are not about the same subject (guidance vs. a completed-quarter actual) -- distinct from UNSUPPORTED, where evidence at least addresses the same subject without confirming the specific claim. Independently justified from the evidence's own explicit scoping language, not constructed to force a contrast with Case A."
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_08_different_entity",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 8 of 9. Different entity -- an already-validated NOT_APPLICABLE pattern (boundary_pair2_b_notapplicable_unrelated_subject; Document 47 Rev 5 Sec7.3.1's own worked Apple/Microsoft example); non-regression check for the entity-mismatch boundary, which the v2 CONTRADICTED/UNSUPPORTED remediation does not touch.",
+  "claim": "Company X expects revenue growth next quarter.",
+  "evidence": "Company Y's revenue increased this quarter.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "Per Document 47 Rev 5 Sec7.3.1's subject/entity mismatch rule: evidence concerns a different company than the claim names -- NOT_APPLICABLE, regardless of the numeric similarity. Independently justified from the evidence text and the ratified policy alone, assigned before any judge call and never sent to the judge."
+}

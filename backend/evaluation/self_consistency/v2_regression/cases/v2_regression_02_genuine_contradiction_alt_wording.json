@@ -1,0 +1,9 @@
+{
+  "case_id": "v2_regression_02_genuine_contradiction_alt_wording",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized JUDGE_PROMPT_VERSION v2 remediation regression set (Document 47 Sec9.1 methodology). Case 2 of 9. Same pattern as case 1 with 'will' phrasing instead of 'expects' -- tests generalization of correct CONTRADICTED behavior across phrasing register.",
+  "claim": "Revenue will increase next quarter.",
+  "evidence": "Revenue will decrease next quarter.",
+  "reference_verdict": "CONTRADICTED",
+  "reference_rationale": "Affirmative, directly opposing directional statement about the same period -- a genuine contradiction. Independently justified from the evidence text alone, assigned before any judge call and never sent to the judge."
+}

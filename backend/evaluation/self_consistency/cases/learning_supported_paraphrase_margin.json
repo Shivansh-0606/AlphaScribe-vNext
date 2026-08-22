@@ -1,0 +1,9 @@
+{
+  "case_id": "learning_supported_paraphrase_margin",
+  "surface": "learning",
+  "provenance": "Hand-authored 2026-08-18 for M11 self-consistency evaluation (Document 47 Sec9.1). Synthetic figures, not real disclosed data.",
+  "claim": "The company's operating profitability improved this quarter, with margin expanding by roughly two percentage points.",
+  "evidence": "Financial excerpt: Operating margin was 32.1% in the current quarter, up from 30.0% in the prior-year quarter.",
+  "reference_verdict": "SUPPORTED",
+  "reference_rationale": "The claim paraphrases (not quotes) the evidence -- 'expanding by roughly two percentage points' matches the 30.0% -> 32.1% (2.1pp) figures without repeating the exact numbers. Tests whether the judge recognizes paraphrased support, not only literal string overlap."
+}

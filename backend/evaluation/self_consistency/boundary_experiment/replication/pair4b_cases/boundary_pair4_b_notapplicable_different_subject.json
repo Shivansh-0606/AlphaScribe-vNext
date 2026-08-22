@@ -1,0 +1,9 @@
+{
+  "case_id": "boundary_pair4_b_notapplicable_different_subject",
+  "surface": "research",
+  "provenance": "Hand-authored 2026-08-18 for the CTO-authorized M11 targeted boundary experiment (paired with boundary_pair4_a_applicable_silent_same_subject). Synthetic figures, not real disclosed data. Pair sharpens the core UNSUPPORTED-vs-NOT_APPLICABLE discrimination directly: Case B's evidence is explicitly scoped to a different subject (product/business description) and explicitly disclaims covering financial results at all -- the same 'explicit self-scoping' shape as the original pilot's disputed case, applied to a subject-matter axis instead of a temporal one.",
+  "claim": "Diluted EPS came in at $1.64 for the quarter, beating expectations.",
+  "evidence": "10-K excerpt, Item 1 (Business): The Company designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories, and sells a variety of related services. This section describes the Company's products and services and does not include financial results.",
+  "reference_verdict": "NOT_APPLICABLE",
+  "reference_rationale": "The evidence explicitly self-scopes to product/business description and explicitly states it does not include financial results. It is not about the same subject as the claim (quarterly EPS) at all -- distinct from Case A, where evidence stays within the earnings subject but omits one detail. Independently justified from the evidence's own explicit scoping language, not constructed to force a contrast with Case A."
+}
