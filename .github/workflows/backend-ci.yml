@@ -1,12 +1,20 @@
 name: Backend CI
 
 # M2 Phase 0 (docs/backend_engineering/06_Clean_Architecture_Migration_Plan.md
-# §5.1, §7.1; 12_M2_Implementation_Charter.md). Two jobs:
-#   hermetic — no secrets, no live Mongo/LLM/network. Runs on every push/PR.
-#   live     — needs a real Mongo + LLM key; gated to main only, never a fork
-#              PR (10 SD-12: the only job holding API keys must never run on
-#              untrusted PR code). Present as a skeleton; the maintainer adds
-#              the required secrets (see the job's `env:` block) to enable it.
+# §5.1, §7.1; 12_M2_Implementation_Charter.md). Three jobs:
+#   hermetic   — no secrets, no live Mongo/LLM/network. Runs on every push/PR.
+#   live       — needs a real Mongo + LLM key; gated to main only, never a
+#                fork PR (10 SD-12: the only job holding API keys must never
+#                run on untrusted PR code). Present as a skeleton; the
+#                maintainer adds the required secrets (see the job's `env:`
+#                block) to enable it.
+#   evaluation — M10 CI integration (docs/backend_engineering/52), same
+#                main-only/secret-gated posture as `live`. Non-blocking by
+#                design (Document 52 §4/§6): evaluation content (any
+#                verdict, including REGRESSION) never fails this job or
+#                gates a merge — only a genuine execution failure does
+#                (Document 52 §5.1). See the job's own comments for the
+#                full contract this implements.
 #
 # Deliberately minimal (M2 charter: "do not introduce unnecessary tooling") —
 # no lint/format/type-check job, since none is configured for backend/ today.
@@ -115,3 +123,225 @@ jobs:
       - name: Run live suite
         if: ${{ env.MONGO_URL != '' }}
         run: python -m pytest -n 2 --dist loadscope -m live
+
+  evaluation:
+    name: M10 evaluation harness (non-blocking, main only)
+    runs-on: ubuntu-latest
+    # Document 52 §7: identical trigger condition to `live` — main-push
+    # only, never any PR, fork or same-repo (10 SD-12's own boundary,
+    # applied identically). Even FIXTURE mode makes a real LLM call
+    # (Document 52 §1), so this job carries the same secret-exposure
+    # profile as `live`, not `hermetic`'s "no secrets" profile.
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      github.repository == 'Shivansh-0606/AlphaScribe-vNext'
+    needs: hermetic
+    # Document 52 §8.1: serialize evaluation runs so two concurrent pushes
+    # to main never race on the shared accumulated results artifact.
+    # cancel-in-progress: false — a differently-shaped commit's run must
+    # still complete and contribute its own results, not be silently
+    # dropped because a later push arrived first.
+    concurrency:
+      group: evaluation-main
+      cancel-in-progress: false
+    # Document 53 §2/§6 — no job in this workflow previously set an
+    # explicit cap; bounded here given the harness's own per-call timeout
+    # (agents/llm.py's _REQUEST_TIMEOUT=120s) and today's small (4-case)
+    # dataset (Document 52 §9).
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # Document 52 §8 / Document 53 §3 — needed only by this job, to list
+      # and download the prior run's evaluation-results artifact. Scoped
+      # here, not workflow-wide, preserving hermetic/live's existing
+      # least-privilege posture.
+      actions: read
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Reuses `live`'s exact secret — until it is configured, this job is
+      # a documented skeleton, matching `live`'s own convention exactly.
+      GEMINI_API_KEY: ${{ secrets.CI_GEMINI_API_KEY }}
+    steps:
+      - name: Skip until CI Gemini secret is configured
+        if: ${{ env.GEMINI_API_KEY == '' }}
+        working-directory: .
+        # Overrides the job's `backend` default — this step runs before
+        # checkout, so that directory doesn't exist on the runner yet.
+        run: |
+          echo "::notice::Evaluation job skipped — CI_GEMINI_API_KEY not configured. See .github/workflows/backend-ci.yml."
+          exit 0
+
+      - uses: actions/checkout@v4
+        if: ${{ env.GEMINI_API_KEY != '' }}
+
+      - uses: actions/setup-python@v5
+        if: ${{ env.GEMINI_API_KEY != '' }}
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        if: ${{ env.GEMINI_API_KEY != '' }}
+        run: python -m pip install -r requirements.txt
+
+      - name: Download prior evaluation-results artifact (if any)
+        # Document 52 §8: this step only stages files on disk — it never
+        # decides baseline compatibility. That decision remains entirely
+        # owned by the existing, unmodified find_baseline()
+        # (evaluation/regression/result_store.py), which runs inside the
+        # harness step below exactly as it does for a local developer run.
+        if: ${{ env.GEMINI_API_KEY != '' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Reviewer 3 remediation: the prior version assumed the API
+            // returns artifacts newest-first and stopped at the first
+            // page (100 artifacts). Neither is safe — this repository's
+            // artifact count grows unboundedly (hermetic's backend-coverage
+            // artifact on every push/PR), and response order for this
+            // endpoint is not a documented guarantee to rely on.
+            //
+            // github.paginate() is a core Octokit helper already bundled
+            // by actions/github-script (no new dependency) — it walks
+            // every page automatically. The `name` filter is a documented
+            // query parameter on this endpoint that narrows the
+            // server-side result set (fewer pages to walk in practice),
+            // but correctness below never depends on it actually working:
+            // the client-side name/expired checks are the real guarantee,
+            // independent of whatever the filter does or doesn't exclude.
+            const artifacts = await github.paginate(
+              github.rest.actions.listArtifactsForRepo,
+              { owner: context.repo.owner, repo: context.repo.repo, name: 'evaluation-results', per_page: 100 },
+            );
+
+            const candidates = artifacts.filter(a => a.name === 'evaluation-results' && !a.expired);
+
+            if (candidates.length === 0) {
+              core.notice(`No prior evaluation-results artifact found (${artifacts.length} name-matching, 0 unexpired) — starting fresh history.`);
+              return;
+            }
+
+            // Explicitly select the newest by created_at — never by array
+            // position or artifact ID alone. Deterministic id-based
+            // tiebreak (ids are monotonically increasing) for the
+            // vanishingly unlikely case of an identical created_at.
+            const newest = candidates.reduce((best, a) => {
+              const aTime = Date.parse(a.created_at);
+              const bestTime = Date.parse(best.created_at);
+              if (aTime > bestTime) return a;
+              if (aTime === bestTime && a.id > best.id) return a;
+              return best;
+            });
+
+            const download = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: newest.id,
+              archive_format: 'zip',
+            });
+            fs.writeFileSync('evaluation-results.zip', Buffer.from(download.data));
+            core.notice(`Downloaded prior evaluation-results artifact (id=${newest.id}, created ${newest.created_at}) — newest of ${candidates.length} valid candidate(s) out of ${artifacts.length} name-matching artifact(s) inspected.`);
+
+      - name: Extract prior results
+        if: ${{ env.GEMINI_API_KEY != '' }}
+        working-directory: .
+        run: |
+          mkdir -p backend/evaluation/results
+          if [ -f evaluation-results.zip ]; then
+            unzip -o -q evaluation-results.zip -d backend/evaluation/results/
+            rm evaluation-results.zip
+          fi
+
+      - name: Run evaluation harness
+        id: run_eval
+        if: ${{ env.GEMINI_API_KEY != '' }}
+        run: |
+          set +e
+          python scripts/run_evaluation.py --mode fixture --format json > eval_output.json 2> eval_stderr.txt
+          CLI_EXIT=$?
+          set -e
+          # Document 52 §4's frozen contract: exit 0/1 with valid JSON is
+          # CONTENT (a REGRESSION verdict or a per-case adapter error included
+          # — never blocks). Exit 2, an uncaught exception, or missing/
+          # invalid JSON is an EXECUTION FAILURE — surfaced explicitly here,
+          # never silently represented as a successful run (Document 52 §5.1).
+          if { [ "$CLI_EXIT" = "0" ] || [ "$CLI_EXIT" = "1" ]; } && python -c "import json; json.load(open('eval_output.json'))" 2>/dev/null; then
+            echo "execution_status=SUCCEEDED" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "execution_status=FAILED" >> "$GITHUB_OUTPUT"
+          echo "::error::Evaluation execution failed (CLI exit=$CLI_EXIT) — this is an infrastructure/execution failure, not an evaluation verdict. See captured stderr below."
+          cat eval_stderr.txt
+          exit 1
+
+      - name: Write job summary
+        if: ${{ always() && env.GEMINI_API_KEY != '' }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+
+          status = "${{ steps.run_eval.outputs.execution_status }}" or "FAILED"
+          lines = [f"## M10 Evaluation Run — execution status: {status}", ""]
+
+          if status != "SUCCEEDED":
+              lines.append(
+                  "**Execution failed** — the evaluation harness did not "
+                  "complete. This is an infrastructure/execution failure, "
+                  "distinct from any evaluation verdict (Document 52 SS5.1). "
+                  "See the job log for captured stderr."
+              )
+          else:
+              try:
+                  with open("eval_output.json") as f:
+                      outcomes = json.load(f)
+              except Exception as e:
+                  outcomes = []
+                  lines.append(f"(Could not parse eval_output.json: {e})")
+
+              lines.append("| Case | Outcome |")
+              lines.append("|---|---|")
+              for o in outcomes:
+                  if "error" in o:
+                      # Document 52 SS8.2: best-effort text classification
+                      # only — the CLI does not yet propagate the
+                      # AdapterError subclass name (a named, out-of-scope
+                      # gap, Document 52 SS8.2/SS11). "not implemented"
+                      # matches UnsupportedExecutionModeError's own message
+                      # text (evaluation/adapters/research.py) as of this
+                      # writing — fragile, and known to be so.
+                      err = o["error"]
+                      kind = (
+                          "known-unsupported execution mode"
+                          if "not implemented" in err
+                          else "unexpected adapter/execution error"
+                      )
+                      lines.append(f"| -- | ERRORED ({kind}): {err} |")
+                  else:
+                      case = o["case"]
+                      lines.append(
+                          f"| {case['case_id']} ({case['surface']}) | "
+                          f"{o['verdict']} -- {o['verdict_reason']} |"
+                      )
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write("\n".join(lines) + "\n")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && env.GEMINI_API_KEY != '' }}
+        with:
+          name: evaluation-results
+          path: backend/evaluation/results/
+          # Longer than backend-coverage's 14 days: this artifact is the
+          # accumulated baseline history Document 52 SS8 depends on, not a
+          # short-lived debug output. A configuration parameter (Document
+          # 53 SS2), not an architectural one.
+          retention-days: 90
+          if-no-files-found: warn
