@@ -28,6 +28,11 @@ Document 33's Amendment section instead (no frontend consumer exists yet,
 Document 37 §10), and the M9.1 addition, transcribed from Document 43 §5-§13
 instead (no frontend consumer exists yet either — M9.1 is backend-only per its
 own CTO authorization).
+PLUS 1 M12 route (`GET /companies/{ticker}/financials`), the frozen read
+contract in docs/backend_engineering/33_M8_Financials_API_Contract_Review.md
+§1-§10 — CTO-ratified 2026-08-24 (Round 7 / M12 Governance Ratification) —
+with implementation separately CTO-authorized the same day (M12
+Implementation Authorization decision).
 
 This is the automated guard on 06 C-1 ("no approved API contract may change")
 — it is deliberately an exact-set assertion, not a fuzzy/partial one: adding,
@@ -92,6 +97,7 @@ APPROVED_ROUTES = {
     ("GET", "/api/learning/{id}"),            # M2 Phase L — additive
     ("POST", "/api/learning/{id}/cancel"),    # M2 Phase L — additive
     ("POST", "/api/companies/{ticker}/financials/acquire"),  # M8 Step 7 — additive, Document 33 Amendment
+    ("GET", "/api/companies/{ticker}/financials"),  # M12 — additive, Document 33 §1-§10 (CTO-ratified Round 7)
     ("POST", "/api/reports/compare/explain"),              # M9.1 — additive, Document 43 §5
     ("GET", "/api/reports/compare/explain/{id}"),           # M9.1 — additive, Document 43 §5/§8
     ("GET", "/api/reports/compare/explain/{id}/stream"),    # M9.1 — additive, Document 43 §5/§17
@@ -115,8 +121,8 @@ def test_route_count_matches_the_approved_contract():
     # 31 approved (02) - 1 removed (M9.2: POST /reports/rescore) + 2 additive
     # M2 Phase 1 (health/ready, metrics) + 4 additive M2 Phase L (Learning)
     # + 1 additive M8 Step 7 (financials acquire) + 4 additive M9.1
-    # (comparison explanation, Document 43).
-    assert len(APPROVED_ROUTES) == 41
+    # (comparison explanation, Document 43) + 1 additive M12 (financials read).
+    assert len(APPROVED_ROUTES) == 42
 
 
 def test_no_routes_were_added_removed_or_renamed():
@@ -143,4 +149,5 @@ if __name__ == "__main__":
     test_rescore_route_removed()
     print("ok: live route surface matches the 31 approved - 1 removed (M9.2: rescore) "
           "+ 2 additive M2 Phase 1 + 4 additive M2 Phase L (Learning) + 1 additive M8 "
-          "Step 7 (financials acquire) + 4 additive M9.1 (comparison explanation) routes exactly")
+          "Step 7 (financials acquire) + 4 additive M9.1 (comparison explanation) "
+          "+ 1 additive M12 (financials read) routes exactly")

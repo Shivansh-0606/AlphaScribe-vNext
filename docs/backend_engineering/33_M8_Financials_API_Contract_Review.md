@@ -1,9 +1,11 @@
 # M8 Financials API Contract Review
 
-**Status:** 🟡 **API CONTRACT READY — AWAITING FINAL CTO APPROVAL.** This
-remains a documentation-only artifact — no backend, frontend, ADR, or
-schema/migration file was created or modified to produce it. The API
-contract itself is **not yet approved for implementation.**
+**Status:** 🟢 **CTO-RATIFIED (2026-08-24 — M12 Governance Ratification;
+see Round 7 below and Document 55 §10).** This remains a
+documentation-only artifact — no backend, frontend, ADR, or
+schema/migration file was created or modified to produce it. Ratifying
+this contract does not by itself authorize implementation — a separate
+CTO implementation-authorization decision remains required.
 **Date:** 2026-08-10
 **Gate:** the API-contract review Document 32 explicitly carved out as a
 separate, later gate (§9/§18 of ADR-029) — Document 32's approval
@@ -43,7 +45,7 @@ Amendment §18.
 | Document 37 (Financials Acquisition Request Endpoint Proposal) | 🟢 CTO APPROVED |
 | Document 33 narrow reopening | 🟢 COMPLETE |
 | Document 33 `POST .../acquire` API contract | 🟢 CTO APPROVED |
-| Document 33 `GET /financials` API contract | 🟡 unchanged from Round 4 — awaiting final CTO approval, not resolved by this reopening |
+| Document 33 `GET /financials` API contract | 🟢 CTO-RATIFIED (2026-08-24, Round 7 / M12 Governance Ratification) |
 | M8 implementation | 🔴 BLOCKED |
 
 > **Revision, Round 2 — CTO-directed API contract amendment (2026-08-10):**
@@ -111,6 +113,40 @@ Amendment §18.
 > does **not** authorize implementation of either endpoint — the next
 > mandatory gate is a separate API Contract Review of the new endpoint's
 > wire-level schema.
+>
+> **Revision, Round 6 — CTO-directed ordering clarification (2026-08-24):**
+> the CTO resolved a documentation gap identified during Backend & AI
+> Reviewer 3's M12 ordering-contract verification: `GET /financials`'s
+> `periods[]` array had no stated deterministic sort order anywhere in
+> this document. This revision adds exactly one clarification —
+> `periods[]` is ordered by `period_end` in descending chronological
+> order, most recent period first, identically for `annual` and
+> `quarterly` responses (§6.2) — and updates the Proposed Frozen Contract
+> summary to match. No other provision of this document is reopened,
+> reworded, or reinterpreted; endpoint semantics, request parameters,
+> response fields, acquisition-state semantics, error semantics, and
+> authentication semantics are all unchanged. This clarification does not
+> itself ratify the `GET` contract or authorize implementation — the
+> contract's status remains exactly as Round 4 left it: 🟡 awaiting final
+> CTO approval.
+>
+> **Revision, Round 7 — CTO M12 Governance Ratification (2026-08-24):**
+> the CTO ratified `GET /companies/{ticker}/financials`'s existing
+> contract (§1-§10, including Round 6's `periods[]` ordering
+> clarification) as part of the M12 Financial Research Data Completion
+> ratification decision, which ratified this document together with
+> Document 55. Ratified with: annual/quarterly separation preserved;
+> `acquisition_state` authoritative; `periods[]` ordered by `period_end`
+> descending, most recent period first; existing response/error
+> semantics preserved — no term changes beyond that status. **This
+> ratification approves the contract only — it does not authorize
+> implementation.** A separate, subsequent CTO implementation-
+> authorization decision remains required before Backend Engineering
+> begins. Full M12 scope boundary and explicit exclusions (Redis, new
+> financial-data infrastructure, provider redesign, acquisition rewrite,
+> citation-architecture changes, G8 remediation, H-1 work, generalized
+> financial analytics, unrelated roadmap work) are recorded in Document
+> 55 §10, not duplicated here.
 
 ---
 
@@ -478,6 +514,15 @@ justifies pagination today. If a future scale requirement changes this,
 that is a **separately reviewed contract evolution**, not something to
 pre-build speculatively here.
 
+**Ordering (finalized, Round 6):** within each `statement_type`,
+`periods[]` is ordered by `period_end` in descending chronological
+order, with the most recent period first. This ordering applies
+identically to `annual` and `quarterly` responses — neither period type
+receives different sort behavior, and no other field determines order.
+This is a response-array ordering requirement only; it does not change
+which periods are returned (the retention rule above), any field, or any
+other contract term.
+
 ### 6.3 Freshness
 
 Covered by §4 — the endpoint serves persisted data and reports
@@ -581,6 +626,9 @@ ACQUISITION:         read-oriented endpoint
 STATEMENT TYPES:     income | balance_sheet | cash_flow
 HISTORICAL PERIODS:  all persisted periods matching the requested
                      ticker/period_type; no pagination, no artificial limit
+ORDERING:            periods[] ordered by period_end descending (most
+                     recent period first), identically for annual and
+                     quarterly (§6.2)
 VALUE:               JSON number
 ACQUISITION STATES:  not_yet_acquired | available | confirmed_unavailable
                      (reported from the canonical acquisition-state
@@ -595,30 +643,30 @@ ERRORS:              existing application/API error behavior;
                      no new error hierarchy; acquisition states are
                      NOT errors (§5)
 VERSIONING:          existing unversioned /api/... convention (§9)
-STATUS:              ready for final CTO review
+STATUS:              CTO-RATIFIED (2026-08-24, Round 7 / M12 Governance
+                     Ratification) — implementation not authorized
 ```
 
 ---
 
 ## Final Recommendation
 
-## 🟡 API CONTRACT READY — AWAITING FINAL CTO APPROVAL
+## 🟢 CTO-RATIFIED (2026-08-24, M12 Governance Ratification — Round 7)
 
-This document is not itself an approval. Every gap Round 1 identified,
-and both points Round 2 left open, have been resolved using only
-already-decided architecture (Document 32) and existing codebase
-precedent (`GET /filings`, `domain/errors.py`, FastAPI/Pydantic's
-existing validation behavior) — with the internal-vs-external error
-distinction and acquisition-state sourcing corrected per the CTO's Round
-3 direction. No unresolved contract decision remains. The API contract
-itself is complete and ready for final CTO approval; the canonical
-acquisition-state provider is a separate architectural dependency
-("Contract Dependency — Acquisition-State Provider" above) that must be
-approved — via already-approved architecture or a separate architecture
-decision — before endpoint implementation begins. This is a governance
-dependency on implementation, not a new unresolved API-contract
-decision. The CTO's final review determines whether this contract is
-approved for implementation.
+Every gap Round 1 identified, and both points Round 2 left open, were
+resolved using only already-decided architecture (Document 32) and
+existing codebase precedent (`GET /filings`, `domain/errors.py`,
+FastAPI/Pydantic's existing validation behavior) — with the
+internal-vs-external error distinction and acquisition-state sourcing
+corrected per the CTO's Round 3 direction, and the `periods[]` ordering
+gap closed per Round 6. No unresolved contract decision remained at the
+time of ratification. The canonical acquisition-state provider — the one
+dependency this contract's completeness relied on ("Contract Dependency
+— Acquisition-State Provider" above) — is itself ratified (Document 35/
+38). **The CTO has ratified this contract (Round 7).** Ratification is a
+governance sign-off on the contract's design, not implementation
+authorization: implementation remains gated on a separate, subsequent
+CTO implementation-authorization decision (Document 55 §7.1/§10).
 
 ---
 

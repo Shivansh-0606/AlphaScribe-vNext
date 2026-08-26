@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from application.financials import AcquireFinancialsUseCase
 from application.financials_orchestration import FinancialsAcquisitionOrchestrator
 from application.jobs import JobLifecycle
-from application.ports import AcquisitionStateRepository, EventBus, JobStore, RateLimiter
+from application.ports import AcquisitionStateRepository, EventBus, FinancialStatementRepository, JobStore, RateLimiter
 from app.settings import Settings
 from infrastructure.mongo.acquisition_state import MongoAcquisitionStateRepository
 from infrastructure.mongo.client import create_mongo_client
@@ -51,6 +51,10 @@ class Container:
     # repository port Step 5 uses, without reaching into the use case's
     # internals or duplicating its business logic.
     acquisition_states: AcquisitionStateRepository
+    # M12 — exposed the same way, so GET /financials can read persisted
+    # statements through the same repository port the acquisition use case
+    # uses, without constructing a second adapter instance.
+    financial_statements: FinancialStatementRepository
     job_backend: str = "memory"
     # M6 A2 — exposed only under JOB_BACKEND=redis, so /health/ready can
     # verify the configured execution backend (26 A2) without the
@@ -84,9 +88,8 @@ def build_container(settings: Settings) -> Container:
     # extending the existing composition-root pattern (not a new one).
     db = mongo_client[settings.db_name]
     acquisition_states = MongoAcquisitionStateRepository(db)
-    acquire_financials = AcquireFinancialsUseCase(
-        MongoFinancialStatementRepository(db), acquisition_states
-    )
+    financial_statements = MongoFinancialStatementRepository(db)
+    acquire_financials = AcquireFinancialsUseCase(financial_statements, acquisition_states)
     financials_orchestrator = FinancialsAcquisitionOrchestrator(acquire_financials)
 
     return Container(
@@ -98,6 +101,7 @@ def build_container(settings: Settings) -> Container:
         job_lifecycle=job_lifecycle,
         financials_orchestrator=financials_orchestrator,
         acquisition_states=acquisition_states,
+        financial_statements=financial_statements,
         job_backend=backend,
         redis_client=redis_client,
     )

@@ -8,18 +8,21 @@ import { Card, CardContent } from "@/components/foundation/Card";
 import { Loader } from "@/components/foundation/Loader";
 import { Text } from "@/components/foundation/Text";
 import { MetricStat } from "@/components/research/MetricStat";
+import { StatementTable } from "@/components/research/StatementTable";
 import { useFinancialsAcquisition } from "../application/useFinancialsAcquisition";
+import { useFinancialStatements } from "../application/useFinancialStatements";
 import { useReport } from "../application/useReport";
-import type { ExtractedFinancials } from "../integration/schemas";
+import type { ExtractedFinancials, FinancialStatementGroup } from "../integration/schemas";
 
 /**
- * SCR-06 Financials. Progressive enhancement per CTO decision (Phase 4B):
- * the frozen `StatementTable` (multi-period Income/Balance/Cash Flow) has no
- * backend data source at all — only a single-period 7-field LLM snapshot
- * (`extracted_data` on a report) exists. This renders every field that
- * genuinely has a value as a `MetricStat`, and reserves the Statements
- * section with an honest placeholder rather than fabricating or omitting it.
- * No backend scope was added for this phase.
+ * SCR-06 Financials. The "Financial Metrics" card renders the single-period
+ * 7-field LLM snapshot (`extracted_data` on a report) as `MetricStat`s — every
+ * field that genuinely has a value, nothing fabricated. The "Financial
+ * Statements" card (below) is the M12 addition: multi-period Income/Balance/
+ * Cash Flow data from `GET /companies/{ticker}/financials` (Document 33
+ * §1-§10, CTO-ratified), rendered per statement type via `StatementTable`
+ * once `acquisition_state` is `available` (Document 55 §3.2's acceptance
+ * matrix) — independent of the report/job above.
  */
 const METRIC_FIELDS: { key: keyof ExtractedFinancials; label: string }[] = [
   { key: "revenue", label: "Revenue" },
@@ -37,45 +40,121 @@ function directionFromValue(value: string): "up" | "down" | undefined {
   return undefined;
 }
 
-/**
- * Terminal outcomes that render with no action button at all — the ones
- * where the acquisition control (idle button or "Check status") unmounts,
- * which would otherwise drop keyboard focus to `<body>` with no indication
- * of what happened. `requested` keeps its "Check status" button in place
- * (same control, just relabeled), so focus is never lost there.
- */
-const TERMINAL_OUTCOMES_WITHOUT_ACTION = new Set(["available", "confirmed_unavailable", "mixed"]);
+const STATEMENT_TITLES = {
+  income: "Income Statement",
+  balance_sheet: "Balance Sheet",
+  cash_flow: "Cash Flow Statement",
+} as const;
 
 /**
- * The Statements card's acquisition-status banner. `GET /companies/{ticker}/
- * financials` doesn't exist yet (out of scope for this integration), so a
- * successful acquisition still can't be rendered here — this only reports
- * what the backend now knows, never fabricates the statements themselves.
+ * Document 55 §3.2's acceptance matrix, as a pure function: `AVAILABLE` with
+ * empty `periods[]` is treated the same as `NOT_YET_ACQUIRED` (that
+ * combination shouldn't occur via the normal acquisition path but isn't
+ * claimed impossible). Shared by the render branch below and the focus-
+ * management effect, so "does this block still show the trigger button" is
+ * decided in exactly one place.
  */
-function StatementsBanner({
+function statementDisplayState(
+  group: FinancialStatementGroup,
+): "table" | "unavailable" | "pending" {
+  if (group.acquisition_state === "available" && group.periods.length > 0) return "table";
+  if (group.acquisition_state === "confirmed_unavailable") return "unavailable";
+  return "pending";
+}
+
+/** One statement type's card: table, "unavailable" banner, or "not yet" banner + trigger. */
+function StatementBlock({
+  title,
+  group,
   ticker,
-  acquisition,
+  triggerAction,
 }: {
+  title: string;
+  group: FinancialStatementGroup;
   ticker: string;
-  acquisition: ReturnType<typeof useFinancialsAcquisition>;
+  triggerAction: React.ReactElement;
 }) {
-  // Focus target for the terminal-without-action outcomes below. `tabIndex={-1}`
-  // keeps it out of the normal Tab order — it's only ever reached
-  // programmatically, right after the control it replaces disappears.
+  const state = statementDisplayState(group);
+  let body: React.ReactNode;
+  if (state === "table") {
+    body = <StatementTable periods={group.periods} />;
+  } else if (state === "unavailable") {
+    body = (
+      <Banner tone="info">
+        The data provider has no {title.toLowerCase()} for {ticker}.
+      </Banner>
+    );
+  } else {
+    body = (
+      <Banner tone="info" action={triggerAction}>
+        {title} isn&apos;t available yet.
+      </Banner>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <Text variant="label">{title}</Text>
+      {body}
+    </div>
+  );
+}
+
+/**
+ * The Statements card body: `GET /companies/{ticker}/financials` (Document
+ * 33, CTO-ratified) drives each statement type's own state independently —
+ * one card can show a real table while another still shows an idle banner.
+ * The acquisition trigger (`POST .../acquire`) is shared across all three,
+ * matching the backend's own per-(ticker, period_type) — not per-statement-
+ * type — request shape (Document 33 Amendment §4).
+ */
+function FinancialStatements({ ticker }: { ticker: string }) {
+  const financials = useFinancialStatements(ticker, "annual");
+  const acquisition = useFinancialsAcquisition(ticker);
+  // Focus target for when every statement type turns terminal and the
+  // trigger button this card previously had focus on unmounts — `tabIndex=
+  // -1` keeps it out of the normal Tab order, reached only programmatically.
   const focusRef = useRef<HTMLDivElement>(null);
-  const outcome = acquisition.isSuccess ? acquisition.data.outcome : undefined;
+  const justMutatedRef = useRef(false);
 
   useEffect(() => {
-    // Keyed on `acquisition.data`'s identity (a fresh object per resolved
-    // mutation) so this fires exactly once per new terminal result — never
-    // on an unrelated re-render, which would yank focus from whatever the
-    // user is doing next.
-    if (outcome && TERMINAL_OUTCOMES_WITHOUT_ACTION.has(outcome)) {
+    if (acquisition.isSuccess) {
+      justMutatedRef.current = true;
+      financials.refetch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [acquisition.data]);
+
+  useEffect(() => {
+    if (!justMutatedRef.current || !financials.data) return;
+    justMutatedRef.current = false;
+    const stillPending = Object.values(financials.data.statements).some(
+      (g) => statementDisplayState(g) === "pending",
+    );
+    if (!stillPending) {
       focusRef.current?.focus();
     }
-  }, [outcome, acquisition.data]);
+  }, [financials.data]);
 
-  const checkAction = (
+  if (financials.isPending) {
+    return <Loader label="Loading financial statements…" />;
+  }
+
+  if (financials.isError) {
+    return (
+      <Banner
+        tone="error"
+        action={
+          <Button variant="secondary" size="sm" onClick={() => financials.refetch()}>
+            Retry
+          </Button>
+        }
+      >
+        Couldn&apos;t load financial statements.
+      </Banner>
+    );
+  }
+
+  const triggerAction = (
     <Button
       variant="secondary"
       size="sm"
@@ -86,50 +165,20 @@ function StatementsBanner({
     </Button>
   );
 
-  let content;
-  if (acquisition.isError) {
-    content = (
-      <Banner tone="error" action={checkAction}>
-        {acquisition.error.message}
-      </Banner>
-    );
-  } else if (outcome === "requested") {
-    content = (
-      <Banner tone="info" action={checkAction}>
-        Fetching financial statements for {ticker} in the background — check back shortly.
-      </Banner>
-    );
-  } else if (outcome === "available") {
-    content = (
-      <Banner tone="success">
-        Financial statements for {ticker} are now available on the backend. Display in this screen
-        isn&apos;t built yet.
-      </Banner>
-    );
-  } else if (outcome === "confirmed_unavailable") {
-    content = (
-      <Banner tone="info">The data provider has no financial statements for {ticker}.</Banner>
-    );
-  } else if (outcome === "mixed") {
-    content = (
-      <Banner tone="info">
-        Some financial statements for {ticker} are available, others aren&apos;t — the provider
-        couldn&apos;t supply all of them.
-      </Banner>
-    );
-  } else {
-    content = (
-      <Banner tone="info" action={checkAction}>
-        Multi-period Income Statement / Balance Sheet / Cash Flow Statement data isn&apos;t
-        available yet — this section will show them once structured statement data is added to the
-        backend.
-      </Banner>
-    );
-  }
+  const { statements } = financials.data;
 
   return (
-    <div ref={focusRef} tabIndex={-1}>
-      {content}
+    <div ref={focusRef} tabIndex={-1} className="flex flex-col gap-4">
+      {acquisition.isError && <Banner tone="error">{acquisition.error.message}</Banner>}
+      {(Object.keys(STATEMENT_TITLES) as (keyof typeof STATEMENT_TITLES)[]).map((key) => (
+        <StatementBlock
+          key={key}
+          title={STATEMENT_TITLES[key]}
+          group={statements[key]}
+          ticker={ticker}
+          triggerAction={triggerAction}
+        />
+      ))}
     </div>
   );
 }
@@ -137,7 +186,6 @@ function StatementsBanner({
 export function FinancialsSection({ ticker }: { ticker: string }) {
   const jobId = useSearchParams().get("job");
   const report = useReport(jobId);
-  const acquisition = useFinancialsAcquisition(ticker);
 
   if (!jobId) {
     return (
@@ -211,7 +259,7 @@ export function FinancialsSection({ ticker }: { ticker: string }) {
       <Card>
         <CardContent className="flex flex-col gap-3">
           <Text variant="body-strong">Financial Statements</Text>
-          <StatementsBanner ticker={ticker} acquisition={acquisition} />
+          <FinancialStatements ticker={ticker} />
         </CardContent>
       </Card>
     </div>

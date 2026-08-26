@@ -5,6 +5,7 @@ import {
   cancelReportResponseSchema,
   filingsResponseSchema,
   financialsAcquireResponseSchema,
+  financialsResponseSchema,
   generateReportRequestSchema,
   generateReportResponseSchema,
   ingestEdgarRequestSchema,
@@ -67,6 +68,15 @@ export function acquireFinancials(ticker: string, periodType: "annual" | "quarte
     `/api/companies/${encodeURIComponent(ticker)}/financials/acquire?${params.toString()}`,
     financialsAcquireResponseSchema,
     { method: "POST" },
+  );
+}
+
+/** `period_type` is a required query param on this route too (Document 33 §6.1, frozen). */
+export function fetchFinancialStatements(ticker: string, periodType: "annual" | "quarterly") {
+  const params = new URLSearchParams({ period_type: periodType });
+  return apiFetch(
+    `/api/companies/${encodeURIComponent(ticker)}/financials?${params.toString()}`,
+    financialsResponseSchema,
   );
 }
 

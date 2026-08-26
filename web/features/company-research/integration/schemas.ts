@@ -180,6 +180,47 @@ export const financialsAcquireResponseSchema = z.object({
 });
 export type FinancialsAcquireResponse = z.infer<typeof financialsAcquireResponseSchema>;
 
+// ---- Financials read (backend/server.py GET /companies/{ticker}/financials
+// — Document 33 §1-§10, CTO-ratified Round 7; backend/domain/financials.py
+// FinancialStatement/Metric/AcquisitionOutcome) -----------------------------
+
+export const financialMetricSchema = z.object({
+  canonical_metric: z.string().nullable(),
+  provider_label: z.string(),
+  value: z.number(),
+  unit: z.enum(["currency", "currency_per_share", "shares", "ratio", "percentage", "count"]),
+});
+export type FinancialMetric = z.infer<typeof financialMetricSchema>;
+
+// periods[] arrives period_end descending (most recent first) — Document 33
+// §6.2, a backend contract guarantee, not re-sorted client-side.
+export const financialPeriodSchema = z.object({
+  period_end: z.string(),
+  fiscal_year: z.string(),
+  currency: z.string(),
+  source: z.string(),
+  fetched_at: z.string(),
+  metrics: z.array(financialMetricSchema),
+});
+export type FinancialPeriod = z.infer<typeof financialPeriodSchema>;
+
+export const financialStatementGroupSchema = z.object({
+  acquisition_state: z.enum(["not_yet_acquired", "available", "confirmed_unavailable"]),
+  periods: z.array(financialPeriodSchema),
+});
+export type FinancialStatementGroup = z.infer<typeof financialStatementGroupSchema>;
+
+export const financialsResponseSchema = z.object({
+  ticker: z.string(),
+  period_type: z.enum(["annual", "quarterly"]),
+  statements: z.object({
+    income: financialStatementGroupSchema,
+    balance_sheet: financialStatementGroupSchema,
+    cash_flow: financialStatementGroupSchema,
+  }),
+});
+export type FinancialsResponse = z.infer<typeof financialsResponseSchema>;
+
 // ---- SSE stream events -----------------------------------------------------
 
 /**

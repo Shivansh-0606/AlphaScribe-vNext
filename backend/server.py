@@ -867,6 +867,65 @@ async def acquire_financials(
         return {"ticker": ticker, "period_type": period_type.value, "outcome": outcome}
 
 
+@api.get("/companies/{ticker}/financials")
+async def get_financials(
+    ticker: str, period_type: PeriodType, user: dict = Depends(current_user)
+) -> dict:
+    """M12 — Document 33 §1-§10 (CTO-ratified, Round 7). A thin, read-only
+    HTTP adapter: reads persisted FinancialStatement rows through the same
+    repository port the acquisition use case uses, reads each
+    StatementType's AcquisitionState through the same port
+    acquire_financials uses, groups statements by statement_type, and
+    assembles the frozen response envelope (Document 33 §3.2). Never calls
+    a provider synchronously and never schedules acquisition (Document 33
+    §4) — that is exclusively POST .../acquire's job.
+    """
+    ticker = ticker.strip().upper()
+    if not ticker:
+        raise ValidationError("ticker required", code="validation_error")
+
+    with get_tracer().start_as_current_span("financials.get_endpoint") as span:
+        span.set_attribute("ticker", ticker)
+        span.set_attribute("period_type", period_type.value)
+        try:
+            fetched = await container.financial_statements.get(ticker, period_type)
+            state_results = await asyncio.gather(
+                *(container.acquisition_states.get(ticker, period_type, st) for st in StatementType)
+            )
+        except Exception as e:  # noqa: BLE001 — synchronous infra failure, Document 33 §5 row 4's 502 case
+            logger.exception(
+                "financials read failed ticker=%s period_type=%s", ticker, period_type.value
+            )
+            raise InfrastructureError("Failed to read financial statements. See server logs for details.") from e
+
+        states = dict(zip(StatementType, state_results))
+        by_type: dict[StatementType, list] = {st: [] for st in StatementType}
+        for statement in fetched:
+            by_type[statement.statement_type].append(statement)
+
+        statements = {}
+        for st in StatementType:
+            # Document 33 §6.2 (Round 6/7, CTO-ratified) — period_end descending,
+            # most recent period first, identically for annual and quarterly.
+            periods = sorted(by_type[st], key=lambda s: s.period_end, reverse=True)
+            statements[st.value] = {
+                "acquisition_state": states[st].value,
+                "periods": [
+                    {
+                        "period_end": p.period_end,
+                        "fiscal_year": p.fiscal_year,
+                        "currency": p.currency,
+                        "source": p.source,
+                        "fetched_at": p.fetched_at,
+                        "metrics": [m.model_dump(mode="json") for m in p.metrics],
+                    }
+                    for p in periods
+                ],
+            }
+
+        return {"ticker": ticker, "period_type": period_type.value, "statements": statements}
+
+
 @api.get("/filings")
 async def list_filings(ticker: Optional[str] = None, user: dict = Depends(current_user)):
     q: dict = {}
