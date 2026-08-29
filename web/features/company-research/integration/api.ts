@@ -3,6 +3,7 @@ import { openEventStream } from "@/lib/api/sse-client";
 import { AppError } from "@/lib/errors/app-error";
 import {
   cancelReportResponseSchema,
+  filingContentResponseSchema,
   filingsResponseSchema,
   financialsAcquireResponseSchema,
   financialsResponseSchema,
@@ -59,6 +60,19 @@ export function cancelReport(jobId: string) {
 export function fetchFilings(ticker: string) {
   const params = new URLSearchParams({ ticker });
   return apiFetch(`/api/filings?${params.toString()}`, filingsResponseSchema);
+}
+
+/**
+ * M13 — GET /companies/{ticker}/filings/{doc_id}/content (Document 59,
+ * CTO-ratified 2026-08-27). Company-namespaced read of an already-ingested
+ * filing's persisted text chunks. An unknown `(ticker, doc_id)` returns 404,
+ * normalised to an `AppError` here like any other request.
+ */
+export function fetchFilingContent(ticker: string, docId: string) {
+  return apiFetch(
+    `/api/companies/${encodeURIComponent(ticker)}/filings/${encodeURIComponent(docId)}/content`,
+    filingContentResponseSchema,
+  );
 }
 
 /** `period_type` is a required query param on this route, not a body field (Document 33 Amendment, frozen). */

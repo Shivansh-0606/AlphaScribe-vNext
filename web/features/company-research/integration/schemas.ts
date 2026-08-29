@@ -169,6 +169,34 @@ export const filingsResponseSchema = z.object({
   filings: z.array(filingSchema),
 });
 
+// ---- Filing content read (backend/server.py GET
+// /companies/{ticker}/filings/{doc_id}/content — M13, Document 59 §5.1
+// CTO-ratified 2026-08-27). Persisted chunks returned verbatim in their
+// existing representation (chunk_idx + text), ordered chunk_idx ascending;
+// embeddings are never included (Document 59 §5.2). `content.chunks` is `[]`
+// for a known filing with no persisted chunks (200, not 404 — Document 59
+// §8 / OD-7); an unknown (ticker, doc_id) is a 404 (OD-6), surfaced as an
+// AppError by `apiFetch` like any other feature request.
+export const filingContentChunkSchema = z.object({
+  chunk_idx: z.number(),
+  text: z.string(),
+});
+export type FilingContentChunk = z.infer<typeof filingContentChunkSchema>;
+
+export const filingContentResponseSchema = z.object({
+  doc_id: z.string(),
+  ticker: z.string(),
+  company_name: z.string().nullable(),
+  source: z.string(),
+  created_at: z.string(),
+  num_chunks: z.number(),
+  char_count: z.number(),
+  content: z.object({
+    chunks: z.array(filingContentChunkSchema),
+  }),
+});
+export type FilingContentResponse = z.infer<typeof filingContentResponseSchema>;
+
 // ---- Financials acquisition (backend/server.py POST
 // /companies/{ticker}/financials/acquire — Document 33 Amendment, frozen
 // wire contract; backend/domain/financials.py AcquisitionOutcome) ----------

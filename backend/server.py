@@ -926,6 +926,85 @@ async def get_financials(
         return {"ticker": ticker, "period_type": period_type.value, "statements": statements}
 
 
+@api.get("/companies/{ticker}/filings/{doc_id}/content")
+async def get_filing_content(
+    ticker: str, doc_id: str, user: dict = Depends(current_user)
+) -> dict:
+    """M13 — Filing Content Reading (Document 59 CTO-RATIFIED / FROZEN,
+    Document 60 CTO-RATIFIED / FROZEN, 2026-08-27; M13 Implementation
+    Authorization, 2026-08-27). A thin, read-only HTTP adapter over the
+    filing text already persisted at ingest: reads the `filings` metadata
+    row and its ordered `filing_chunks` directly through `db` (Document 60
+    §3.1 / OD-A — no new repository/port/service), strips embeddings, and
+    returns the frozen envelope (Document 59 §5.1). Never calls a provider,
+    never triggers acquisition, never writes.
+
+    - `(ticker, doc_id)` identity — the `filings` row must match both, or
+      404 (Document 59 §8 / OD-6). A `doc_id` under a different ticker
+      "does not exist for the requested company".
+    - Zero chunks for a real filing → 200 with `content.chunks: []`
+      (Document 59 §8 / OD-7), never a fabricated body.
+    - `chunk_idx` ascending is authoritative (Document 59 §6): the query
+      carries an explicit `.sort("chunk_idx", 1)` and the result is
+      re-ordered in Python so incidental Mongo order is never trusted.
+    - OD-8 (delegated to this phase): a chunk missing an integer
+      `chunk_idx` or a string `text` is omitted and logged, rather than
+      500-ing the whole read or fabricating content — the smallest
+      deterministic behaviour consistent with Document 59 §8's non-binding
+      candidate; no `partial` flag is added (the UI does not need one).
+    """
+    ticker = ticker.strip().upper()
+    if not ticker:
+        raise ValidationError("ticker required", code="validation_error")
+
+    with get_tracer().start_as_current_span("filings.get_content_endpoint") as span:
+        span.set_attribute("ticker", ticker)
+        span.set_attribute("doc_id", doc_id)
+        try:
+            filing = await db.filings.find_one({"ticker": ticker, "doc_id": doc_id}, {"_id": 0})
+            if filing is None:
+                raise NotFoundError("filing not found")  # Document 59 §8 / OD-6 — 404
+
+            raw_chunks = await (
+                db.filing_chunks.find({"doc_id": doc_id}, {"_id": 0, "embedding": 0})
+                .sort("chunk_idx", 1)
+                .to_list(length=None)
+            )
+            chunks = sorted(
+                (
+                    {"chunk_idx": c["chunk_idx"], "text": c["text"]}
+                    for c in raw_chunks
+                    if isinstance(c.get("chunk_idx"), int) and isinstance(c.get("text"), str)
+                ),
+                key=lambda c: c["chunk_idx"],
+            )
+            if len(chunks) != len(raw_chunks):
+                logger.warning(
+                    "filing content: %d malformed chunk(s) omitted for doc_id=%s ticker=%s",
+                    len(raw_chunks) - len(chunks), doc_id, ticker,
+                )
+
+            return {
+                "doc_id": filing["doc_id"],
+                "ticker": filing["ticker"],
+                "company_name": filing.get("company_name"),
+                "source": filing["source"],
+                "created_at": filing["created_at"],
+                "num_chunks": filing["num_chunks"],
+                "char_count": filing["char_count"],
+                "content": {"chunks": chunks},
+            }
+        except DomainError:
+            raise  # NotFoundError / ValidationError pass through unchanged (Document 59 §9)
+        except Exception as e:  # noqa: BLE001 — synchronous infra failure or an unassemblable row, Document 59 §8/§9's 502 case
+            logger.exception(
+                "filing content read failed ticker=%s doc_id=%s", ticker, doc_id
+            )
+            raise InfrastructureError(
+                "Failed to read filing content. See server logs for details."
+            ) from e
+
+
 @api.get("/filings")
 async def list_filings(ticker: Optional[str] = None, user: dict = Depends(current_user)):
     q: dict = {}
