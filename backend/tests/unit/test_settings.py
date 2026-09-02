@@ -70,7 +70,10 @@ def test_defaults_apply_when_optional_fields_are_unset():
 def test_job_deadline_dict_matches_07_5_4():
     with _clean_env(MONGO_URL="mongodb://x", DB_NAME="x"):
         s = load_settings()
-        assert s.job_deadline_s == {"research": 300.0, "learning": 120.0, "comparison_explanation": 60.0}
+        assert s.job_deadline_s == {
+            "research": 300.0, "learning": 120.0, "comparison_explanation": 60.0,
+            "filing_analysis": 180.0,  # M14 — additive (Document 65 §11/§19; operational, retunable)
+        }
         # 09 §6.2 / 07 LR-9's binding invariant: the reaper window must
         # exceed the longest job deadline plus grace, or the reaper could
         # free the slot of a still-running job.

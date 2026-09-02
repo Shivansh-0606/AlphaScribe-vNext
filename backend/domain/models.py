@@ -21,6 +21,7 @@ class JobKind(str, Enum):
     RESEARCH = "research"
     LEARNING = "learning"
     COMPARISON_EXPLANATION = "comparison_explanation"
+    FILING_ANALYSIS = "filing_analysis"  # M14 — additive (Document 65 OAQ-4 / §11; Document 66 §5 C-c)
 
 
 class JobStatus(str, Enum):

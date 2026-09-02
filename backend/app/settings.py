@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     # M9.1 — a single chat_json call, not a multi-node graph (Document 41 §5/§13.1),
     # so a much shorter budget than research/learning is appropriate.
     job_deadline_comparison_explanation_s: float = Field(default=60.0, validation_alias="JOB_DEADLINE_COMPARISON_EXPLANATION_S")
+    # M14 — one wall-clock deadline for the out-of-graph filing-analysis job
+    # (Document 65 §11 / §19 — operational config, recommend 180; retunable
+    # without a Document 64 contract change).
+    job_deadline_filing_analysis_s: float = Field(default=180.0, validation_alias="JOB_DEADLINE_FILING_ANALYSIS_S")
     job_deadline_grace_s: float = Field(default=30.0, validation_alias="JOB_DEADLINE_GRACE_S")
     max_job_lifetime_s: float = Field(default=600.0, validation_alias="MAX_JOB_LIFETIME_S")
 
@@ -121,6 +125,7 @@ class Settings(BaseSettings):
             "research": self.job_deadline_research_s,
             "learning": self.job_deadline_learning_s,
             "comparison_explanation": self.job_deadline_comparison_explanation_s,
+            "filing_analysis": self.job_deadline_filing_analysis_s,
         }
 
 

@@ -1,0 +1,698 @@
+{
+  "experiment": "M14 Document 65 section 20.1 section-location validation spike",
+  "generated_at_utc": "2026-08-31T18:11:41.390003+00:00",
+  "governance": {
+    "authority": "Document 66 section 5 C-a (spike first) / section 8; Document 65 section 20 / section 20.1",
+    "isolation": "diagnostic only; no production module/route/node; no MongoDB collection/index/migration/schema; no ratified-doc edit; no C-2; full four-output flow NOT wired"
+  },
+  "llm_config": {
+    "provider": "openai",
+    "light_model": "nvidia/nemotron-3-super-120b-a12b",
+    "base_url": "https://integrate.api.nvidia.com/v1",
+    "max_output_tokens": "3072"
+  },
+  "corpus": [
+    {
+      "key": "EDGAR_10Q",
+      "kind": "EDGAR 10-Q",
+      "is_edgar": true,
+      "available": true,
+      "note": "reused existing ingested real filing"
+    },
+    {
+      "key": "EDGAR_10K",
+      "kind": "EDGAR 10-K",
+      "is_edgar": true,
+      "available": true,
+      "note": "ingested live from EDGAR (MSFT)"
+    },
+    {
+      "key": "BSE_ANNUAL",
+      "kind": "BSE annual report",
+      "is_edgar": false,
+      "available": true,
+      "note": "reused existing ingested real filing"
+    },
+    {
+      "key": "PLAINTEXT",
+      "kind": "plain-text POST /ingest/text",
+      "is_edgar": false,
+      "available": true,
+      "note": "unstructured narrative memo, no Item structure by construction"
+    }
+  ],
+  "per_filing": [
+    {
+      "key": "EDGAR_10Q",
+      "kind": "EDGAR 10-Q",
+      "is_edgar": true,
+      "status": "RUN",
+      "note": "reused existing ingested real filing",
+      "ticker": "TSLA",
+      "doc_id": "1bcb03b5-dbbc-470f-8505-396d594f8919",
+      "source": "10-Q 0001628280-26-026673 filed 2026-04-23",
+      "num_chunks": 166,
+      "char_count": 154897,
+      "risk_factors": {
+        "located_range": null,
+        "llm_only": false,
+        "heuristic_heading_chunk": null,
+        "heuristic_heading_snippet": "",
+        "range_text": {
+          "head": "",
+          "tail": ""
+        },
+        "reviewer_verdict": "<PENDING HUMAN REVIEW: does this range cover the filing's real Risk Factors?>"
+      },
+      "mda": {
+        "located_range": [
+          24,
+          124
+        ],
+        "llm_only": true,
+        "heuristic_heading_chunk": null,
+        "heuristic_heading_snippet": "",
+        "range_text": {
+          "head": "e resale values of our vehicles or as market conditions change, there may be material changes to their estimated values. The total recorded guarantee liabilities on vehicles sold under these programs were immaterial as of March&#160;31, 2026 and December&#160;31, 2025. Our maximum exposure on the guarantees we provide if they are unable to sell the vehicle at or above the vehicle&#8217;s contractu",
+          "tail": "es in global trade conditions and labor availability, will necessitate additional funding beyond our operating cash flow. 30 Table of Contents Critical Accounting Policies and Estimates For a description of our critical accounting policies and estimates, refer to Part II, Item 7, Critical Accounting Policies and Estimates in our Annual Report on Form 10-K for the year ended December&#160;31, 2025."
+        },
+        "reviewer_verdict": "<PENDING HUMAN REVIEW: does this range cover the filing's real MD&A?>"
+      },
+      "filing_summary_control": {
+        "state": "complete",
+        "note": "whole-filing pass; filing-local by construction (single doc_id input)"
+      },
+      "important_changes_control": {
+        "state": "complete",
+        "cue_hits": [
+          {
+            "chunk_idx": 19,
+            "cue": "reclassified",
+            "snippet": ". Reclassifications Certain prior period balances have been reclassified to conform to the current period presentation in the consolidated financial statements and the accompanying"
+          },
+          {
+            "chunk_idx": 42,
+            "cue": "recently adopted",
+            "snippet": "a material impact on our consolidated financial statements. Recently adopted accounting pronouncements ASU 2025-05 In July 2025, the FASB issued ASU No."
+          },
+          {
+            "chunk_idx": 43,
+            "cue": "we adopted",
+            "snippet": "current classified accounts receivable and contract assets. We adopted this ASU on a prospective basis effective January 1, 2026. While this ASU was adopted, we did not elect pract"
+          },
+          {
+            "chunk_idx": 110,
+            "cue": "we began",
+            "snippet": "6, we made significant progress towards these objectives as we began pilot production of Cybercab, as well as ramps across our new battery and material factories, including cathode"
+          }
+        ],
+        "cue_hit_count": 4,
+        "note": "filing-local cue scan only; no other document loaded (INV-IC)"
+      },
+      "output_states": {
+        "Filing Summary": "complete",
+        "Risk Factors Digest": "insufficient_evidence",
+        "MD&A Digest": "partial",
+        "Important Changes": "complete"
+      },
+      "llm_calls": {
+        "run1": [
+          {
+            "chunk_idx": 24,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "mda",
+            "confidence": 0.85,
+            "error": null
+          },
+          {
+            "chunk_idx": 58,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "mda",
+            "confidence": 0.92,
+            "error": null
+          },
+          {
+            "chunk_idx": 91,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "other",
+            "confidence": 0.9,
+            "error": null
+          },
+          {
+            "chunk_idx": 124,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "mda",
+            "confidence": 0.9,
+            "error": null
+          },
+          {
+            "chunk_idx": 24,
+            "why": "no-heuristic-mda-probe",
+            "label": "mda",
+            "confidence": 0.9,
+            "error": null
+          },
+          {
+            "chunk_idx": 58,
+            "why": "no-heuristic-mda-probe",
+            "label": "mda",
+            "confidence": 0.9,
+            "error": null
+          },
+          {
+            "chunk_idx": 91,
+            "why": "no-heuristic-mda-probe",
+            "label": "risk_factors",
+            "confidence": 0.85,
+            "error": null
+          },
+          {
+            "chunk_idx": 124,
+            "why": "no-heuristic-mda-probe",
+            "label": "mda",
+            "confidence": 0.95,
+            "error": null
+          }
+        ],
+        "run2_count": 8
+      },
+      "determinism": {
+        "ranges_identical_run1_vs_run2": false,
+        "states_identical_run1_vs_run2": false,
+        "run1_ranges": {
+          "risk_factors": null,
+          "mda": [
+            24,
+            124
+          ]
+        },
+        "run2_ranges": {
+          "risk_factors": [
+            91,
+            91
+          ],
+          "mda": [
+            24,
+            124
+          ]
+        }
+      }
+    },
+    {
+      "key": "EDGAR_10K",
+      "kind": "EDGAR 10-K",
+      "is_edgar": true,
+      "status": "RUN",
+      "note": "ingested live from EDGAR (MSFT)",
+      "ticker": "MSFT",
+      "doc_id": "168d4f17-7ab2-40fc-be61-fa89df07dfbc",
+      "source": "10-K 0001193125-26-323660 filed 2026-07-29",
+      "num_chunks": 215,
+      "char_count": 200000,
+      "risk_factors": {
+        "located_range": [
+          10,
+          70
+        ],
+        "llm_only": false,
+        "heuristic_heading_chunk": 10,
+        "heuristic_heading_snippet": "Risk Factors   &#160;   14   &#160;  &#160;   &#160;   &#160;  &#160;   &#160;   Item 1B.   &#160;   Unresolved Staff C",
+        "range_text": {
+          "head": "; \n &#160; \n &#160; \n &#160; \n Information about our Executive Officers \n &#160; \n 12 \n &#160;\n\n&#160; \n &#160; \n &#160; &#160; \n &#160; \n Item 1A. \n &#160; \n Risk Factors \n &#160; \n 14 \n &#160;\n\n&#160; \n &#160; \n &#160;\n\n&#160; \n &#160; \n Item 1B. \n &#160; \n Unresolved Staff Comments \n &#160; \n 29 \n &#160;\n\n&#160; \n &#160; \n &#160;\n\n&#160; \n &#160; \n Item 1C. \n &#160; \n Cybersecurity \n &#160; \n 2",
+          "tail": " post on the social media channels listed on our Investor Relations website. 13 \n \n PART I Item 1A &#160; \n ITEM 1A. RIS K FACTORS Our operations and financial results are subject to various risks and uncertainties, including those described below, that could adversely affect our business, operations, financial condition, results of operations, liquidity, and the trading price of our common stock."
+        },
+        "reviewer_verdict": "<PENDING HUMAN REVIEW: does this range cover the filing's real Risk Factors?>"
+      },
+      "mda": {
+        "located_range": [
+          32,
+          32
+        ],
+        "llm_only": true,
+        "heuristic_heading_chunk": null,
+        "heuristic_heading_snippet": "",
+        "range_text": {
+          "head": "m and our ability to continue offering insight and AI-enabled services that provide value for our members and customers. LinkedIn revenue is mainly affected by demand from enterprises and professionals for subscriptions to Talent Solutions, Sales Solutions, and Premium Subscriptions offerings, as well as member engagement and the quality of the sponsored content delivered to those members to drive",
+          "tail": " Services Dynamics provides cloud-based and on-premises business solutions for financial management, enterprise resource planning (&#8220;ERP&#8221;), customer relationship management (&#8220;CRM&#8221;), and supply chain management, as well as agentic AI and other low code application development platforms, for small and medium businesses, large organizations, and divisions of global enterprises."
+        },
+        "reviewer_verdict": "<PENDING HUMAN REVIEW: does this range cover the filing's real MD&A?>"
+      },
+      "filing_summary_control": {
+        "state": "complete",
+        "note": "whole-filing pass; filing-local by construction (single doc_id input)"
+      },
+      "important_changes_control": {
+        "state": "complete",
+        "cue_hits": [
+          {
+            "chunk_idx": 97,
+            "cue": "beginning in",
+            "snippet": "ommission on January 19, 2024 and amended on March 8, 2024, beginning in late November 2023, a nation-state associated threat actor used a password spray attack to compromise a leg"
+          },
+          {
+            "chunk_idx": 107,
+            "cue": "no longer",
+            "snippet": "upport all these systems and products, including those that no longer incorporate the strongest current security advances or standards."
+          },
+          {
+            "chunk_idx": 108,
+            "cue": "no longer",
+            "snippet": "e systems and products, including those that no longer incorporate the strongest current security advances or standards. As a result, we may not be able to discontin"
+          },
+          {
+            "chunk_idx": 113,
+            "cue": "no longer",
+            "snippet": "r systems, continue to run software or operating systems we no longer support, may fail to timely install or enable security patches, or may otherwise fail to adopt adequate securi"
+          }
+        ],
+        "cue_hit_count": 4,
+        "note": "filing-local cue scan only; no other document loaded (INV-IC)"
+      },
+      "output_states": {
+        "Filing Summary": "complete",
+        "Risk Factors Digest": "complete",
+        "MD&A Digest": "partial",
+        "Important Changes": "complete"
+      },
+      "llm_calls": {
+        "run1": [
+          {
+            "chunk_idx": 9,
+            "why": "risk_factors-before-start",
+            "label": "other",
+            "confidence": 0.95,
+            "error": null
+          },
+          {
+            "chunk_idx": 70,
+            "why": "risk_factors-after-end",
+            "label": "risk_factors",
+            "confidence": 0.96,
+            "error": null
+          },
+          {
+            "chunk_idx": 32,
+            "why": "no-heuristic-mda-probe",
+            "label": "mda",
+            "confidence": 0.92,
+            "error": null
+          },
+          {
+            "chunk_idx": 75,
+            "why": "no-heuristic-mda-probe",
+            "label": "risk_factors",
+            "confidence": 0.85,
+            "error": null
+          },
+          {
+            "chunk_idx": 118,
+            "why": "no-heuristic-mda-probe",
+            "label": "risk_factors",
+            "confidence": 0.95,
+            "error": null
+          },
+          {
+            "chunk_idx": 161,
+            "why": "no-heuristic-mda-probe",
+            "label": "risk_factors",
+            "confidence": 0.95,
+            "error": null
+          }
+        ],
+        "run2_count": 6
+      },
+      "determinism": {
+        "ranges_identical_run1_vs_run2": true,
+        "states_identical_run1_vs_run2": true,
+        "run1_ranges": {
+          "risk_factors": [
+            10,
+            70
+          ],
+          "mda": [
+            32,
+            32
+          ]
+        },
+        "run2_ranges": {
+          "risk_factors": [
+            10,
+            70
+          ],
+          "mda": [
+            32,
+            32
+          ]
+        }
+      }
+    },
+    {
+      "key": "BSE_ANNUAL",
+      "kind": "BSE annual report",
+      "is_edgar": false,
+      "status": "RUN",
+      "note": "reused existing ingested real filing",
+      "ticker": "RELIANCE",
+      "doc_id": "ad4151a4-da2f-444c-a62c-d6fb04c9f0c6",
+      "source": "Annual Report",
+      "num_chunks": 1209,
+      "char_count": 984279,
+      "risk_factors": {
+        "located_range": null,
+        "llm_only": false,
+        "heuristic_heading_chunk": null,
+        "heuristic_heading_snippet": "",
+        "range_text": {
+          "head": "",
+          "tail": ""
+        },
+        "reviewer_verdict": "<PENDING HUMAN REVIEW: does this range cover the filing's real Risk Factors?>"
+      },
+      "mda": {
+        "located_range": [
+          181,
+          181
+        ],
+        "llm_only": true,
+        "heuristic_heading_chunk": null,
+        "heuristic_heading_snippet": "",
+        "range_text": {
+          "head": "ivering \nan annual capacity of approximately 0.4 \nMillion Tonnes and a target to expand \nto over 500 CBG plants by 2030. The \nCompany is developing integrated \nenergy hubs on wastelands, combining \nmodular CBG plants, agriphotovoltaics \nand BESS. In line with this, it is \nadvancing integrated CBG hubs in \nthe Southern states and has laid the \nfoundation for its first integrated hub \nin Andhra Prad",
+          "tail": "developing advanced enzymes, \nmicrobial consortia and high-yield \nenergy crops to enhance biogas \nproductivity. The Reliance Jamnagar \nManufacturing Division (JMD) \nsuccessfully commissioned the 1.2 \nGW Central Transmission Utility (CTU) \nfacility, along with a 220kV cable \nnetwork, enabling upto 500 MW power \nimport infrastructure for JMD O2C \nand synchronising the system with the \nnational grid."
+        },
+        "reviewer_verdict": "<PENDING HUMAN REVIEW: does this range cover the filing's real MD&A?>"
+      },
+      "filing_summary_control": {
+        "state": "complete",
+        "note": "whole-filing pass; filing-local by construction (single doc_id input)"
+      },
+      "important_changes_control": {
+        "state": "complete",
+        "cue_hits": [
+          {
+            "chunk_idx": 595,
+            "cue": "reclassified",
+            "snippet": "35,262 Other\tComprehensive\tIncome i. Items that will not be reclassified to Profit or Loss 27.1 (402) 255 ii. Income tax relating to items that will not be reclassified to Profit o"
+          },
+          {
+            "chunk_idx": 705,
+            "cue": "reclassified",
+            "snippet": "27.1\t \tOther\tComprehensive\tIncome\t-\tItems\tthat\twill\tnot\tbe\tReclassified\tto\tProfit\tor\tLoss  Remeasurement loss of Defined Benefit Plan (88) (68)  Tax effect on above 22 17  Equity"
+          },
+          {
+            "chunk_idx": 729,
+            "cue": "changed from",
+            "snippet": "^ Relationships established during the year. & Relationship changed from Joint Venture to Subsidiary. $$  Amalgamated with Jiostar India Private Limited. Sr. No."
+          },
+          {
+            "chunk_idx": 730,
+            "cue": "changed from",
+            "snippet": "ar. & Relationship changed from Joint Venture to Subsidiary. $$  Amalgamated with Jiostar India Private Limited. Sr. No. Name of the Subsid"
+          },
+          {
+            "chunk_idx": 737,
+            "cue": "changed from",
+            "snippet": "year. % Company/subsidiary is a beneficiary & Relationship changed from Joint Venture to Subsidiary"
+          },
+          {
+            "chunk_idx": 738,
+            "cue": "changed from",
+            "snippet": "year. % Company/subsidiary is a beneficiary & Relationship changed from Joint Venture to Subsidiary Reliance Industries Limited Integrated Annual Report 2025-26 156 157 Standalone"
+          },
+          {
+            "chunk_idx": 793,
+            "cue": "reclassified",
+            "snippet": "gnised Other Comprehensive  Income- Items that will  not be reclassified to  Profit or Loss  Other Comprehensive  Income-Items that will  not be reclassified to  Profit or Loss  A."
+          },
+          {
+            "chunk_idx": 813,
+            "cue": "reclassified",
+            "snippet": "ncome  during the year. (18,559) (4,099) Items that will be reclassified to  Profit & Loss 3 Amount reclassified to Profit and Loss during the year 2,436 2,229 Value of Sale and Fi"
+          },
+          {
+            "chunk_idx": 821,
+            "cue": "reclassified",
+            "snippet": "s for the corresponding previous year have been regrouped / reclassified wherever necessary, to make them  comparable. 44. Approval\tof\tFinancial\tStatements  The financial statement"
+          },
+          {
+            "chunk_idx": 893,
+            "cue": "reclassified",
+            "snippet": "81,309 Other\tComprehensive\tIncome i. Items that will not be reclassified to Profit or Loss 26.1 (337) (2,904) ii. Income Tax relating to items that will not be reclassified to Prof"
+          },
+          {
+            "chunk_idx": 894,
+            "cue": "reclassified",
+            "snippet": "ified to Profit or Loss 26.1 84 438 iii. Items that will be reclassified to Profit or Loss 26.2 (14,623) (214) iv. Income Tax relating to items that will be reclassified to Profit"
+          },
+          {
+            "chunk_idx": 995,
+            "cue": "reclassified",
+            "snippet": "25 26.1 Other\tComprehensive\tIncome\t\u2013\tItems\tthat\twill\tnot\tbe\treclassified\tto\tProfit\tand\t Loss Remeasurement of Defined Benefit Plan (41) (222) Tax effect on above 10 41 Equity Instr"
+          }
+        ],
+        "cue_hit_count": 30,
+        "note": "filing-local cue scan only; no other document loaded (INV-IC)"
+      },
+      "output_states": {
+        "Filing Summary": "complete",
+        "Risk Factors Digest": "insufficient_evidence",
+        "MD&A Digest": "partial",
+        "Important Changes": "complete"
+      },
+      "llm_calls": {
+        "run1": [
+          {
+            "chunk_idx": 181,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "mda",
+            "confidence": 0.92,
+            "error": null
+          },
+          {
+            "chunk_idx": 423,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "mda",
+            "confidence": 0.85,
+            "error": null
+          },
+          {
+            "chunk_idx": 664,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "other",
+            "confidence": 0.95,
+            "error": null
+          },
+          {
+            "chunk_idx": 906,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "other",
+            "confidence": 0.9,
+            "error": null
+          },
+          {
+            "chunk_idx": 181,
+            "why": "no-heuristic-mda-probe",
+            "label": "mda",
+            "confidence": 0.92,
+            "error": null
+          },
+          {
+            "chunk_idx": 423,
+            "why": "no-heuristic-mda-probe",
+            "label": "risk_factors",
+            "confidence": 0.85,
+            "error": null
+          },
+          {
+            "chunk_idx": 664,
+            "why": "no-heuristic-mda-probe",
+            "label": "other",
+            "confidence": 0.9,
+            "error": null
+          },
+          {
+            "chunk_idx": 906,
+            "why": "no-heuristic-mda-probe",
+            "label": "other",
+            "confidence": 0.7,
+            "error": null
+          }
+        ],
+        "run2_count": 8
+      },
+      "determinism": {
+        "ranges_identical_run1_vs_run2": true,
+        "states_identical_run1_vs_run2": true,
+        "run1_ranges": {
+          "risk_factors": null,
+          "mda": [
+            181,
+            181
+          ]
+        },
+        "run2_ranges": {
+          "risk_factors": null,
+          "mda": [
+            181,
+            181
+          ]
+        }
+      }
+    },
+    {
+      "key": "PLAINTEXT",
+      "kind": "plain-text POST /ingest/text",
+      "is_edgar": false,
+      "status": "RUN",
+      "note": "unstructured narrative memo, no Item structure by construction",
+      "ticker": "RIVERSTONE_SPIKE",
+      "doc_id": "761094a5-8b4e-4156-b9af-a9bbe1567d3a",
+      "source": "spike plain-text ingest (unstructured memo)",
+      "num_chunks": 3,
+      "char_count": 1819,
+      "risk_factors": {
+        "located_range": null,
+        "llm_only": false,
+        "heuristic_heading_chunk": null,
+        "heuristic_heading_snippet": "",
+        "range_text": {
+          "head": "",
+          "tail": ""
+        },
+        "reviewer_verdict": "<PENDING HUMAN REVIEW: does this range cover the filing's real Risk Factors?>"
+      },
+      "mda": {
+        "located_range": [
+          1,
+          2
+        ],
+        "llm_only": true,
+        "heuristic_heading_chunk": null,
+        "heuristic_heading_snippet": "",
+        "range_text": {
+          "head": "ternal debt. Headcount grew from 210\nto 265, mostly in implementation and customer success.\n\nMatters the board discussed The board spent most of the meeting on customer concentration: the top two\ncustomers are now 41 percent of revenue, up from 33 percent, and management\nwas asked to bring a mitigation plan to the next meeting. The board also\nreviewed the renewal pipeline, a proposed price increas",
+          "tail": "e FX exposure will be hedged from next quarter.\n\nOutlook\n---\ne segment. None of these is considered\nsevere at present, but the FX exposure will be hedged from next quarter.\n\nOutlook Management expects revenue growth to moderate to the mid-twenties percent\nrange next year as the base grows, with margin roughly stable. The analytics\nadd-on is expected to reach 20 percent of revenue within two years."
+        },
+        "reviewer_verdict": "<PENDING HUMAN REVIEW: does this range cover the filing's real MD&A?>"
+      },
+      "filing_summary_control": {
+        "state": "complete",
+        "note": "whole-filing pass; filing-local by construction (single doc_id input)"
+      },
+      "important_changes_control": {
+        "state": "insufficient_evidence",
+        "cue_hits": [],
+        "cue_hit_count": 0,
+        "note": "filing-local cue scan only; no other document loaded (INV-IC)"
+      },
+      "output_states": {
+        "Filing Summary": "complete",
+        "Risk Factors Digest": "insufficient_evidence",
+        "MD&A Digest": "partial",
+        "Important Changes": "insufficient_evidence"
+      },
+      "llm_calls": {
+        "run1": [
+          {
+            "chunk_idx": 0,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "other",
+            "confidence": 0.95,
+            "error": null
+          },
+          {
+            "chunk_idx": 1,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "mda",
+            "confidence": 0.92,
+            "error": null
+          },
+          {
+            "chunk_idx": 2,
+            "why": "no-heuristic-risk_factors-probe",
+            "label": "mda",
+            "confidence": 0.9,
+            "error": null
+          },
+          {
+            "chunk_idx": 0,
+            "why": "no-heuristic-mda-probe",
+            "label": "other",
+            "confidence": 0.95,
+            "error": null
+          },
+          {
+            "chunk_idx": 1,
+            "why": "no-heuristic-mda-probe",
+            "label": "mda",
+            "confidence": 0.85,
+            "error": null
+          },
+          {
+            "chunk_idx": 2,
+            "why": "no-heuristic-mda-probe",
+            "label": "mda",
+            "confidence": 0.95,
+            "error": null
+          }
+        ],
+        "run2_count": 6
+      },
+      "determinism": {
+        "ranges_identical_run1_vs_run2": true,
+        "states_identical_run1_vs_run2": true,
+        "run1_ranges": {
+          "risk_factors": null,
+          "mda": [
+            1,
+            2
+          ]
+        },
+        "run2_ranges": {
+          "risk_factors": null,
+          "mda": [
+            1,
+            2
+          ]
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "edgar": {
+      "n_filings": 2,
+      "n_outputs": 8,
+      "partial": 2,
+      "insufficient_evidence": 1,
+      "partial_rate": 0.25,
+      "insufficient_evidence_rate": 0.125
+    },
+    "non_edgar": {
+      "n_filings": 2,
+      "n_outputs": 8,
+      "partial": 2,
+      "insufficient_evidence": 3,
+      "partial_rate": 0.25,
+      "insufficient_evidence_rate": 0.375
+    },
+    "determinism_all_filings_identical_twice": false
+  },
+  "section_20_1_bar_assessment": {
+    "sample_covers_all_four_required_types": true,
+    "missing_required_types": [],
+    "repeatable_under_identical_inputs": false,
+    "llm_classification_errors": 0,
+    "risk_factors_and_mda_correctness": "REQUIRES CTO-REVIEWER SIGN-OFF (per-filing reviewer_verdict fields are PENDING)",
+    "zero_false_positive_section_locations": "REQUIRES CTO-REVIEWER SIGN-OFF",
+    "incomplete_evidence_honest_partial_or_insufficient": "machine rules applied; correctness of the honesty call REQUIRES CTO-REVIEWER SIGN-OFF",
+    "control_outputs_filing_local": true,
+    "cto_agreed_quality_bar_on_record": false
+  },
+  "gate_recommendation": "STOP_FOR_CTO_GOVERNANCE",
+  "gate_recommendation_reasons": [
+    "section location not identical across two runs under identical inputs/config",
+    "no CTO-agreed section 20.1 quality bar is on record (Document 65 section 20: 'Until a bar is set, the gate is not cleared')",
+    "Risk Factors / MD&A section-location correctness and zero-false-positive are CTO-reviewer determinations; per-filing reviewer_verdict fields are PENDING"
+  ],
+  "note": "This script does not self-declare CONTINUE. It produces reviewer-checkable evidence and recommends STOP so the CTO can (a) set the section 20.1 quality bar, (b) review per-filing section-location correctness, (c) decide CONTINUE or escalate. A STOP here is NOT authorization for C-2 (Document 65 section 20.1)."
+}

@@ -110,6 +110,14 @@ APPROVED_ROUTES = {
     ("GET", "/api/reports/compare/explain/{id}/stream"),    # M9.1 — additive, Document 43 §5/§17
     ("POST", "/api/reports/compare/explain/{id}/cancel"),   # M9.1 — additive, Document 43 §5/§13
     ("GET", "/api/companies/{ticker}/filings/{doc_id}/content"),  # M13 — additive, Document 59 §3.2/§16 (OD-1, CTO-ratified 2026-08-27) / Document 60
+    # M14 Filing Analysis — 4 additive routes, transcribed verbatim from
+    # docs/backend_engineering/64_M14_Filing_Analysis_API_Contract.md §9.1
+    # (CTO-ratified 2026-08-31) and the ratified route family in Document 65 §13;
+    # implementation separately CTO-authorized (M14 Implementation Authorization).
+    ("POST", "/api/companies/{ticker}/filings/{doc_id}/analysis"),
+    ("GET", "/api/companies/{ticker}/filings/{doc_id}/analysis/{id}"),
+    ("GET", "/api/companies/{ticker}/filings/{doc_id}/analysis/{id}/stream"),
+    ("POST", "/api/companies/{ticker}/filings/{doc_id}/analysis/{id}/cancel"),
 }
 
 _HTTP_METHODS = {"get", "post", "put", "delete", "patch"}
@@ -130,8 +138,9 @@ def test_route_count_matches_the_approved_contract():
     # M2 Phase 1 (health/ready, metrics) + 4 additive M2 Phase L (Learning)
     # + 1 additive M8 Step 7 (financials acquire) + 4 additive M9.1
     # (comparison explanation, Document 43) + 1 additive M12 (financials read)
-    # + 1 additive M13 (filing content read, Documents 59/60).
-    assert len(APPROVED_ROUTES) == 43
+    # + 1 additive M13 (filing content read, Documents 59/60)
+    # + 4 additive M14 (filing analysis, Documents 64 §9.1 / 65 §13).
+    assert len(APPROVED_ROUTES) == 47
 
 
 def test_no_routes_were_added_removed_or_renamed():
@@ -160,4 +169,4 @@ if __name__ == "__main__":
           "+ 2 additive M2 Phase 1 + 4 additive M2 Phase L (Learning) + 1 additive M8 "
           "Step 7 (financials acquire) + 4 additive M9.1 (comparison explanation) "
           "+ 1 additive M12 (financials read) + 1 additive M13 (filing content read) "
-          "routes exactly")
+          "+ 4 additive M14 (filing analysis) routes exactly")

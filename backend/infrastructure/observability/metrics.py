@@ -127,6 +127,16 @@ comparison_explanation_runs_total = Counter(
     ["outcome"],  # completed_complete | completed_partial | failed | failed_deadline_exceeded | cancelled
 )
 
+# --- M14 — the Document 65 §18 / Document 64 §14 (AH-7) required "outcome
+# signal": distinguish, in aggregate, per-run filing-analysis outcomes.
+# Same shape/rationale as comparison_explanation_runs_total. ---
+filing_analysis_runs_total = Counter(
+    "alphascribe_filing_analysis_runs_total",
+    "M14 filing-analysis job runs, by aggregate outcome",
+    ["outcome"],  # completed_complete | completed_partial | completed_insufficient_evidence
+                  # | failed | failed_deadline_exceeded | cancelled
+)
+
 # --- DEFINED, not yet incremented anywhere — its call site is 09 §8.1's
 # fail-open policy, implemented today in agents/auth.py's in-memory rate
 # limiter, not the RedisRateLimiter port this gauge belongs to (that port

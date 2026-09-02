@@ -55,6 +55,7 @@ from infrastructure.observability.metrics import (
     auth_failures_total,
     authz_denied_total,
     comparison_explanation_runs_total,
+    filing_analysis_runs_total,
     deadline_exceeded_total,
     http_request_duration_seconds,
     http_requests_total,
@@ -75,6 +76,10 @@ from agents.comparison_explanation import (
     compute_evidence_fingerprint,
     compute_identity_key,
     generate_explanation,
+)
+from agents.filing_analysis import (
+    FilingAnalysisGroundingError,
+    analyze_filing,
 )
 
 # ---------------------------------------------------------------------------
@@ -926,6 +931,40 @@ async def get_financials(
         return {"ticker": ticker, "period_type": period_type.value, "statements": statements}
 
 
+async def _load_ordered_filing_chunks(doc_id: str, ticker: str, *, context: str) -> list[dict]:
+    """One filing's persisted chunks as an ordered `[{chunk_idx, text}]` list.
+
+    `chunk_idx` ascending is authoritative (Document 59 §6): the query carries
+    an explicit `.sort("chunk_idx", 1)` AND the result is re-sorted in Python
+    so incidental Mongo order is never trusted. `_id` / `embedding` are
+    stripped. A row whose `chunk_idx` is not an int or whose `text` is not a
+    str is omitted and logged, not fatal (Document 59 §8 / OD-8).
+
+    Shared verbatim by M13 `get_filing_content` and M14 `_run_filing_analysis`
+    (bounded-revision M-1) — one implementation, identical behaviour. `context`
+    only labels the malformed-row warning line.
+    """
+    raw_chunks = await (
+        db.filing_chunks.find({"doc_id": doc_id}, {"_id": 0, "embedding": 0})
+        .sort("chunk_idx", 1)
+        .to_list(length=None)
+    )
+    chunks = sorted(
+        (
+            {"chunk_idx": c["chunk_idx"], "text": c["text"]}
+            for c in raw_chunks
+            if isinstance(c.get("chunk_idx"), int) and isinstance(c.get("text"), str)
+        ),
+        key=lambda c: c["chunk_idx"],
+    )
+    if len(chunks) != len(raw_chunks):
+        logger.warning(
+            "%s: %d malformed chunk(s) omitted for doc_id=%s ticker=%s",
+            context, len(raw_chunks) - len(chunks), doc_id, ticker,
+        )
+    return chunks
+
+
 @api.get("/companies/{ticker}/filings/{doc_id}/content")
 async def get_filing_content(
     ticker: str, doc_id: str, user: dict = Depends(current_user)
@@ -965,24 +1004,7 @@ async def get_filing_content(
             if filing is None:
                 raise NotFoundError("filing not found")  # Document 59 §8 / OD-6 — 404
 
-            raw_chunks = await (
-                db.filing_chunks.find({"doc_id": doc_id}, {"_id": 0, "embedding": 0})
-                .sort("chunk_idx", 1)
-                .to_list(length=None)
-            )
-            chunks = sorted(
-                (
-                    {"chunk_idx": c["chunk_idx"], "text": c["text"]}
-                    for c in raw_chunks
-                    if isinstance(c.get("chunk_idx"), int) and isinstance(c.get("text"), str)
-                ),
-                key=lambda c: c["chunk_idx"],
-            )
-            if len(chunks) != len(raw_chunks):
-                logger.warning(
-                    "filing content: %d malformed chunk(s) omitted for doc_id=%s ticker=%s",
-                    len(raw_chunks) - len(chunks), doc_id, ticker,
-                )
+            chunks = await _load_ordered_filing_chunks(doc_id, ticker, context="filing content")
 
             return {
                 "doc_id": filing["doc_id"],
@@ -2246,6 +2268,274 @@ async def get_comparison_explanation(id: str, user: dict = Depends(current_user)
             return {"status": "completed", "id": id,
                     "explanation": _serialize_explanation_result(artifact, id_=id)}
     return {"status": job_doc["status"], "id": id}
+
+
+# ---------------------------------------------------------------------------
+# M14 — Filing Analysis (Documents 63/64/65/66; §20.1 OAQ-1(D) = PASS).
+# Additive: a fourth async LLM surface after Research / Learning /
+# Comparison-Explanation. Mirrors _run_comparison_explanation's out-of-graph
+# orchestration (Document 65 §11 / OAQ-7) on top of the existing JobLifecycle,
+# EventBus/SSE, and agents/llm.py abstractions -- all unmodified.
+#
+# PERSISTENCE = fallback C (Document 65 §12 / Document 66 §5 C-l / §9.1): no
+# `filing_analyses` / `filing_analysis_jobs` collection is authorized (that
+# needs a separate 08_MongoDB_Data_Architecture.md + ADR), so a completed
+# analysis is held ONLY for the job's lifetime in the in-process buffer below
+# -- a direct peer of RUNNING_TASKS -- then evicted. `reused` is therefore
+# always False (Document 64 §12 on-demand path; run-to-run textual variation
+# is contract-permitted). No Mongo write, no Redis, no Job/JobStore change.
+# ---------------------------------------------------------------------------
+
+# ponytail: fallback-C persistence -- a completed analysis lives only in this
+# process, only until its max_job_lifetime_s TTL (or a 256-entry oldest-first
+# eviction), and not across a restart or a second backend instance (the buffer,
+# like RUNNING_TASKS and the auth rate-limiter, assumes a single instance).
+# GET after expiry returns {status: completed} with no `analysis`. Upgrade
+# path: the Document 65 OAQ-5 durable two-collection store (`filing_analyses` /
+# `filing_analysis_jobs`), gated on a separate 08_MongoDB_Data_Architecture.md
+# + ADR authorization (Document 66 §9.1) -- deliberately not built here.
+_FILING_ANALYSIS_RESULTS: dict[str, tuple[str, dict, float]] = {}  # id -> (user_id, analysis_payload, expires_at_epoch_s)
+_FA_MAX_ENTRIES = 256
+
+
+def _fa_now() -> float:
+    return datetime.now(timezone.utc).timestamp()
+
+
+def _store_filing_analysis_result(job_id: str, user_id: str, payload: dict) -> None:
+    now = _fa_now()
+    _FILING_ANALYSIS_RESULTS[job_id] = (user_id, payload, now + settings.max_job_lifetime_s)
+    for k in [k for k, v in list(_FILING_ANALYSIS_RESULTS.items()) if v[2] <= now]:
+        _FILING_ANALYSIS_RESULTS.pop(k, None)
+    if len(_FILING_ANALYSIS_RESULTS) > _FA_MAX_ENTRIES:
+        oldest = sorted(_FILING_ANALYSIS_RESULTS, key=lambda k: _FILING_ANALYSIS_RESULTS[k][2])
+        for k in oldest[: len(_FILING_ANALYSIS_RESULTS) - _FA_MAX_ENTRIES]:
+            _FILING_ANALYSIS_RESULTS.pop(k, None)
+
+
+def _get_filing_analysis_result(job_id: str, user_id: str) -> dict | None:
+    entry = _FILING_ANALYSIS_RESULTS.get(job_id)
+    if not entry:
+        return None
+    uid, payload, exp = entry
+    if exp <= _fa_now():
+        _FILING_ANALYSIS_RESULTS.pop(job_id, None)
+        return None
+    if uid != user_id:  # job records are owner-scoped (Document 64 §15)
+        return None
+    return payload
+
+
+class FilingAnalysisRequest(BaseModel):
+    # BYOK field set, verbatim from GenerateRequest / ExplainRequest
+    # (Document 64 §9.2). No output-selection parameter (CQ-2). The body is
+    # optional -- a bare POST analyses the filing with the server's env key.
+    llm_provider: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    llm_model: Optional[str] = None
+
+
+async def _run_filing_analysis(
+    job_id: str, ticker: str, doc_id: str, user_id: str,
+    llm_provider: str | None = None, llm_api_key: str | None = None,
+    llm_base_url: str | None = None, llm_model: str | None = None,
+) -> None:
+    from agents.llm import reset_llm_context, set_llm_context
+
+    _tok = (
+        set_llm_context(llm_provider, llm_api_key, light_model=llm_model,
+                        heavy_model=llm_model, base_url=llm_base_url)
+        if (llm_provider or llm_api_key) else None
+    )
+    await container.job_lifecycle.mark_running(job_id)
+
+    async def push(ev: dict) -> None:
+        await container.job_lifecycle.publish(
+            job_id, {**ev, "ts": datetime.now(timezone.utc).isoformat()}
+        )
+
+    async def progress(node: str, message: str) -> None:
+        await push({"node": node, "status": "ok", "message": message})
+
+    _span_cm = get_tracer().start_as_current_span(
+        "pipeline.filing_analysis", attributes={"job_id": job_id}
+    )
+    _span = _span_cm.__enter__()
+    outcome = "failed"
+    try:
+        await push({"node": "pipeline", "status": "start", "message": "Analysing filing"})
+
+        # Execution-time (ticker, doc_id) resolution. Reports/filings are
+        # immutable after ingest, so a fresh read is safe. 404 non-disclosure
+        # (Document 64 §10; Document 59 OD-6).
+        filing = await db.filings.find_one({"ticker": ticker, "doc_id": doc_id}, {"_id": 0})
+        if filing is None:
+            raise NotFoundError("filing not found")
+
+        chunks = await _load_ordered_filing_chunks(doc_id, ticker, context="filing analysis")
+
+        if await container.job_lifecycle.is_past_deadline(job_id):
+            raise TimeoutError("deadline")
+
+        result = await analyze_filing(chunks, doc_id, db=db, ticker=ticker, progress=progress)
+
+        if await container.job_lifecycle.is_past_deadline(job_id):
+            raise TimeoutError("deadline")
+
+        analysis_payload = {
+            "doc_id": filing["doc_id"],
+            "ticker": filing["ticker"],
+            "company_name": filing.get("company_name"),
+            "source": filing["source"],
+            "created_at": filing["created_at"],
+            "prompt_version": result["prompt_version"],
+            "schema_version": result["schema_version"],
+            "outputs": result["outputs"],
+        }
+        _store_filing_analysis_result(job_id, user_id, analysis_payload)
+
+        states = [o["state"] for o in result["outputs"].values()]
+        if all(s == "insufficient_evidence" for s in states):
+            outcome = "completed_insufficient_evidence"
+        elif any(s in ("partial", "insufficient_evidence") for s in states):
+            outcome = "completed_partial"
+        else:
+            outcome = "completed_complete"
+        await container.job_lifecycle.complete(job_id)
+        filing_analysis_runs_total.labels(outcome=outcome).inc()
+    except asyncio.CancelledError:
+        outcome = "cancelled"
+        _FILING_ANALYSIS_RESULTS.pop(job_id, None)
+        await container.job_lifecycle.cancel(job_id)  # idempotent
+        filing_analysis_runs_total.labels(outcome=outcome).inc()
+        _span.set_status(Status(StatusCode.ERROR, "Job cancelled"))
+    except Exception as e:  # noqa: BLE001 — never leak raw provider/validation text
+        logger.exception("filing analysis failed")
+        if isinstance(e, NotFoundError):
+            outcome, err = "failed", "Filing not found."
+        elif isinstance(e, TimeoutError):
+            outcome, err = "failed_deadline_exceeded", "Filing analysis exceeded its time budget and was stopped."
+        elif isinstance(e, FilingAnalysisGroundingError):
+            outcome, err = "failed", "Filing analysis could not be produced with fully grounded citations."
+        else:
+            outcome, err = "failed", "Filing analysis failed. See server logs for details."
+        _FILING_ANALYSIS_RESULTS.pop(job_id, None)
+        await container.job_lifecycle.fail(job_id, err)
+        filing_analysis_runs_total.labels(outcome=outcome).inc()
+        _span.set_status(Status(StatusCode.ERROR, err))
+    finally:
+        if _tok is not None:
+            reset_llm_context(_tok)
+        RUNNING_TASKS.pop(job_id, None)
+        jobs_active.labels(kind="filing_analysis").dec()
+        _span_cm.__exit__(None, None, None)
+
+
+@api.post("/companies/{ticker}/filings/{doc_id}/analysis")
+async def create_filing_analysis(
+    ticker: str, doc_id: str,
+    req: Optional[FilingAnalysisRequest] = None,
+    user: dict = Depends(current_user),
+):
+    """M14 — create an async Filing Analysis job for one filing (Document 64
+    §9.1 / Document 65 §13). Additive; changes no existing route."""
+    req = req or FilingAnalysisRequest()
+    ticker = ticker.strip().upper()
+    if not ticker:
+        raise ValidationError("ticker required", code="validation_error")
+
+    # Same admin/SSRF gate as every other BYOK surface (Document 64 §9.2 / §15).
+    if req.llm_provider == "custom" or req.llm_base_url:
+        require_admin(user)
+    if req.llm_base_url:
+        from agents.llm import assert_public_url
+        try:
+            assert_public_url(req.llm_base_url)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Custom LLM base URL must be a publicly reachable http(s) "
+                    "address — the server calls it directly, so localhost and "
+                    "private-network addresses aren't allowed."
+                ),
+            )
+
+    # (ticker, doc_id) identity — 404 non-disclosure (Document 64 §10; Document 59 OD-6).
+    filing = await db.filings.find_one({"ticker": ticker, "doc_id": doc_id}, {"_id": 0, "doc_id": 1})
+    if filing is None:
+        raise NotFoundError("filing not found")
+
+    job_id = str(uuid.uuid4())
+    await container.job_lifecycle.start(
+        job_id, JobKind.FILING_ANALYSIS, user["id"], ticker=ticker,
+        deadline_s=settings.job_deadline_s["filing_analysis"],
+    )
+    jobs_active.labels(kind="filing_analysis").inc()
+    RUNNING_TASKS[job_id] = asyncio.create_task(
+        _run_filing_analysis(
+            job_id, ticker, doc_id, user["id"],
+            llm_provider=req.llm_provider, llm_api_key=req.llm_api_key,
+            llm_base_url=req.llm_base_url, llm_model=req.llm_model,
+        )
+    )
+    # fallback C: no stored artifact -> never a reuse (Document 64 §12).
+    return {"id": job_id, "status": "queued", "reused": False}
+
+
+@api.get("/companies/{ticker}/filings/{doc_id}/analysis/{id}")
+async def get_filing_analysis(
+    ticker: str, doc_id: str, id: str, user: dict = Depends(current_user)
+):
+    payload = _get_filing_analysis_result(id, user["id"])
+    if payload is not None:
+        return {"id": id, "status": "completed", "analysis": payload}
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="analysis job not found")
+    return {"id": id, "status": job.status.value}
+
+
+async def _filing_analysis_stream_events(job_id: str, user_id: str):
+    """Mirrors _comparison_explanation_stream_events: inject the completed
+    analysis payload as a `final` event right after the terminal `pipeline/ok`
+    (the frozen SSE convention — Document 65 §11)."""
+    async for ev in container.events.subscribe(job_id):
+        yield ev
+        if ev.get("node") == "pipeline" and ev.get("status") == "ok":
+            payload = _get_filing_analysis_result(job_id, user_id)
+            if payload is not None:
+                yield {"node": "final", "status": "ok", "analysis": payload}
+
+
+@api.get("/companies/{ticker}/filings/{doc_id}/analysis/{id}/stream")
+async def stream_filing_analysis(
+    ticker: str, doc_id: str, id: str, user: dict = Depends(current_user)
+):
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="analysis job not found")
+    return sse_response(
+        _filing_analysis_stream_events(id, user["id"]), stream_name="filing_analysis"
+    )
+
+
+@api.post("/companies/{ticker}/filings/{doc_id}/analysis/{id}/cancel")
+async def cancel_filing_analysis(
+    ticker: str, doc_id: str, id: str, user: dict = Depends(current_user)
+):
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="analysis job not found")
+    if job.is_terminal():
+        return {"id": id, "status": job.status.value}
+    task = RUNNING_TASKS.get(id)
+    if task and not task.done():
+        task.cancel()
+    await container.job_lifecycle.cancel(id)
+    _FILING_ANALYSIS_RESULTS.pop(id, None)  # cancellation guarantees the result is not published
+    return {"id": id, "status": "cancelled"}
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,1246 @@
+{
+  "experiment": "M14 Document 65 section 20.1 section-location validation spike -- round 2 (bounded OAQ-1(D) realization improvement)",
+  "generated_at_utc": "2026-09-01T12:59:22.886866+00:00",
+  "authority": "CTO authorization 2026-09-01 -- bounded remediation/evaluation only; OAQ-1(D) Alt B unchanged; NOT production implementation; NOT C-2",
+  "llm_config": {
+    "provider": "openai",
+    "light_model": "nvidia/nemotron-3-super-120b-a12b",
+    "base_url": "https://integrate.api.nvidia.com/v1",
+    "max_output_tokens": "3072",
+    "classification_temperature": 0.0,
+    "k_votes": 3
+  },
+  "ground_truth_disclaimer": "GROUND_TRUTH table = HUMAN-ESTABLISHED EVALUATION GROUND TRUTH -- NOT PRODUCTION LOGIC -- NOT CONTRACT ARTIFACT. The locate_* prediction pipeline does not read it.",
+  "corpus": [
+    {
+      "key": "EDGAR_10Q",
+      "kind": "EDGAR 10-Q",
+      "is_edgar": true,
+      "available": true,
+      "note": "reused existing ingested real filing"
+    },
+    {
+      "key": "EDGAR_10K",
+      "kind": "EDGAR 10-K",
+      "is_edgar": true,
+      "available": true,
+      "note": "reused existing ingested real filing"
+    },
+    {
+      "key": "BSE_ANNUAL",
+      "kind": "BSE annual report",
+      "is_edgar": false,
+      "available": true,
+      "note": "reused existing ingested real filing"
+    },
+    {
+      "key": "PLAINTEXT",
+      "kind": "plain-text POST /ingest/text",
+      "is_edgar": false,
+      "available": true,
+      "note": "unstructured narrative memo, no Item structure by construction"
+    }
+  ],
+  "per_filing": [
+    {
+      "key": "EDGAR_10Q",
+      "kind": "EDGAR 10-Q",
+      "is_edgar": true,
+      "status": "RUN",
+      "ticker": "TSLA",
+      "doc_id": "1bcb03b5-dbbc-470f-8505-396d594f8919",
+      "source": "10-Q 0001628280-26-026673 filed 2026-04-23",
+      "num_chunks": 166,
+      "char_count": 154897,
+      "note": "reused existing ingested real filing",
+      "prediction_run1": {
+        "risk_factors": {
+          "kind": "rf",
+          "predicted_present": true,
+          "range": [
+            155,
+            155
+          ],
+          "basis": "structural",
+          "start_chunk": 155,
+          "end_chunk": 155,
+          "end_established": true,
+          "boundary_rule": "next-different-heading",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "heading_seen_chunks": [
+            5,
+            155
+          ],
+          "toc_chunks": [
+            5
+          ],
+          "llm_calls": [],
+          "evidence": {
+            "start_heading_context": "eport on Form 10-Q. ITEM 1A. RISK FACTORS Our operations and financial results are subject to various risks and uncertainties, including the factors discussed in Part I, Item 1A, Risk Factors in our Annual Report on Form",
+            "start_chunk_first_400": "tingencies , to the consolidated financial statements included elsewhere in this Quarterly Report on Form 10-Q. ITEM 1A. RISK FACTORS Our operations and financial results are subject to various risks and uncertainties, including the factors discussed in Part I, Item 1A, Risk Factors in our Annual Report on Form 10-K for the year ended December 31, 2025, which could adversely affect our business, f",
+            "end_chunk_first_300": "tingencies , to the consolidated financial statements included elsewhere in this Quarterly Report on Form 10-Q. ITEM 1A. RISK FACTORS Our operations and financial results are subject to various risks and uncertainties, including the factors discussed in Part I, Item 1A, Risk Factors in our Annual Re"
+          }
+        },
+        "mda": {
+          "kind": "mda",
+          "predicted_present": true,
+          "range": [
+            5,
+            5
+          ],
+          "basis": "structural",
+          "start_chunk": 5,
+          "end_chunk": 5,
+          "end_established": true,
+          "boundary_rule": "next-different-heading",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "heading_seen_chunks": [
+            5,
+            104,
+            143
+          ],
+          "toc_chunks": [],
+          "llm_calls": [],
+          "evidence": {
+            "start_heading_context": "ancial Statements 9 Item 2. Management's Discussion and Analysis of Financial Condition and Results of Operations 28 Item 3. Quantitative and Qualitative Disclosures about Market Risk 36 Item 4. Controls and Procedures 3",
+            "start_chunk_first_400": "of April 16, 2026, there were 3,755,723,871 shares of the registrant's common stock outstanding. TESLA, INC. FORM 10-Q FOR THE QUARTER ENDED MARCH 31, 2026 INDEX Page PART I. FINANCIAL INFORMATION Item 1. Financial Statements 4 Consolidated Balance Sheets 4 Consolidated Statements of Operations 5 Consolidated Statements of Comprehensive Income 6 Consolidated Statements of Redeemable Noncontrolling",
+            "end_chunk_first_300": "of April 16, 2026, there were 3,755,723,871 shares of the registrant's common stock outstanding. TESLA, INC. FORM 10-Q FOR THE QUARTER ENDED MARCH 31, 2026 INDEX Page PART I. FINANCIAL INFORMATION Item 1. Financial Statements 4 Consolidated Balance Sheets 4 Consolidated Statements of Operations 5 Co"
+          }
+        }
+      },
+      "evaluation": {
+        "risk_factors": {
+          "filing": "EDGAR_10Q",
+          "section": "risk_factors",
+          "target_present": true,
+          "predicted_range": [
+            155,
+            155
+          ],
+          "ground_truth_range": [
+            155,
+            155
+          ],
+          "basis": "structural",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "boundary_status": "end_established",
+          "false_positive": false,
+          "false_negative": false,
+          "verdict": "CORRECT LOCATION",
+          "reviewer_evidence": {
+            "predicted_start_context": "eport on Form 10-Q. ITEM 1A. RISK FACTORS Our operations and financial results are subject to various risks and uncertainties, including the factors discussed in Part I, Item 1A, Risk Factors in our Annual Report on Form",
+            "heading_seen_chunks": [
+              5,
+              155
+            ],
+            "toc_chunks_rejected": [
+              5
+            ],
+            "ground_truth_note": "Part II Item 1A; entire 'no material changes, see 10-K' disclosure sits in chunk 155; 'ITEM 2. UNREGISTERED SALES' follows in the same chunk"
+          }
+        },
+        "mda": {
+          "filing": "EDGAR_10Q",
+          "section": "mda",
+          "target_present": true,
+          "predicted_range": [
+            5,
+            5
+          ],
+          "ground_truth_range": [
+            104,
+            148
+          ],
+          "basis": "structural",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "boundary_status": "end_established",
+          "false_positive": true,
+          "false_negative": false,
+          "verdict": "target-present GENUINE FAILURE (wrong location)",
+          "reviewer_evidence": {
+            "predicted_start_context": "ancial Statements 9 Item 2. Management's Discussion and Analysis of Financial Condition and Results of Operations 28 Item 3. Quantitative and Qualitative Disclosures about Market Risk 36 Item 4. Controls and Procedures 3",
+            "heading_seen_chunks": [
+              5,
+              104,
+              143
+            ],
+            "toc_chunks_rejected": [],
+            "ground_truth_note": "Part I Item 2; 'ITEM 2. MANAGEMENT'S DISCUSSION AND ANALYSIS ... The following discussion and analysis' at ch 104; ends before 'ITEM 3. QUANTITATIVE...' at ch 149"
+          }
+        }
+      },
+      "reproducibility": {
+        "n_runs": 5,
+        "identical": true,
+        "llm_invoked": false,
+        "per_run": [
+          {
+            "run": 1,
+            "risk_factors_range": [
+              155,
+              155
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              5,
+              5
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 2,
+            "risk_factors_range": [
+              155,
+              155
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              5,
+              5
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 3,
+            "risk_factors_range": [
+              155,
+              155
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              5,
+              5
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 4,
+            "risk_factors_range": [
+              155,
+              155
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              5,
+              5
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 5,
+            "risk_factors_range": [
+              155,
+              155
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              5,
+              5
+            ],
+            "mda_basis": "structural"
+          }
+        ],
+        "distinct_signatures": [
+          "{\"mda\": [[5, 5], \"structural\", \"located_bounded\"], \"risk_factors\": [[155, 155], \"structural\", \"located_bounded\"]}"
+        ]
+      },
+      "controls_DIAGNOSTIC": {
+        "note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS -- these controls are diagnostics, NOT a test of the ratified Document 64 features",
+        "filing_summary": {
+          "filing_local": true,
+          "note": "whole-filing; single doc_id input; NOT an evaluation of the Document 64 Filing Summary output"
+        },
+        "important_changes": {
+          "filing_local": true,
+          "cue_hit_count": 4,
+          "cue_hits_sample": [
+            {
+              "chunk_idx": 19,
+              "cue": "reclassified",
+              "snippet": "fications certain prior period balances have been reclassified to conform to the current period presentation in the consolidated financial statements and the ac"
+            },
+            {
+              "chunk_idx": 42,
+              "cue": "recently adopted",
+              "snippet": "impact on our consolidated financial statements. recently adopted accounting pronouncements asu 2025-05 in july 2025, the fasb issued asu no."
+            },
+            {
+              "chunk_idx": 43,
+              "cue": "we adopted",
+              "snippet": "assified accounts receivable and contract assets. we adopted this asu on a prospective basis effective january 1, 2026. while this asu was adopted, we did not e"
+            },
+            {
+              "chunk_idx": 110,
+              "cue": "we began",
+              "snippet": "significant progress towards these objectives as we began pilot production of cybercab, as well as ramps across our new battery and material factories, includi"
+            }
+          ],
+          "note": "cue-STRING presence only; DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS; does NOT evaluate contractual material-change detection (Document 65 section 9 / INV-IC)"
+        }
+      }
+    },
+    {
+      "key": "EDGAR_10K",
+      "kind": "EDGAR 10-K",
+      "is_edgar": true,
+      "status": "RUN",
+      "ticker": "MSFT",
+      "doc_id": "168d4f17-7ab2-40fc-be61-fa89df07dfbc",
+      "source": "10-K 0001193125-26-323660 filed 2026-07-29",
+      "num_chunks": 215,
+      "char_count": 200000,
+      "note": "reused existing ingested real filing",
+      "prediction_run1": {
+        "risk_factors": {
+          "kind": "rf",
+          "predicted_present": true,
+          "range": [
+            70,
+            173
+          ],
+          "basis": "structural",
+          "start_chunk": 70,
+          "end_chunk": 173,
+          "end_established": true,
+          "boundary_rule": "next-different-heading",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "heading_seen_chunks": [
+            10,
+            62,
+            70,
+            103,
+            158,
+            167,
+            168,
+            200,
+            201
+          ],
+          "toc_chunks": [
+            10
+          ],
+          "llm_calls": [],
+          "evidence": {
+            "start_heading_context": " 13  PART I Item 1A ITEM 1A. RIS K FACTORS Our operations and financial results are subject to various risks and uncertainties, including those described below, that could adversely affect our business, operations, finan",
+            "start_chunk_first_400": "-hub, including the Environmental Sustainability Report, Microsoft Digital Defense Report, and Microsoft Impact Summary. The information found on these websites is not part of, or incorporated by reference into, this or any other report we file with, or furnish to, the SEC. In addition to these channels, we use social media to communicate to the public. It is possible that the information we post ",
+            "end_chunk_first_300": "to U.S. immigration policies or laws, may inhibit our ability to adequately staff our research and development efforts. If we are less successful in our recruiting efforts, or if we cannot retain highly skilled workers and key leaders, our ability to develop and deliver successful products and servi"
+          }
+        },
+        "mda": {
+          "kind": "mda",
+          "predicted_present": true,
+          "range": [
+            11,
+            11
+          ],
+          "basis": "structural",
+          "start_chunk": 11,
+          "end_chunk": 11,
+          "end_established": true,
+          "boundary_rule": "next-different-heading",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "heading_seen_chunks": [
+            11,
+            192
+          ],
+          "toc_chunks": [],
+          "llm_calls": [],
+          "evidence": {
+            "start_heading_context": "6.  [Reserved]  33  Item 7.  Management's Discussion and Analysis of Financial Condition and Results of Operations  34  Item 7A.  Quantitative and Qualitative Disclosures About Market Risk  49  Item 8.  Financial Stateme",
+            "start_chunk_first_400": "31\n\nPART II\n\nItem 5.\n\nMarket for Registrant's Common Equity, Related Stockholder Matters, and Issuer Purchases of Equity Securities\n\n32\n\nItem 6.\n\n[Reserved]\n\n33\n\nItem 7.\n\nManagement's Discussion and Analysis of Financial Condition and Results of Operations\n\n34\n\nItem 7A.\n\nQuantitative and Qualitative Disclosures About Market Risk\n\n49\n\nItem 8.\n\nFinancial Statements and Supplementary Data\n\n50",
+            "end_chunk_first_300": "31\n\nPART II\n\nItem 5.\n\nMarket for Registrant's Common Equity, Related Stockholder Matters, and Issuer Purchases of Equity Securities\n\n32\n\nItem 6.\n\n[Reserved]\n\n33\n\nItem 7.\n\nManagement's Discussion and Analysis of Financial Condition and Results of Operations\n\n34\n\nItem 7A.\n\nQuantitative and Qualitative"
+          }
+        }
+      },
+      "evaluation": {
+        "risk_factors": {
+          "filing": "EDGAR_10K",
+          "section": "risk_factors",
+          "target_present": true,
+          "predicted_range": [
+            70,
+            173
+          ],
+          "ground_truth_range": [
+            70,
+            185
+          ],
+          "basis": "structural",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "boundary_status": "end_established",
+          "false_positive": false,
+          "false_negative": false,
+          "verdict": "CORRECT LOCATION",
+          "reviewer_evidence": {
+            "predicted_start_context": " 13  PART I Item 1A ITEM 1A. RIS K FACTORS Our operations and financial results are subject to various risks and uncertainties, including those described below, that could adversely affect our business, operations, finan",
+            "heading_seen_chunks": [
+              10,
+              62,
+              70,
+              103,
+              158,
+              167,
+              168,
+              200,
+              201
+            ],
+            "toc_chunks_rejected": [
+              10
+            ],
+            "ground_truth_note": "Item 1A body opens 'ITEM 1A. RISK FACTORS Our operations and financial results are subject to various risks and uncertainties' at ~ch 70 (heading late in the chunk, continues into 71); runs to ~185 before 'ITEM 6. [RESERVED]'/'ITEM 7' at ch 191-192. START is the load-bearing value; END approximate"
+          }
+        },
+        "mda": {
+          "filing": "EDGAR_10K",
+          "section": "mda",
+          "target_present": true,
+          "predicted_range": [
+            11,
+            11
+          ],
+          "ground_truth_range": [
+            192,
+            214
+          ],
+          "basis": "structural",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "boundary_status": "end_established",
+          "false_positive": true,
+          "false_negative": false,
+          "verdict": "target-present GENUINE FAILURE (wrong location)",
+          "reviewer_evidence": {
+            "predicted_start_context": "6.  [Reserved]  33  Item 7.  Management's Discussion and Analysis of Financial Condition and Results of Operations  34  Item 7A.  Quantitative and Qualitative Disclosures About Market Risk  49  Item 8.  Financial Stateme",
+            "heading_seen_chunks": [
+              11,
+              192
+            ],
+            "toc_chunks_rejected": [],
+            "ground_truth_note": "Item 7; '33 PART II Item 7 ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS ... The following Management's Discussion and Analysis ... (\"MD&A\")' at ch 192; runs to end of file / Item 8"
+          }
+        }
+      },
+      "reproducibility": {
+        "n_runs": 5,
+        "identical": true,
+        "llm_invoked": false,
+        "per_run": [
+          {
+            "run": 1,
+            "risk_factors_range": [
+              70,
+              173
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              11,
+              11
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 2,
+            "risk_factors_range": [
+              70,
+              173
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              11,
+              11
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 3,
+            "risk_factors_range": [
+              70,
+              173
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              11,
+              11
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 4,
+            "risk_factors_range": [
+              70,
+              173
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              11,
+              11
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 5,
+            "risk_factors_range": [
+              70,
+              173
+            ],
+            "risk_factors_basis": "structural",
+            "mda_range": [
+              11,
+              11
+            ],
+            "mda_basis": "structural"
+          }
+        ],
+        "distinct_signatures": [
+          "{\"mda\": [[11, 11], \"structural\", \"located_bounded\"], \"risk_factors\": [[70, 173], \"structural\", \"located_bounded\"]}"
+        ]
+      },
+      "controls_DIAGNOSTIC": {
+        "note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS -- these controls are diagnostics, NOT a test of the ratified Document 64 features",
+        "filing_summary": {
+          "filing_local": true,
+          "note": "whole-filing; single doc_id input; NOT an evaluation of the Document 64 Filing Summary output"
+        },
+        "important_changes": {
+          "filing_local": true,
+          "cue_hit_count": 4,
+          "cue_hits_sample": [
+            {
+              "chunk_idx": 97,
+              "cue": "beginning in",
+              "snippet": "on january 19, 2024 and amended on march 8, 2024, beginning in late november 2023, a nation-state associated threat actor used a password spray attack to compro"
+            },
+            {
+              "chunk_idx": 107,
+              "cue": "no longer",
+              "snippet": "these systems and products, including those that no longer incorporate the strongest current security advances or standards."
+            },
+            {
+              "chunk_idx": 108,
+              "cue": "no longer",
+              "snippet": "e systems and products, including those that no longer incorporate the strongest current security advances or standards. as a result, we may not be able to"
+            },
+            {
+              "chunk_idx": 113,
+              "cue": "no longer",
+              "snippet": "continue to run software or operating systems we no longer support, may fail to timely install or enable security patches, or may otherwise fail to adopt adequ"
+            }
+          ],
+          "note": "cue-STRING presence only; DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS; does NOT evaluate contractual material-change detection (Document 65 section 9 / INV-IC)"
+        }
+      }
+    },
+    {
+      "key": "BSE_ANNUAL",
+      "kind": "BSE annual report",
+      "is_edgar": false,
+      "status": "RUN",
+      "ticker": "RELIANCE",
+      "doc_id": "ad4151a4-da2f-444c-a62c-d6fb04c9f0c6",
+      "source": "Annual Report",
+      "num_chunks": 1209,
+      "char_count": 984279,
+      "note": "reused existing ingested real filing",
+      "prediction_run1": {
+        "risk_factors": {
+          "kind": "rf",
+          "predicted_present": false,
+          "range": null,
+          "basis": "heading-absent",
+          "start_chunk": null,
+          "end_chunk": null,
+          "end_established": null,
+          "boundary_rule": null,
+          "diagnostic_state": "not_located",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "heading_seen_chunks": [],
+          "toc_chunks": [],
+          "llm_calls": [],
+          "evidence": {}
+        },
+        "mda": {
+          "kind": "mda",
+          "predicted_present": true,
+          "range": [
+            22,
+            144
+          ],
+          "basis": "structural",
+          "start_chunk": 22,
+          "end_chunk": 144,
+          "end_established": true,
+          "boundary_rule": "running-header-run",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "heading_seen_chunks": [
+            6,
+            22,
+            30,
+            31,
+            41,
+            51,
+            59,
+            69,
+            77,
+            90,
+            99,
+            109,
+            119,
+            131,
+            144,
+            309,
+            312,
+            315,
+            316,
+            404
+          ],
+          "toc_chunks": [
+            6
+          ],
+          "llm_calls": [],
+          "evidence": {
+            "start_heading_context": " Report 2025-26 6 7 Management Discussion and Analysis Financial Performance and Review Operating Environment Global economic expansion continued, with IMF estimating global growth at 3.4% for CY25, improving from CY24 g",
+            "start_chunk_first_400": "tly towards its\nmost defining chapters. With warm regards,\nMukesh D. Ambani\nChairman and Managing Director\nMay 27, 2026 Reliance Industries Limited Integrated Annual Report 2025-26\n6 7\nManagement Discussion and Analysis\nFinancial Performance and Review\nOperating Environment\nGlobal economic expansion continued,\nwith IMF estimating global growth at\n3.4% for CY25, improving from CY24\ngrowth of 3.1%. ",
+            "end_chunk_first_300": "insurance coverage,\nthereby strengthening balance\nsheet resilience and supporting the\nCompany's strategic priorities. Reliance Industries Limited Integrated Annual Report 2025-26\n30 31\nManagement Discussion and Analysis Management Discussion and Analysis\nMajor Awards and Recognitions\nLeadership and "
+          }
+        }
+      },
+      "evaluation": {
+        "risk_factors": {
+          "filing": "BSE_ANNUAL",
+          "section": "risk_factors",
+          "target_present": false,
+          "predicted_range": null,
+          "ground_truth_range": null,
+          "basis": "heading-absent",
+          "diagnostic_state": "not_located",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "boundary_status": "n/a",
+          "false_positive": false,
+          "false_negative": false,
+          "verdict": "target-absent correct absence",
+          "reviewer_evidence": {
+            "predicted_start_context": "",
+            "heading_seen_chunks": [],
+            "toc_chunks_rejected": [],
+            "ground_truth_note": "NO SEC-style Risk Factors / Item 1A section. 'Enterprise Risk Management' content (~ch 125-143) is NOT a Risk Factors section and must not be reported as one"
+          }
+        },
+        "mda": {
+          "filing": "BSE_ANNUAL",
+          "section": "mda",
+          "target_present": true,
+          "predicted_range": [
+            22,
+            144
+          ],
+          "ground_truth_range": [
+            22,
+            144
+          ],
+          "basis": "structural",
+          "diagnostic_state": "located_bounded",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "boundary_status": "end_established",
+          "false_positive": false,
+          "false_negative": false,
+          "verdict": "CORRECT LOCATION",
+          "reviewer_evidence": {
+            "predicted_start_context": " Report 2025-26 6 7 Management Discussion and Analysis Financial Performance and Review Operating Environment Global economic expansion continued, with IMF estimating global growth at 3.4% for CY25, improving from CY24 g",
+            "heading_seen_chunks": [
+              6,
+              22,
+              30,
+              31,
+              41,
+              51,
+              59,
+              69,
+              77,
+              90,
+              99,
+              109,
+              119,
+              131,
+              144,
+              309,
+              312,
+              315,
+              316,
+              404
+            ],
+            "toc_chunks_rejected": [
+              6
+            ],
+            "ground_truth_note": "'Management Discussion and Analysis' (non-possessive) begins ch 22 ('... Management Discussion and Analysis Financial Performance and Review Operating Environment Global economic expansion continued'); running header recurs ch 22..144; ch 6 is the contents page"
+          }
+        }
+      },
+      "reproducibility": {
+        "n_runs": 5,
+        "identical": true,
+        "llm_invoked": false,
+        "per_run": [
+          {
+            "run": 1,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": [
+              22,
+              144
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 2,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": [
+              22,
+              144
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 3,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": [
+              22,
+              144
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 4,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": [
+              22,
+              144
+            ],
+            "mda_basis": "structural"
+          },
+          {
+            "run": 5,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": [
+              22,
+              144
+            ],
+            "mda_basis": "structural"
+          }
+        ],
+        "distinct_signatures": [
+          "{\"mda\": [[22, 144], \"structural\", \"located_bounded\"], \"risk_factors\": [null, \"heading-absent\", \"not_located\"]}"
+        ]
+      },
+      "controls_DIAGNOSTIC": {
+        "note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS -- these controls are diagnostics, NOT a test of the ratified Document 64 features",
+        "filing_summary": {
+          "filing_local": true,
+          "note": "whole-filing; single doc_id input; NOT an evaluation of the Document 64 Filing Summary output"
+        },
+        "important_changes": {
+          "filing_local": true,
+          "cue_hit_count": 30,
+          "cue_hits_sample": [
+            {
+              "chunk_idx": 595,
+              "cue": "reclassified",
+              "snippet": "er comprehensive income i. items that will not be reclassified to profit or loss 27.1 (402) 255 ii. income tax relating to items that will not be reclassified t"
+            },
+            {
+              "chunk_idx": 705,
+              "cue": "reclassified",
+              "snippet": "her comprehensive income - items that will not be reclassified to profit or loss remeasurement loss of defined benefit plan (88) (68) tax effect on above 22 17"
+            },
+            {
+              "chunk_idx": 729,
+              "cue": "changed from",
+              "snippet": "ships established during the year. & relationship changed from joint venture to subsidiary. $$ amalgamated with jiostar india private limited. sr. no."
+            },
+            {
+              "chunk_idx": 730,
+              "cue": "changed from",
+              "snippet": "ar. & relationship changed from joint venture to subsidiary. $$ amalgamated with jiostar india private limited. sr. no. name of t"
+            },
+            {
+              "chunk_idx": 737,
+              "cue": "changed from",
+              "snippet": "ompany/subsidiary is a beneficiary & relationship changed from joint venture to subsidiary"
+            },
+            {
+              "chunk_idx": 738,
+              "cue": "changed from",
+              "snippet": "ompany/subsidiary is a beneficiary & relationship changed from joint venture to subsidiary reliance industries limited integrated annual report 2025-26 156 157"
+            },
+            {
+              "chunk_idx": 793,
+              "cue": "reclassified",
+              "snippet": "ther comprehensive income- items that will not be reclassified to profit or loss other comprehensive income-items that will not be reclassified to profit or los"
+            },
+            {
+              "chunk_idx": 813,
+              "cue": "reclassified",
+              "snippet": "ing the year. (18,559) (4,099) items that will be reclassified to profit & loss 3 amount reclassified to profit and loss during the year 2,436 2,229 value of sa"
+            }
+          ],
+          "note": "cue-STRING presence only; DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS; does NOT evaluate contractual material-change detection (Document 65 section 9 / INV-IC)"
+        }
+      }
+    },
+    {
+      "key": "PLAINTEXT",
+      "kind": "plain-text POST /ingest/text",
+      "is_edgar": false,
+      "status": "RUN",
+      "ticker": "RIVERSTONE_SPIKE",
+      "doc_id": "761094a5-8b4e-4156-b9af-a9bbe1567d3a",
+      "source": "spike plain-text ingest (unstructured memo)",
+      "num_chunks": 3,
+      "char_count": 1819,
+      "note": "unstructured narrative memo, no Item structure by construction",
+      "prediction_run1": {
+        "risk_factors": {
+          "kind": "rf",
+          "predicted_present": false,
+          "range": null,
+          "basis": "heading-absent",
+          "start_chunk": null,
+          "end_chunk": null,
+          "end_established": null,
+          "boundary_rule": null,
+          "diagnostic_state": "not_located",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "heading_seen_chunks": [],
+          "toc_chunks": [],
+          "llm_calls": [],
+          "evidence": {}
+        },
+        "mda": {
+          "kind": "mda",
+          "predicted_present": false,
+          "range": null,
+          "basis": "heading-absent",
+          "start_chunk": null,
+          "end_chunk": null,
+          "end_established": null,
+          "boundary_rule": null,
+          "diagnostic_state": "not_located",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "heading_seen_chunks": [],
+          "toc_chunks": [],
+          "llm_calls": [],
+          "evidence": {}
+        }
+      },
+      "evaluation": {
+        "risk_factors": {
+          "filing": "PLAINTEXT",
+          "section": "risk_factors",
+          "target_present": false,
+          "predicted_range": null,
+          "ground_truth_range": null,
+          "basis": "heading-absent",
+          "diagnostic_state": "not_located",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "boundary_status": "n/a",
+          "false_positive": false,
+          "false_negative": false,
+          "verdict": "target-absent correct absence",
+          "reviewer_evidence": {
+            "predicted_start_context": "",
+            "heading_seen_chunks": [],
+            "toc_chunks_rejected": [],
+            "ground_truth_note": "informal 'Risks the management team is tracking' paragraph is NOT a formal Risk Factors section"
+          }
+        },
+        "mda": {
+          "filing": "PLAINTEXT",
+          "section": "mda",
+          "target_present": false,
+          "predicted_range": null,
+          "ground_truth_range": null,
+          "basis": "heading-absent",
+          "diagnostic_state": "not_located",
+          "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+          "boundary_status": "n/a",
+          "false_positive": false,
+          "false_negative": false,
+          "verdict": "target-absent correct absence",
+          "reviewer_evidence": {
+            "predicted_start_context": "",
+            "heading_seen_chunks": [],
+            "toc_chunks_rejected": [],
+            "ground_truth_note": "informal 'Trading position' / 'Matters the board discussed' / 'Outlook' narrative is NOT a formal MD&A section"
+          }
+        }
+      },
+      "reproducibility": {
+        "n_runs": 5,
+        "identical": true,
+        "llm_invoked": false,
+        "per_run": [
+          {
+            "run": 1,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": null,
+            "mda_basis": "heading-absent"
+          },
+          {
+            "run": 2,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": null,
+            "mda_basis": "heading-absent"
+          },
+          {
+            "run": 3,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": null,
+            "mda_basis": "heading-absent"
+          },
+          {
+            "run": 4,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": null,
+            "mda_basis": "heading-absent"
+          },
+          {
+            "run": 5,
+            "risk_factors_range": null,
+            "risk_factors_basis": "heading-absent",
+            "mda_range": null,
+            "mda_basis": "heading-absent"
+          }
+        ],
+        "distinct_signatures": [
+          "{\"mda\": [null, \"heading-absent\", \"not_located\"], \"risk_factors\": [null, \"heading-absent\", \"not_located\"]}"
+        ]
+      },
+      "controls_DIAGNOSTIC": {
+        "note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS -- these controls are diagnostics, NOT a test of the ratified Document 64 features",
+        "filing_summary": {
+          "filing_local": true,
+          "note": "whole-filing; single doc_id input; NOT an evaluation of the Document 64 Filing Summary output"
+        },
+        "important_changes": {
+          "filing_local": true,
+          "cue_hit_count": 0,
+          "cue_hits_sample": [],
+          "note": "cue-STRING presence only; DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS; does NOT evaluate contractual material-change detection (Document 65 section 9 / INV-IC)"
+        }
+      }
+    }
+  ],
+  "evaluations": [
+    {
+      "filing": "EDGAR_10Q",
+      "section": "risk_factors",
+      "target_present": true,
+      "predicted_range": [
+        155,
+        155
+      ],
+      "ground_truth_range": [
+        155,
+        155
+      ],
+      "basis": "structural",
+      "diagnostic_state": "located_bounded",
+      "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+      "boundary_status": "end_established",
+      "false_positive": false,
+      "false_negative": false,
+      "verdict": "CORRECT LOCATION",
+      "reviewer_evidence": {
+        "predicted_start_context": "eport on Form 10-Q. ITEM 1A. RISK FACTORS Our operations and financial results are subject to various risks and uncertainties, including the factors discussed in Part I, Item 1A, Risk Factors in our Annual Report on Form",
+        "heading_seen_chunks": [
+          5,
+          155
+        ],
+        "toc_chunks_rejected": [
+          5
+        ],
+        "ground_truth_note": "Part II Item 1A; entire 'no material changes, see 10-K' disclosure sits in chunk 155; 'ITEM 2. UNREGISTERED SALES' follows in the same chunk"
+      }
+    },
+    {
+      "filing": "EDGAR_10Q",
+      "section": "mda",
+      "target_present": true,
+      "predicted_range": [
+        5,
+        5
+      ],
+      "ground_truth_range": [
+        104,
+        148
+      ],
+      "basis": "structural",
+      "diagnostic_state": "located_bounded",
+      "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+      "boundary_status": "end_established",
+      "false_positive": true,
+      "false_negative": false,
+      "verdict": "target-present GENUINE FAILURE (wrong location)",
+      "reviewer_evidence": {
+        "predicted_start_context": "ancial Statements 9 Item 2. Management's Discussion and Analysis of Financial Condition and Results of Operations 28 Item 3. Quantitative and Qualitative Disclosures about Market Risk 36 Item 4. Controls and Procedures 3",
+        "heading_seen_chunks": [
+          5,
+          104,
+          143
+        ],
+        "toc_chunks_rejected": [],
+        "ground_truth_note": "Part I Item 2; 'ITEM 2. MANAGEMENT'S DISCUSSION AND ANALYSIS ... The following discussion and analysis' at ch 104; ends before 'ITEM 3. QUANTITATIVE...' at ch 149"
+      }
+    },
+    {
+      "filing": "EDGAR_10K",
+      "section": "risk_factors",
+      "target_present": true,
+      "predicted_range": [
+        70,
+        173
+      ],
+      "ground_truth_range": [
+        70,
+        185
+      ],
+      "basis": "structural",
+      "diagnostic_state": "located_bounded",
+      "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+      "boundary_status": "end_established",
+      "false_positive": false,
+      "false_negative": false,
+      "verdict": "CORRECT LOCATION",
+      "reviewer_evidence": {
+        "predicted_start_context": " 13  PART I Item 1A ITEM 1A. RIS K FACTORS Our operations and financial results are subject to various risks and uncertainties, including those described below, that could adversely affect our business, operations, finan",
+        "heading_seen_chunks": [
+          10,
+          62,
+          70,
+          103,
+          158,
+          167,
+          168,
+          200,
+          201
+        ],
+        "toc_chunks_rejected": [
+          10
+        ],
+        "ground_truth_note": "Item 1A body opens 'ITEM 1A. RISK FACTORS Our operations and financial results are subject to various risks and uncertainties' at ~ch 70 (heading late in the chunk, continues into 71); runs to ~185 before 'ITEM 6. [RESERVED]'/'ITEM 7' at ch 191-192. START is the load-bearing value; END approximate"
+      }
+    },
+    {
+      "filing": "EDGAR_10K",
+      "section": "mda",
+      "target_present": true,
+      "predicted_range": [
+        11,
+        11
+      ],
+      "ground_truth_range": [
+        192,
+        214
+      ],
+      "basis": "structural",
+      "diagnostic_state": "located_bounded",
+      "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+      "boundary_status": "end_established",
+      "false_positive": true,
+      "false_negative": false,
+      "verdict": "target-present GENUINE FAILURE (wrong location)",
+      "reviewer_evidence": {
+        "predicted_start_context": "6.  [Reserved]  33  Item 7.  Management's Discussion and Analysis of Financial Condition and Results of Operations  34  Item 7A.  Quantitative and Qualitative Disclosures About Market Risk  49  Item 8.  Financial Stateme",
+        "heading_seen_chunks": [
+          11,
+          192
+        ],
+        "toc_chunks_rejected": [],
+        "ground_truth_note": "Item 7; '33 PART II Item 7 ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS ... The following Management's Discussion and Analysis ... (\"MD&A\")' at ch 192; runs to end of file / Item 8"
+      }
+    },
+    {
+      "filing": "BSE_ANNUAL",
+      "section": "risk_factors",
+      "target_present": false,
+      "predicted_range": null,
+      "ground_truth_range": null,
+      "basis": "heading-absent",
+      "diagnostic_state": "not_located",
+      "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+      "boundary_status": "n/a",
+      "false_positive": false,
+      "false_negative": false,
+      "verdict": "target-absent correct absence",
+      "reviewer_evidence": {
+        "predicted_start_context": "",
+        "heading_seen_chunks": [],
+        "toc_chunks_rejected": [],
+        "ground_truth_note": "NO SEC-style Risk Factors / Item 1A section. 'Enterprise Risk Management' content (~ch 125-143) is NOT a Risk Factors section and must not be reported as one"
+      }
+    },
+    {
+      "filing": "BSE_ANNUAL",
+      "section": "mda",
+      "target_present": true,
+      "predicted_range": [
+        22,
+        144
+      ],
+      "ground_truth_range": [
+        22,
+        144
+      ],
+      "basis": "structural",
+      "diagnostic_state": "located_bounded",
+      "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+      "boundary_status": "end_established",
+      "false_positive": false,
+      "false_negative": false,
+      "verdict": "CORRECT LOCATION",
+      "reviewer_evidence": {
+        "predicted_start_context": " Report 2025-26 6 7 Management Discussion and Analysis Financial Performance and Review Operating Environment Global economic expansion continued, with IMF estimating global growth at 3.4% for CY25, improving from CY24 g",
+        "heading_seen_chunks": [
+          6,
+          22,
+          30,
+          31,
+          41,
+          51,
+          59,
+          69,
+          77,
+          90,
+          99,
+          109,
+          119,
+          131,
+          144,
+          309,
+          312,
+          315,
+          316,
+          404
+        ],
+        "toc_chunks_rejected": [
+          6
+        ],
+        "ground_truth_note": "'Management Discussion and Analysis' (non-possessive) begins ch 22 ('... Management Discussion and Analysis Financial Performance and Review Operating Environment Global economic expansion continued'); running header recurs ch 22..144; ch 6 is the contents page"
+      }
+    },
+    {
+      "filing": "PLAINTEXT",
+      "section": "risk_factors",
+      "target_present": false,
+      "predicted_range": null,
+      "ground_truth_range": null,
+      "basis": "heading-absent",
+      "diagnostic_state": "not_located",
+      "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+      "boundary_status": "n/a",
+      "false_positive": false,
+      "false_negative": false,
+      "verdict": "target-absent correct absence",
+      "reviewer_evidence": {
+        "predicted_start_context": "",
+        "heading_seen_chunks": [],
+        "toc_chunks_rejected": [],
+        "ground_truth_note": "informal 'Risks the management team is tracking' paragraph is NOT a formal Risk Factors section"
+      }
+    },
+    {
+      "filing": "PLAINTEXT",
+      "section": "mda",
+      "target_present": false,
+      "predicted_range": null,
+      "ground_truth_range": null,
+      "basis": "heading-absent",
+      "diagnostic_state": "not_located",
+      "diagnostic_state_note": "DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS",
+      "boundary_status": "n/a",
+      "false_positive": false,
+      "false_negative": false,
+      "verdict": "target-absent correct absence",
+      "reviewer_evidence": {
+        "predicted_start_context": "",
+        "heading_seen_chunks": [],
+        "toc_chunks_rejected": [],
+        "ground_truth_note": "informal 'Trading position' / 'Matters the board discussed' / 'Outlook' narrative is NOT a formal MD&A section"
+      }
+    }
+  ],
+  "false_positives": [
+    {
+      "filing": "EDGAR_10Q",
+      "section": "mda",
+      "verdict": "target-present GENUINE FAILURE (wrong location)",
+      "predicted_range": [
+        5,
+        5
+      ],
+      "why": "Part I Item 2; 'ITEM 2. MANAGEMENT'S DISCUSSION AND ANALYSIS ... The following discussion and analysis' at ch 104; ends before 'ITEM 3. QUANTITATIVE...' at ch 149"
+    },
+    {
+      "filing": "EDGAR_10K",
+      "section": "mda",
+      "verdict": "target-present GENUINE FAILURE (wrong location)",
+      "predicted_range": [
+        11,
+        11
+      ],
+      "why": "Item 7; '33 PART II Item 7 ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS ... The following Management's Discussion and Analysis ... (\"MD&A\")' at ch 192; runs to end of file / Item 8"
+    }
+  ],
+  "false_negatives": [],
+  "boundary_failures": [],
+  "aggregate": {
+    "edgar": {
+      "n_filings": 2,
+      "n_section_targets": 4,
+      "correct_location": 2,
+      "correct_absence": 0,
+      "partial_boundary": 0,
+      "false_positive": 2,
+      "false_negative": 0
+    },
+    "non_edgar": {
+      "n_filings": 2,
+      "n_section_targets": 4,
+      "correct_location": 1,
+      "correct_absence": 3,
+      "partial_boundary": 0,
+      "false_positive": 0,
+      "false_negative": 0
+    },
+    "all_reproducible": true
+  },
+  "section_20_1_bar": {
+    "1_every_filing_correct_RF_and_MDA_evidence": false,
+    "2_zero_false_positive_section_locations": false,
+    "3_incomplete_evidence_honest_partial_or_insufficient": true,
+    "4_control_outputs_filing_local": true,
+    "4_note": "controls are structurally filing-local (one doc_id per run); 'correctly grounded' in the full Document 64 sense is an OAQ-9/generation concern, out of scope for a section-location spike",
+    "5_reproducible_under_identical_inputs": true,
+    "6_reviewer_checkable": true,
+    "sample_covers_all_four_required_types": true,
+    "missing_required_types": [],
+    "llm_classification_errors": 0
+  },
+  "section_20_1_bar_met": false,
+  "result": "FAIL / STOP",
+  "contract_state_caveat": "All per-section diagnostic_state values are LOCATOR diagnostics tagged 'DIAGNOSTIC -- NOT DOCUMENT 64 CONTRACT SEMANTICS'. They are NOT Document 64 section 11.6/11.7 contractual complete/partial/insufficient_evidence."
+}

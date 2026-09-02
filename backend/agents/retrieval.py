@@ -148,6 +148,7 @@ async def retrieve(
     *,
     top_k: int = 8,
     candidate_k: int = 24,
+    doc_id: str | None = None,
 ) -> tuple[list[dict], dict]:
     """Hybrid retrieval.
 
@@ -155,6 +156,11 @@ async def retrieve(
     2) Dense cosine (if embedder available) -> merge normalized scores.
     3) Cross-encoder rerank (if reranker available) -> final ordering.
     Returns (docs, meta) where meta describes which stages were used.
+
+    `doc_id` (M14 — Document 65 OAQ-3/B, Document 66 §5 C-g): optional, opt-in.
+    When supplied, scoring is restricted to that single filing's chunks. The
+    report pipeline's `retriever` node passes no `doc_id`, so its behaviour is
+    byte-for-byte unchanged.
     """
     # Newest-first so that when a ticker has >2000 chunks (repeated re-ingests),
     # the cap drops the oldest rather than silently dropping the latest filing.
@@ -162,7 +168,10 @@ async def retrieve(
     # fresh ones; add a doc_id/version filter if that ever causes bad retrievals.
     _started = time.monotonic()
     try:
-        cursor = db.filing_chunks.find({"ticker": ticker.upper()}, {"_id": 0}).sort("created_at", -1)
+        _flt: dict = {"ticker": ticker.upper()}
+        if doc_id:
+            _flt["doc_id"] = doc_id
+        cursor = db.filing_chunks.find(_flt, {"_id": 0}).sort("created_at", -1)
         chunks: list[dict] = await cursor.to_list(2000)
         meta = {"total_chunks": len(chunks), "bm25": True, "dense": False, "reranker": False}
         if not chunks:
