@@ -73,6 +73,7 @@ def test_job_deadline_dict_matches_07_5_4():
         assert s.job_deadline_s == {
             "research": 300.0, "learning": 120.0, "comparison_explanation": 60.0,
             "filing_analysis": 180.0,  # M14 — additive (Document 65 §11/§19; operational, retunable)
+            "change_brief": 60.0,  # M15 — additive (Document 73 R1 §16; operational, retunable — Document 76 §15.4)
         }
         # 09 §6.2 / 07 LR-9's binding invariant: the reaper window must
         # exceed the longest job deadline plus grace, or the reaper could

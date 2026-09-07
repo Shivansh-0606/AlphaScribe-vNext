@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -54,6 +54,7 @@ from infrastructure.observability.metrics import (
     acquisition_request_total,
     auth_failures_total,
     authz_denied_total,
+    change_brief_runs_total,
     comparison_explanation_runs_total,
     filing_analysis_runs_total,
     deadline_exceeded_total,
@@ -80,6 +81,11 @@ from agents.comparison_explanation import (
 from agents.filing_analysis import (
     FilingAnalysisGroundingError,
     analyze_filing,
+)
+from agents.change_brief_financial import compute_financial_change_brief
+from agents.change_brief_narrative import (
+    SCHEMA_VERSION as CHANGE_BRIEF_SCHEMA_VERSION,
+    generate_change_brief_narrative,
 )
 
 # ---------------------------------------------------------------------------
@@ -2535,6 +2541,366 @@ async def cancel_filing_analysis(
         task.cancel()
     await container.job_lifecycle.cancel(id)
     _FILING_ANALYSIS_RESULTS.pop(id, None)  # cancellation guarantees the result is not published
+    return {"id": id, "status": "cancelled"}
+
+
+# ---------------------------------------------------------------------------
+# M15 — C-4 "What Changed Since Last Review" (Documents 70 R4 / 73 R1 / 75 /
+# 76). A fifth async LLM/data surface after Research / Learning /
+# Comparison-Explanation / Filing Analysis. One JobKind.CHANGE_BRIEF, one
+# route family under /api/companies/{ticker}/changes (Document 70 §10.1), one
+# orchestration function that branches on comparison_type into two fully
+# independent engines that share only this shell:
+#   - `period` mode  -> agents/change_brief_financial.py: pure, deterministic,
+#                       LLM-free numeric-delta over two financial_statements rows.
+#   - `report` mode  -> agents/change_brief_narrative.py: one bounded chat_json
+#                       call over two reports, per-item both-sides citation
+#                       validation, no iterative/continuation generation.
+#
+# PERSISTENCE = AH-2 (Document 73 R1 §12, ratified Document 74 §10): the
+# process-local, TTL-bounded in-process buffer below — the same mechanism as
+# M14's _FILING_ANALYSIS_RESULTS. `reused` is therefore always False. No Mongo
+# collection/index/schema/migration, no Redis final-result persistence, no
+# cross-process retrieval, no sticky sessions. A restart legitimately discards
+# a completed result; a GET/stream reaching another process cannot retrieve it.
+# ---------------------------------------------------------------------------
+
+# ponytail: AH-2 process-local result buffer -- a completed change brief lives
+# only in this process, only until its max_job_lifetime_s TTL (or a 256-entry
+# oldest-first eviction), and not across a restart or a second backend
+# instance. GET after expiry returns {status: completed} with no `changes`.
+# Upgrade path: a durable store (Document 70 §16 AH-2 / Document 73 R1 §24
+# AAQ-3), gated on a separate 08_MongoDB_Data_Architecture.md + ADR
+# authorization -- deliberately not built here (Document 76 §10/§11).
+_CHANGE_BRIEF_RESULTS: dict[str, tuple[str, dict, float]] = {}  # id -> (user_id, changes_payload, expires_at_epoch_s)
+_CB_MAX_ENTRIES = 256
+
+_CB_REPORT_FIELDS = ("baseline_report_id", "current_report_id")
+_CB_PERIOD_FIELDS = ("period_type", "statement_type", "baseline_period_end", "current_period_end")
+_CB_OUTCOME_BY_STATE = {
+    "complete": "completed_complete",
+    "partial": "completed_partial",
+    "insufficient_evidence": "completed_insufficient_evidence",
+}
+
+
+def _store_change_brief_result(job_id: str, user_id: str, payload: dict) -> None:
+    now = _fa_now()
+    _CHANGE_BRIEF_RESULTS[job_id] = (user_id, payload, now + settings.max_job_lifetime_s)
+    for k in [k for k, v in list(_CHANGE_BRIEF_RESULTS.items()) if v[2] <= now]:
+        _CHANGE_BRIEF_RESULTS.pop(k, None)
+    if len(_CHANGE_BRIEF_RESULTS) > _CB_MAX_ENTRIES:
+        oldest = sorted(_CHANGE_BRIEF_RESULTS, key=lambda k: _CHANGE_BRIEF_RESULTS[k][2])
+        for k in oldest[: len(_CHANGE_BRIEF_RESULTS) - _CB_MAX_ENTRIES]:
+            _CHANGE_BRIEF_RESULTS.pop(k, None)
+
+
+def _get_change_brief_result(job_id: str, user_id: str) -> dict | None:
+    entry = _CHANGE_BRIEF_RESULTS.get(job_id)
+    if not entry:
+        return None
+    uid, payload, exp = entry
+    if exp <= _fa_now():
+        _CHANGE_BRIEF_RESULTS.pop(job_id, None)
+        return None
+    if uid != user_id:  # job records are owner-scoped (Document 70 R4 §18)
+        return None
+    return payload
+
+
+class ChangeBriefRequest(BaseModel):
+    # Discriminated by comparison_type; the dependent-field rules are enforced
+    # in _validate_change_brief_request so every 422 carries the
+    # {detail, type: "validation_error"} envelope (Document 70 R4 §15). BYOK
+    # field set is verbatim from every prior contract.
+    comparison_type: Optional[str] = None
+    baseline_report_id: Optional[str] = None
+    current_report_id: Optional[str] = None
+    period_type: Optional[str] = None
+    statement_type: Optional[str] = None
+    baseline_period_end: Optional[str] = None
+    current_period_end: Optional[str] = None
+    llm_provider: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    llm_model: Optional[str] = None
+
+
+def _validate_change_brief_request(req: "ChangeBriefRequest") -> None:
+    """Document 70 R4 §9.4 / §10.2 / §15 request rules — all 422
+    `validation_error`. A missing/invalid comparison_type, a missing field
+    required by the declared mode, a field belonging to the OTHER mode, a
+    self-comparison, or a non-strictly-increasing period pair."""
+    ct = req.comparison_type
+    if ct not in ("report", "period"):
+        raise ValidationError("comparison_type must be 'report' or 'period'", code="validation_error")
+
+    if ct == "report":
+        for f in _CB_PERIOD_FIELDS:
+            if getattr(req, f) is not None:
+                raise ValidationError(f"{f} is not valid for comparison_type 'report'", code="validation_error")
+        missing = [f for f in _CB_REPORT_FIELDS if not getattr(req, f)]
+        if missing:
+            raise ValidationError(f"comparison_type 'report' requires {missing}", code="validation_error")
+        if req.baseline_report_id == req.current_report_id:
+            raise ValidationError("baseline_report_id and current_report_id must differ", code="validation_error")
+    else:
+        for f in _CB_REPORT_FIELDS:
+            if getattr(req, f) is not None:
+                raise ValidationError(f"{f} is not valid for comparison_type 'period'", code="validation_error")
+        missing = [f for f in _CB_PERIOD_FIELDS if not getattr(req, f)]
+        if missing:
+            raise ValidationError(f"comparison_type 'period' requires {missing}", code="validation_error")
+        if req.period_type not in ("annual", "quarterly"):
+            raise ValidationError("period_type must be 'annual' or 'quarterly'", code="validation_error")
+        if req.statement_type not in ("income", "balance_sheet", "cash_flow"):
+            raise ValidationError(
+                "statement_type must be 'income', 'balance_sheet' or 'cash_flow'", code="validation_error"
+            )
+        # A malformed period_end must be rejected here (422), never passed
+        # through to reference resolution where it degrades to a 404 for a
+        # nonexistent row (Document 70 R4 §10.2 / §15 — period_end is an
+        # ISO-8601 date, repo-canonical form YYYY-MM-DD, financials.py:63).
+        for f in ("baseline_period_end", "current_period_end"):
+            v = getattr(req, f)
+            try:
+                ok = date.fromisoformat(v).isoformat() == v  # parses AND is canonical YYYY-MM-DD
+            except ValueError:
+                ok = False
+            if not ok:
+                raise ValidationError(f"{f} must be an ISO-8601 date (YYYY-MM-DD)", code="validation_error")
+        if req.baseline_period_end >= req.current_period_end:
+            raise ValidationError(
+                "baseline_period_end must be strictly earlier than current_period_end", code="validation_error"
+            )
+
+
+async def _resolve_change_brief_reports(
+    ticker: str, baseline_id: str, current_id: str, user_id: str
+) -> tuple[dict | None, dict | None]:
+    """Both ids must independently resolve to a `reports` doc for this ticker,
+    owned by the caller or `is_sample` (Document 70 R4 §9.4 / §18; Document 73
+    R1 §10 — the _resolve_authorized_reports query pattern plus a ticker-match
+    clause). A foreign / cross-ticker / nonexistent id is indistinguishable
+    (returns None -> 404 non-disclosure at the call site)."""
+    rows = await db.reports.find(
+        {"id": {"$in": [baseline_id, current_id]}, "ticker": ticker,
+         "$or": [{"user_id": user_id}, {"is_sample": True}]},
+        {"_id": 0, "events": 0, "source_documents": 0},
+    ).to_list(2)
+    by_id = {r["id"]: r for r in rows}
+    return by_id.get(baseline_id), by_id.get(current_id)
+
+
+async def _resolve_change_brief_statements(
+    ticker: str, period_type: str, statement_type: str, baseline_pe: str, current_pe: str
+):
+    """Both (ticker, period_type, statement_type, period_end) rows must exist
+    (Document 70 R4 §9.4 / §15). Reads through the same repository port
+    GET /companies/{ticker}/financials uses — no new port, no new query shape
+    (Document 73 R1 §9)."""
+    rows = await container.financial_statements.get(ticker, PeriodType(period_type))
+    st = StatementType(statement_type)
+    by_pe = {s.period_end: s for s in rows if s.statement_type == st}
+    return by_pe.get(baseline_pe), by_pe.get(current_pe)
+
+
+async def _run_change_brief(
+    job_id: str, ticker: str, user_id: str, comparison_type: str, baseline, current,
+    *, llm_provider: str | None = None, llm_api_key: str | None = None,
+    llm_base_url: str | None = None, llm_model: str | None = None,
+) -> None:
+    from agents.llm import reset_llm_context, set_llm_context
+
+    # `period` mode makes no LLM call and never touches BYOK context at all
+    # (Document 73 R1 §19; Document 76 §13).
+    _tok = (
+        set_llm_context(llm_provider, llm_api_key, light_model=llm_model,
+                        heavy_model=llm_model, base_url=llm_base_url)
+        if comparison_type == "report" and (llm_provider or llm_api_key) else None
+    )
+    await container.job_lifecycle.mark_running(job_id)
+
+    async def push(ev: dict) -> None:
+        await container.job_lifecycle.publish(
+            job_id, {**ev, "ts": datetime.now(timezone.utc).isoformat()}
+        )
+
+    _span_cm = get_tracer().start_as_current_span(
+        "pipeline.change_brief", attributes={"job_id": job_id, "comparison_type": comparison_type}
+    )
+    _span = _span_cm.__enter__()
+    outcome = "failed"
+    try:
+        await push({"node": "pipeline", "status": "start", "message": "Computing change brief"})
+
+        if await container.job_lifecycle.is_past_deadline(job_id):
+            raise TimeoutError("deadline")
+
+        if comparison_type == "period":
+            body = compute_financial_change_brief(baseline, current)  # deterministic, no LLM
+            prompt_version = None
+        else:
+            body = await generate_change_brief_narrative(baseline, current)  # one chat_json call
+            prompt_version = body.get("prompt_version")
+
+        if await container.job_lifecycle.is_past_deadline(job_id):
+            raise TimeoutError("deadline")
+
+        changes_payload = {
+            "ticker": ticker,
+            "comparison_type": comparison_type,
+            "baseline": body["baseline"],
+            "current": body["current"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "prompt_version": prompt_version,  # None for `period` (no LLM), a version string for `report`
+            "schema_version": CHANGE_BRIEF_SCHEMA_VERSION,
+            "items": body["items"],
+            "state": body["state"],
+            "coverage_boundaries": body["coverage_boundaries"],
+        }
+        _store_change_brief_result(job_id, user_id, changes_payload)
+
+        outcome = _CB_OUTCOME_BY_STATE[body["state"]]
+        await container.job_lifecycle.complete(job_id)
+        change_brief_runs_total.labels(outcome=outcome, comparison_type=comparison_type).inc()
+    except asyncio.CancelledError:
+        outcome = "cancelled"
+        _CHANGE_BRIEF_RESULTS.pop(job_id, None)
+        await container.job_lifecycle.cancel(job_id)  # idempotent
+        change_brief_runs_total.labels(outcome=outcome, comparison_type=comparison_type).inc()
+        _span.set_status(Status(StatusCode.ERROR, "Job cancelled"))
+    except Exception as e:  # noqa: BLE001 — never leak raw provider/validation text
+        logger.exception("change brief failed")
+        if isinstance(e, NotFoundError):
+            outcome, err = "failed", "Comparison reference not found."
+        elif isinstance(e, TimeoutError):
+            outcome, err = "failed_deadline_exceeded", "Change brief exceeded its time budget and was stopped."
+        else:
+            outcome, err = "failed", "Change brief failed. See server logs for details."
+        _CHANGE_BRIEF_RESULTS.pop(job_id, None)
+        await container.job_lifecycle.fail(job_id, err)
+        change_brief_runs_total.labels(outcome=outcome, comparison_type=comparison_type).inc()
+        _span.set_status(Status(StatusCode.ERROR, err))
+    finally:
+        if _tok is not None:
+            reset_llm_context(_tok)
+        RUNNING_TASKS.pop(job_id, None)
+        jobs_active.labels(kind="change_brief").dec()
+        _span_cm.__exit__(None, None, None)
+
+
+@api.post("/companies/{ticker}/changes")
+async def create_change_brief(
+    ticker: str,
+    req: Optional[ChangeBriefRequest] = None,
+    user: dict = Depends(current_user),
+):
+    """M15 — create an async change-brief job for one company in exactly one
+    mode (Document 70 R4 §10.1). Additive; changes no existing route."""
+    req = req or ChangeBriefRequest()
+    ticker = ticker.strip().upper()
+    if not ticker:
+        raise ValidationError("ticker required", code="validation_error")
+    _validate_change_brief_request(req)
+
+    # Same admin/SSRF gate as every other BYOK surface (Document 70 R4 §18).
+    if req.llm_provider == "custom" or req.llm_base_url:
+        require_admin(user)
+    if req.llm_base_url:
+        from agents.llm import assert_public_url
+        try:
+            assert_public_url(req.llm_base_url)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Custom LLM base URL must be a publicly reachable http(s) "
+                    "address — the server calls it directly, so localhost and "
+                    "private-network addresses aren't allowed."
+                ),
+            )
+
+    # Synchronous reference resolution — 404 non-disclosure (Document 70 R4
+    # §15), checked independently per reference. Reports / financial_statements
+    # are immutable after creation, so the two resolved objects are handed to
+    # the background task directly (Document 73 R1 §21 — at most two reads).
+    if req.comparison_type == "report":
+        baseline, current = await _resolve_change_brief_reports(
+            ticker, req.baseline_report_id, req.current_report_id, user["id"]
+        )
+    else:
+        baseline, current = await _resolve_change_brief_statements(
+            ticker, req.period_type, req.statement_type,
+            req.baseline_period_end, req.current_period_end,
+        )
+    if baseline is None or current is None:
+        raise NotFoundError("comparison reference not found")
+
+    job_id = str(uuid.uuid4())
+    await container.job_lifecycle.start(
+        job_id, JobKind.CHANGE_BRIEF, user["id"], ticker=ticker,
+        deadline_s=settings.job_deadline_s["change_brief"],
+    )
+    jobs_active.labels(kind="change_brief").inc()
+    RUNNING_TASKS[job_id] = asyncio.create_task(
+        _run_change_brief(
+            job_id, ticker, user["id"], req.comparison_type, baseline, current,
+            llm_provider=req.llm_provider, llm_api_key=req.llm_api_key,
+            llm_base_url=req.llm_base_url, llm_model=req.llm_model,
+        )
+    )
+    # AH-2 process-local buffer: no stored artifact -> never a reuse (Document 70 R4 §10.3).
+    return {"id": job_id, "status": "queued", "reused": False}
+
+
+@api.get("/companies/{ticker}/changes/{id}")
+async def get_change_brief(ticker: str, id: str, user: dict = Depends(current_user)):
+    payload = _get_change_brief_result(id, user["id"])
+    if payload is not None:
+        return {"id": id, "status": "completed", "changes": payload}
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="change brief job not found")
+    return {"id": id, "status": job.status.value}  # no `changes` key while non-completed
+
+
+async def _change_brief_stream_events(job_id: str, user_id: str):
+    """Mirrors _filing_analysis_stream_events: inject the completed `changes`
+    payload as a `final` frame right after the terminal `pipeline/ok`. The
+    payload is read from the SAME process-local buffer as GET — the SSE path
+    carries the identical AH-2 invariant, not an exemption (Document 73 R1
+    §12.2; Document 76 §10)."""
+    async for ev in container.events.subscribe(job_id):
+        yield ev
+        if ev.get("node") == "pipeline" and ev.get("status") == "ok":
+            payload = _get_change_brief_result(job_id, user_id)
+            if payload is not None:
+                yield {"node": "final", "status": "ok", "changes": payload}
+
+
+@api.get("/companies/{ticker}/changes/{id}/stream")
+async def stream_change_brief(ticker: str, id: str, user: dict = Depends(current_user)):
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="change brief job not found")
+    return sse_response(
+        _change_brief_stream_events(id, user["id"]), stream_name="change_brief"
+    )
+
+
+@api.post("/companies/{ticker}/changes/{id}/cancel")
+async def cancel_change_brief(ticker: str, id: str, user: dict = Depends(current_user)):
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="change brief job not found")
+    if job.is_terminal():
+        return {"id": id, "status": job.status.value}  # idempotent
+    task = RUNNING_TASKS.get(id)
+    if task and not task.done():
+        task.cancel()
+    await container.job_lifecycle.cancel(id)
+    _CHANGE_BRIEF_RESULTS.pop(id, None)  # cancellation guarantees the result is not published
     return {"id": id, "status": "cancelled"}
 
 

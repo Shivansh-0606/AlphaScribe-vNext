@@ -137,6 +137,19 @@ filing_analysis_runs_total = Counter(
                   # | failed | failed_deadline_exceeded | cancelled
 )
 
+# --- M15 — Document 73 R1 §20's required outcome signal for C-4 "What Changed
+# Since Last Review". Same shape/rationale as filing_analysis_runs_total, with
+# an extra `comparison_type` label dimension (Document 73 R1 §20 — a deliberate,
+# justified deviation: C-4 has two modes worth distinguishing in aggregate). ---
+change_brief_runs_total = Counter(
+    "alphascribe_change_brief_runs_total",
+    "M15 change-brief job runs, by aggregate outcome and comparison mode",
+    ["outcome", "comparison_type"],  # outcome: completed_complete | completed_partial
+                                     #  | completed_insufficient_evidence | failed
+                                     #  | failed_deadline_exceeded | cancelled
+                                     # comparison_type: period | report
+)
+
 # --- DEFINED, not yet incremented anywhere — its call site is 09 §8.1's
 # fail-open policy, implemented today in agents/auth.py's in-memory rate
 # limiter, not the RedisRateLimiter port this gauge belongs to (that port

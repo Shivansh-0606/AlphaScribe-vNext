@@ -118,6 +118,16 @@ APPROVED_ROUTES = {
     ("GET", "/api/companies/{ticker}/filings/{doc_id}/analysis/{id}"),
     ("GET", "/api/companies/{ticker}/filings/{doc_id}/analysis/{id}/stream"),
     ("POST", "/api/companies/{ticker}/filings/{doc_id}/analysis/{id}/cancel"),
+    # M15 — C-4 "What Changed Since Last Review" — 4 additive routes,
+    # transcribed verbatim from
+    # docs/backend_engineering/70_M15_What_Changed_API_Contract_Proposal.md
+    # §10.1 (Revision R4, CTO-ratified 2026-09-06 via Document 72) and the
+    # ratified architecture in Document 73 R1 §16; implementation separately
+    # CTO-authorized (Document 75, ratified by Document 76).
+    ("POST", "/api/companies/{ticker}/changes"),
+    ("GET", "/api/companies/{ticker}/changes/{id}"),
+    ("GET", "/api/companies/{ticker}/changes/{id}/stream"),
+    ("POST", "/api/companies/{ticker}/changes/{id}/cancel"),
 }
 
 _HTTP_METHODS = {"get", "post", "put", "delete", "patch"}
@@ -139,8 +149,9 @@ def test_route_count_matches_the_approved_contract():
     # + 1 additive M8 Step 7 (financials acquire) + 4 additive M9.1
     # (comparison explanation, Document 43) + 1 additive M12 (financials read)
     # + 1 additive M13 (filing content read, Documents 59/60)
-    # + 4 additive M14 (filing analysis, Documents 64 §9.1 / 65 §13).
-    assert len(APPROVED_ROUTES) == 47
+    # + 4 additive M14 (filing analysis, Documents 64 §9.1 / 65 §13)
+    # + 4 additive M15 (change brief, Documents 70 R4 §10.1 / 73 R1 §16).
+    assert len(APPROVED_ROUTES) == 51
 
 
 def test_no_routes_were_added_removed_or_renamed():

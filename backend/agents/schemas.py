@@ -73,6 +73,53 @@ class ComparisonExplanationSchema(BaseModel):
     )
 
 
+class ChangeBriefNarrativeSourceSchema(BaseModel):
+    """One citation entry for a single `report`-mode change item (M15 / C-4,
+    Document 70 R4 §11.3). `report_number` is a 1-based index into the two
+    reports supplied in the prompt (1 = baseline, 2 = current), NOT a real
+    database id — the server maps it to the actual `report_id` after
+    per-item validation (agents/change_brief_narrative.py), so the model is
+    never trusted to emit a real id (identical discipline to
+    ComparisonSourceSchema)."""
+    index: int = Field(description="1-based citation index; matches an [n] marker in explanation")
+    report_number: int = Field(description="1-based: 1 = baseline report, 2 = current report")
+    field: str = Field(description="One of: extracted_data, sentiment_analysis, scorecard, report")
+
+
+class ChangeBriefNarrativeItemSchema(BaseModel):
+    """One discrete narrative change claim (Document 70 R4 §8.3 / §11.3). Each
+    item is independently cited; every emitted item must cite at least one
+    source from the baseline report AND at least one from the current report
+    (the both-sides rule, enforced deterministically after generation)."""
+    summary: str = Field(description="One short sentence naming the single discrete change")
+    explanation: str = Field(description="Plain-language explanation with inline [n] citation markers for every claim")
+    sources: list[ChangeBriefNarrativeSourceSchema] = Field(default_factory=list)
+    cited_source_indices: list[int] = Field(
+        default_factory=list, description="1-based indices into sources actually referenced by [n] markers in explanation"
+    )
+
+
+class ChangeBriefNarrativeLimitationSchema(BaseModel):
+    """An evidence-coverage gap: a topic evidenced on only one side, so whether
+    it genuinely changed cannot be confirmed (Document 70 R4 §14.2). One input
+    signal to the `partial` determination — never the sole authority
+    (Document 73 R1 §10)."""
+    topic: str = Field(description="The specific topic/metric evidenced on only one side")
+    missing_side: str = Field(description="Which side lacks corroborating evidence: 'baseline' or 'current'")
+
+
+class ChangeBriefNarrativeSchema(BaseModel):
+    """Structured output for M15 / C-4 `report`-mode narrative comparison
+    (Document 73 R1 §10/§11 — a structured schema extension, not a
+    post-generation text decomposition). A bounded list of discrete,
+    individually-cited change claims plus explicit one-sided-evidence
+    limitations."""
+    items: list[ChangeBriefNarrativeItemSchema] = Field(default_factory=list)
+    limitations: list[ChangeBriefNarrativeLimitationSchema] = Field(
+        default_factory=list, description="Topics evidenced on only one side — never invent the missing side's content"
+    )
+
+
 class JudgeVerdictSchema(BaseModel):
     """M11 Phase C — Document 47 §7.2/§7.3/§9's model-judged-support judge.
     Evaluates ONLY whether the supplied evidence supports the supplied claim

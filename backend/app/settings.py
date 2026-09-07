@@ -61,6 +61,14 @@ class Settings(BaseSettings):
     # (Document 65 §11 / §19 — operational config, recommend 180; retunable
     # without a Document 64 contract change).
     job_deadline_filing_analysis_s: float = Field(default=180.0, validation_alias="JOB_DEADLINE_FILING_ANALYSIS_S")
+    # M15 — one wall-clock deadline for the out-of-graph change-brief job
+    # (Document 73 R1 §16 — one additive settings entry). The numeric value is
+    # an implementation-time operational choice (Document 70 OCD-4 / Document 73
+    # AAQ-1, both still open at the governance level — Document 76 §15.4): 60s
+    # mirrors comparison_explanation, the closest analogue (a single chat_json
+    # call over a bounded 2-report payload; `period` mode does no LLM call at
+    # all). Retunable via env without a contract change.
+    job_deadline_change_brief_s: float = Field(default=60.0, validation_alias="JOB_DEADLINE_CHANGE_BRIEF_S")
     job_deadline_grace_s: float = Field(default=30.0, validation_alias="JOB_DEADLINE_GRACE_S")
     max_job_lifetime_s: float = Field(default=600.0, validation_alias="MAX_JOB_LIFETIME_S")
 
@@ -126,6 +134,7 @@ class Settings(BaseSettings):
             "learning": self.job_deadline_learning_s,
             "comparison_explanation": self.job_deadline_comparison_explanation_s,
             "filing_analysis": self.job_deadline_filing_analysis_s,
+            "change_brief": self.job_deadline_change_brief_s,  # M15 — additive (Document 73 R1 §16)
         }
 
 
