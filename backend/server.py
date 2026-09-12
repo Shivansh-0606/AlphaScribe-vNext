@@ -57,6 +57,7 @@ from infrastructure.observability.metrics import (
     change_brief_runs_total,
     comparison_explanation_runs_total,
     filing_analysis_runs_total,
+    filing_qa_runs_total,
     deadline_exceeded_total,
     http_request_duration_seconds,
     http_requests_total,
@@ -81,6 +82,10 @@ from agents.comparison_explanation import (
 from agents.filing_analysis import (
     FilingAnalysisGroundingError,
     analyze_filing,
+)
+from agents.filing_qa import (
+    FilingQACitationStructureError,
+    answer_question,
 )
 from agents.change_brief_financial import compute_financial_change_brief
 from agents.change_brief_narrative import (
@@ -2901,6 +2906,285 @@ async def cancel_change_brief(ticker: str, id: str, user: dict = Depends(current
         task.cancel()
     await container.job_lifecycle.cancel(id)
     _CHANGE_BRIEF_RESULTS.pop(id, None)  # cancellation guarantees the result is not published
+    return {"id": id, "status": "cancelled"}
+
+
+# ---------------------------------------------------------------------------
+# M16 — Filing Q&A (FQA v1) (Document 87 Revision 2; Document 90, as amended
+# for candidate selection by Documents 95/96; Document 94 Revision 1,
+# ratified by Document 97 Revision 1). A sixth async LLM surface after
+# Research / Learning / Comparison-Explanation / Filing Analysis / Change
+# Brief. One JobKind.FILING_QA, one route family under
+# /api/companies/{ticker}/filings/{doc_id}/qa, one out-of-graph orchestrator
+# (agents/filing_qa.py::answer_question) -- at most one chat_json call per
+# job, deterministic citation-structure validation, and the Document 95/96-
+# ratified candidate-selection algorithm.
+#
+# PERSISTENCE = AH-2 (Document 90 §7-§9; Document 94 Revision 1 §11): the
+# process-local, TTL-bounded in-process buffer below -- the same mechanism as
+# M14/M15's. `reused` is therefore always False. No Mongo collection, no
+# Redis final-result persistence, no cross-process retrieval, no sticky
+# sessions.
+# ---------------------------------------------------------------------------
+
+# ponytail: AH-2 process-local result buffer -- a completed answer lives only
+# in this process, only until its max_job_lifetime_s TTL (or a 256-entry
+# oldest-first eviction), and not across a restart or a second backend
+# instance. GET after expiry returns {status: completed} with no `answer`.
+# Upgrade path: a durable store, gated on a separate
+# 08_MongoDB_Data_Architecture.md + ADR authorization -- deliberately not
+# built here (Document 94 Revision 1 §11/§16).
+_FILING_QA_RESULTS: dict[str, tuple[str, dict, float]] = {}  # id -> (user_id, answer_payload, expires_at_epoch_s)
+_FQA_MAX_ENTRIES = 256
+
+
+def _store_filing_qa_result(job_id: str, user_id: str, payload: dict) -> None:
+    now = _fa_now()
+    _FILING_QA_RESULTS[job_id] = (user_id, payload, now + settings.max_job_lifetime_s)
+    for k in [k for k, v in list(_FILING_QA_RESULTS.items()) if v[2] <= now]:
+        _FILING_QA_RESULTS.pop(k, None)
+    if len(_FILING_QA_RESULTS) > _FQA_MAX_ENTRIES:
+        oldest = sorted(_FILING_QA_RESULTS, key=lambda k: _FILING_QA_RESULTS[k][2])
+        for k in oldest[: len(_FILING_QA_RESULTS) - _FQA_MAX_ENTRIES]:
+            _FILING_QA_RESULTS.pop(k, None)
+
+
+def _get_filing_qa_result(job_id: str, user_id: str) -> dict | None:
+    entry = _FILING_QA_RESULTS.get(job_id)
+    if not entry:
+        return None
+    uid, payload, exp = entry
+    if exp <= _fa_now():
+        _FILING_QA_RESULTS.pop(job_id, None)
+        return None
+    if uid != user_id:  # job records are owner-scoped (Document 94 Revision 1 §12)
+        return None
+    return payload
+
+
+class FilingQARequest(BaseModel):
+    # `question` is the entire point of the request but is kept Optional here
+    # (like every prior BYOK request model) so a missing/empty value is
+    # rejected by our own domain ValidationError -> {detail, type} envelope,
+    # not FastAPI's raw 422 handler (Document 87 R2 §3.2/§10).
+    question: Optional[str] = None
+    llm_provider: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    llm_model: Optional[str] = None
+
+
+async def _run_filing_qa(
+    job_id: str, ticker: str, doc_id: str, question: str, user_id: str,
+    llm_provider: str | None = None, llm_api_key: str | None = None,
+    llm_base_url: str | None = None, llm_model: str | None = None,
+) -> None:
+    from agents.llm import reset_llm_context, set_llm_context
+
+    _tok = (
+        set_llm_context(llm_provider, llm_api_key, light_model=llm_model,
+                        heavy_model=llm_model, base_url=llm_base_url)
+        if (llm_provider or llm_api_key) else None
+    )
+    await container.job_lifecycle.mark_running(job_id)
+
+    async def push(ev: dict) -> None:
+        await container.job_lifecycle.publish(
+            job_id, {**ev, "ts": datetime.now(timezone.utc).isoformat()}
+        )
+
+    async def progress(node: str, message: str) -> None:
+        await push({"node": node, "status": "ok", "message": message})
+
+    _span_cm = get_tracer().start_as_current_span(
+        "pipeline.filing_qa", attributes={"job_id": job_id}
+    )
+    _span = _span_cm.__enter__()
+    outcome = "failed"
+    try:
+        await push({"node": "pipeline", "status": "start", "message": "Answering question"})
+
+        # Execution-time (ticker, doc_id) resolution. Filings are immutable
+        # after ingest, so a fresh read is safe. 404 non-disclosure (Document
+        # 87 R2 §11).
+        filing = await db.filings.find_one({"ticker": ticker, "doc_id": doc_id}, {"_id": 0})
+        if filing is None:
+            raise NotFoundError("filing not found")
+
+        chunks = await _load_ordered_filing_chunks(doc_id, ticker, context="filing q&a")
+
+        if await container.job_lifecycle.is_past_deadline(job_id):
+            raise TimeoutError("deadline")
+
+        result = await answer_question(
+            chunks, doc_id, question, db=db, ticker=ticker, progress=progress,
+            max_answer_chars=settings.fqa_max_answer_chars,
+            max_sources=settings.fqa_max_sources,
+        )
+
+        if await container.job_lifecycle.is_past_deadline(job_id):
+            raise TimeoutError("deadline")
+
+        answer_payload = {
+            "ticker": filing["ticker"],
+            "doc_id": filing["doc_id"],
+            "question": question,
+            "answer_text": result["answer_text"],
+            "sources": result["sources"],
+            "cited_source_indices": result["cited_source_indices"],
+            "state": result["state"],
+            "coverage_boundaries": result["coverage_boundaries"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "prompt_version": result["prompt_version"],
+            "schema_version": result["schema_version"],
+        }
+        _store_filing_qa_result(job_id, user_id, answer_payload)
+
+        outcome = result["state"]  # "answered" | "insufficient_evidence"
+        await container.job_lifecycle.complete(job_id)
+        filing_qa_runs_total.labels(outcome=outcome).inc()
+    except asyncio.CancelledError:
+        outcome = "cancelled"
+        _FILING_QA_RESULTS.pop(job_id, None)
+        await container.job_lifecycle.cancel(job_id)  # idempotent
+        filing_qa_runs_total.labels(outcome=outcome).inc()
+        _span.set_status(Status(StatusCode.ERROR, "Job cancelled"))
+    except Exception as e:  # noqa: BLE001 — never leak raw provider/validation text
+        logger.exception("filing q&a failed")
+        if isinstance(e, NotFoundError):
+            outcome, err = "failed", "Filing not found."
+        elif isinstance(e, TimeoutError):
+            outcome, err = "failed_deadline_exceeded", "Filing Q&A exceeded its time budget and was stopped."
+        else:
+            outcome, err = "failed", "Filing Q&A failed. See server logs for details."
+        _FILING_QA_RESULTS.pop(job_id, None)
+        await container.job_lifecycle.fail(job_id, err)
+        filing_qa_runs_total.labels(outcome=outcome).inc()
+        _span.set_status(Status(StatusCode.ERROR, err))
+    finally:
+        if _tok is not None:
+            reset_llm_context(_tok)
+        RUNNING_TASKS.pop(job_id, None)
+        jobs_active.labels(kind="filing_qa").dec()
+        _span_cm.__exit__(None, None, None)
+
+
+@api.post("/companies/{ticker}/filings/{doc_id}/qa")
+async def create_filing_qa(
+    ticker: str, doc_id: str,
+    req: Optional[FilingQARequest] = None,
+    user: dict = Depends(current_user),
+):
+    """M16 — create an async Filing Q&A job for one question about one
+    filing (Document 87 R2 §3/§9; Document 94 Revision 1 §11). Additive;
+    changes no existing route."""
+    req = req or FilingQARequest()
+    ticker = ticker.strip().upper()
+    if not ticker:
+        raise ValidationError("ticker required", code="validation_error")
+
+    # Surrounding whitespace trimmed before processing; this normalized value
+    # is what the job operates on and what the completed answer echoes
+    # (Document 87 R2 §3.2/§5/§6.3).
+    question = (req.question or "").strip()
+    if not question:
+        raise ValidationError("question is required", code="validation_error")
+    if len(question) > settings.fqa_max_question_chars:
+        raise ValidationError(
+            f"question must be at most {settings.fqa_max_question_chars} characters",
+            code="validation_error",
+        )
+
+    # Same admin/SSRF gate as every other BYOK surface (Document 87 R2 §15/§16).
+    if req.llm_provider == "custom" or req.llm_base_url:
+        require_admin(user)
+    if req.llm_base_url:
+        from agents.llm import assert_public_url
+        try:
+            assert_public_url(req.llm_base_url)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Custom LLM base URL must be a publicly reachable http(s) "
+                    "address — the server calls it directly, so localhost and "
+                    "private-network addresses aren't allowed."
+                ),
+            )
+
+    # (ticker, doc_id) identity — 404 non-disclosure (Document 87 R2 §4/§11).
+    filing = await db.filings.find_one({"ticker": ticker, "doc_id": doc_id}, {"_id": 0, "doc_id": 1})
+    if filing is None:
+        raise NotFoundError("filing not found")
+
+    job_id = str(uuid.uuid4())
+    await container.job_lifecycle.start(
+        job_id, JobKind.FILING_QA, user["id"], ticker=ticker,
+        deadline_s=settings.job_deadline_s["filing_qa"],
+    )
+    jobs_active.labels(kind="filing_qa").inc()
+    RUNNING_TASKS[job_id] = asyncio.create_task(
+        _run_filing_qa(
+            job_id, ticker, doc_id, question, user["id"],
+            llm_provider=req.llm_provider, llm_api_key=req.llm_api_key,
+            llm_base_url=req.llm_base_url, llm_model=req.llm_model,
+        )
+    )
+    # AH-2 process-local buffer: no stored artifact -> never a reuse (Document 87 R2 §6.1).
+    return {"id": job_id, "status": "queued", "reused": False}
+
+
+@api.get("/companies/{ticker}/filings/{doc_id}/qa/{id}")
+async def get_filing_qa(
+    ticker: str, doc_id: str, id: str, user: dict = Depends(current_user)
+):
+    payload = _get_filing_qa_result(id, user["id"])
+    if payload is not None:
+        return {"id": id, "status": "completed", "answer": payload}
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="filing q&a job not found")
+    return {"id": id, "status": job.status.value}
+
+
+async def _filing_qa_stream_events(job_id: str, user_id: str):
+    """Mirrors _filing_analysis_stream_events: inject the completed answer
+    payload as a `final` event right after the terminal `pipeline/ok` (the
+    frozen SSE convention — Document 87 R2 §14)."""
+    async for ev in container.events.subscribe(job_id):
+        yield ev
+        if ev.get("node") == "pipeline" and ev.get("status") == "ok":
+            payload = _get_filing_qa_result(job_id, user_id)
+            if payload is not None:
+                yield {"node": "final", "status": "ok", "answer": payload}
+
+
+@api.get("/companies/{ticker}/filings/{doc_id}/qa/{id}/stream")
+async def stream_filing_qa(
+    ticker: str, doc_id: str, id: str, user: dict = Depends(current_user)
+):
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="filing q&a job not found")
+    return sse_response(
+        _filing_qa_stream_events(id, user["id"]), stream_name="filing_qa"
+    )
+
+
+@api.post("/companies/{ticker}/filings/{doc_id}/qa/{id}/cancel")
+async def cancel_filing_qa(
+    ticker: str, doc_id: str, id: str, user: dict = Depends(current_user)
+):
+    job = await container.job_lifecycle.get(id)
+    if job is None or job.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="filing q&a job not found")
+    if job.is_terminal():
+        return {"id": id, "status": job.status.value}
+    task = RUNNING_TASKS.get(id)
+    if task and not task.done():
+        task.cancel()
+    await container.job_lifecycle.cancel(id)
+    _FILING_QA_RESULTS.pop(id, None)  # cancellation guarantees the result is not published
     return {"id": id, "status": "cancelled"}
 
 

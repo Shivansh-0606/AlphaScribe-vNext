@@ -150,6 +150,15 @@ change_brief_runs_total = Counter(
                                      # comparison_type: period | report
 )
 
+# --- M16 — Document 90 §16 / Document 94 Revision 1 §13's required outcome
+# signal for Filing Q&A (FQA v1). Same shape/rationale as
+# filing_analysis_runs_total. ---
+filing_qa_runs_total = Counter(
+    "alphascribe_filing_qa_runs_total",
+    "M16 filing Q&A job runs, by aggregate outcome",
+    ["outcome"],  # answered | insufficient_evidence | failed | failed_deadline_exceeded | cancelled
+)
+
 # --- DEFINED, not yet incremented anywhere — its call site is 09 §8.1's
 # fail-open policy, implemented today in agents/auth.py's in-memory rate
 # limiter, not the RedisRateLimiter port this gauge belongs to (that port

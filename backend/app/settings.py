@@ -69,8 +69,22 @@ class Settings(BaseSettings):
     # call over a bounded 2-report payload; `period` mode does no LLM call at
     # all). Retunable via env without a contract change.
     job_deadline_change_brief_s: float = Field(default=60.0, validation_alias="JOB_DEADLINE_CHANGE_BRIEF_S")
+    # M16 — one wall-clock deadline for the out-of-graph filing-qa job
+    # (Document 90 §7/§17; Document 94 Revision 1 §7). 120s mirrors M14's
+    # single-filing analysis budget — a single chat_json call over one
+    # bounded candidate set. Operational config, retunable without a
+    # contract change.
+    job_deadline_filing_qa_s: float = Field(default=120.0, validation_alias="JOB_DEADLINE_FILING_QA_S")
     job_deadline_grace_s: float = Field(default=30.0, validation_alias="JOB_DEADLINE_GRACE_S")
     max_job_lifetime_s: float = Field(default=600.0, validation_alias="MAX_JOB_LIFETIME_S")
+
+    # --- M16 Filing Q&A operational bounds (Document 90 §13; Document 94
+    # Revision 1 §7) — the contract fixes no numeric literal (Document 87 R2
+    # §5/§17); these are recommended defaults, retunable without a contract
+    # change. ---
+    fqa_max_question_chars: int = Field(default=2000, validation_alias="FQA_MAX_QUESTION_CHARS")
+    fqa_max_answer_chars: int = Field(default=4000, validation_alias="FQA_MAX_ANSWER_CHARS")
+    fqa_max_sources: int = Field(default=12, validation_alias="FQA_MAX_SOURCES")
 
     # --- LLM ---
     llm_provider: str = Field(default="gemini", validation_alias="LLM_PROVIDER")
@@ -135,6 +149,7 @@ class Settings(BaseSettings):
             "comparison_explanation": self.job_deadline_comparison_explanation_s,
             "filing_analysis": self.job_deadline_filing_analysis_s,
             "change_brief": self.job_deadline_change_brief_s,  # M15 — additive (Document 73 R1 §16)
+            "filing_qa": self.job_deadline_filing_qa_s,  # M16 — additive (Document 90 §7)
         }
 
 

@@ -23,6 +23,7 @@ class JobKind(str, Enum):
     COMPARISON_EXPLANATION = "comparison_explanation"
     FILING_ANALYSIS = "filing_analysis"  # M14 — additive (Document 65 OAQ-4 / §11; Document 66 §5 C-c)
     CHANGE_BRIEF = "change_brief"  # M15 — additive (Document 73 R1 §16; Document 75 §15; Document 76)
+    FILING_QA = "filing_qa"  # M16 — additive (Document 90 §7; Document 94 Revision 1 §5.2)
 
 
 class JobStatus(str, Enum):

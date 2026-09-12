@@ -40,6 +40,13 @@ CTO-ratified 2026-08-27) with the thin-adapter architecture in
 docs/backend_engineering/60_M13_Filing_Content_Reading_Architecture_Decision_Pack.md
 (CTO-ratified 2026-08-27) — implementation separately CTO-authorized
 2026-08-27 (M13 Implementation Authorization decision).
+PLUS 4 M16 routes (Filing Q&A `.../filings/{doc_id}/qa` and its
+`{id}`/`{id}/stream`/`{id}/cancel` siblings), the frozen contract in
+docs/backend_engineering/87_M16_Filing_QA_API_Contract_Proposal.md §3.1
+(Revision 2, CTO-ratified via Documents 88/89/92) and the ratified
+architecture in Document 90 (candidate selection as amended by Documents
+95/96) — implementation separately CTO-authorized (Document 94 Revision 1,
+ratified by Document 97 Revision 1).
 
 This is the automated guard on 06 C-1 ("no approved API contract may change")
 — it is deliberately an exact-set assertion, not a fuzzy/partial one: adding,
@@ -128,6 +135,16 @@ APPROVED_ROUTES = {
     ("GET", "/api/companies/{ticker}/changes/{id}"),
     ("GET", "/api/companies/{ticker}/changes/{id}/stream"),
     ("POST", "/api/companies/{ticker}/changes/{id}/cancel"),
+    # M16 — Filing Q&A (FQA v1) — 4 additive routes, transcribed verbatim
+    # from docs/backend_engineering/87_M16_Filing_QA_API_Contract_Proposal.md
+    # §3.1 (Revision 2, CTO-ratified via Documents 88/89/92) and the ratified
+    # architecture in Document 90 (candidate selection as amended by
+    # Documents 95/96); implementation separately CTO-authorized (Document
+    # 94 Revision 1, ratified by Document 97 Revision 1).
+    ("POST", "/api/companies/{ticker}/filings/{doc_id}/qa"),
+    ("GET", "/api/companies/{ticker}/filings/{doc_id}/qa/{id}"),
+    ("GET", "/api/companies/{ticker}/filings/{doc_id}/qa/{id}/stream"),
+    ("POST", "/api/companies/{ticker}/filings/{doc_id}/qa/{id}/cancel"),
 }
 
 _HTTP_METHODS = {"get", "post", "put", "delete", "patch"}
@@ -150,8 +167,9 @@ def test_route_count_matches_the_approved_contract():
     # (comparison explanation, Document 43) + 1 additive M12 (financials read)
     # + 1 additive M13 (filing content read, Documents 59/60)
     # + 4 additive M14 (filing analysis, Documents 64 §9.1 / 65 §13)
-    # + 4 additive M15 (change brief, Documents 70 R4 §10.1 / 73 R1 §16).
-    assert len(APPROVED_ROUTES) == 51
+    # + 4 additive M15 (change brief, Documents 70 R4 §10.1 / 73 R1 §16)
+    # + 4 additive M16 (filing Q&A, Documents 87 R2 §3.1 / 90 / 94 Revision 1).
+    assert len(APPROVED_ROUTES) == 55
 
 
 def test_no_routes_were_added_removed_or_renamed():
@@ -180,4 +198,4 @@ if __name__ == "__main__":
           "+ 2 additive M2 Phase 1 + 4 additive M2 Phase L (Learning) + 1 additive M8 "
           "Step 7 (financials acquire) + 4 additive M9.1 (comparison explanation) "
           "+ 1 additive M12 (financials read) + 1 additive M13 (filing content read) "
-          "+ 4 additive M14 (filing analysis) routes exactly")
+          "+ 4 additive M14 (filing analysis) + 4 additive M16 (filing Q&A) routes exactly")
