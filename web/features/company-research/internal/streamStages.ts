@@ -1,4 +1,4 @@
-import type { StreamEvent } from "../integration/schemas";
+import type { FilingAnalysisStreamEvent, StreamEvent } from "../integration/schemas";
 
 /**
  * Derives the canonical AI-surface lifecycle stage (03.15 AD — Thinking →
@@ -40,4 +40,39 @@ export function deriveStage(event: StreamEvent): StreamStage {
   // "pipeline"/"ok" event that already set "completed" — must not regress.
   if (event.node === "final") return "completed";
   return "thinking";
+}
+
+/**
+ * Filing Analysis (M14) has no synthesizer/fact_checker split — one atomic
+ * "analyzing" phase (per-output progress arrives as `node: "analyzing"`
+ * trace events, surfaced via `message`, not a distinct stage) between
+ * `pipeline/start` and the terminal `pipeline/ok` + injected `final` event
+ * (`_filing_analysis_stream_events`, server.py). "cancelled" is never
+ * derived from a stream event here — same as `useResearchJob`/
+ * `useExplanationJob`, cancellation is the caller's own optimistic local
+ * action the moment the Stop control is clicked.
+ */
+export type FilingAnalysisStage = "idle" | "analyzing" | "completed" | "failed" | "cancelled";
+
+const FILING_ANALYSIS_STAGE_LABEL: Record<FilingAnalysisStage, string> = {
+  idle: "",
+  analyzing: "Analyzing the filing…",
+  completed: "Analysis complete.",
+  failed: "The analysis failed.",
+  cancelled: "Analysis cancelled.",
+};
+
+export function filingAnalysisStageLabel(stage: FilingAnalysisStage): string {
+  return FILING_ANALYSIS_STAGE_LABEL[stage];
+}
+
+export function deriveFilingAnalysisStage(event: FilingAnalysisStreamEvent): FilingAnalysisStage {
+  if (event.node === "pipeline") {
+    if (event.status === "ok") return "completed";
+    if (event.status === "error") return "failed";
+    if (event.status === "warn") return "cancelled";
+    return "analyzing";
+  }
+  if (event.node === "final") return "completed";
+  return "analyzing";
 }

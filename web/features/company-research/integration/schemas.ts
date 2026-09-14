@@ -197,6 +197,93 @@ export const filingContentResponseSchema = z.object({
 });
 export type FilingContentResponse = z.infer<typeof filingContentResponseSchema>;
 
+// ---- Filing analysis (backend/server.py POST/GET/cancel
+// /companies/{ticker}/filings/{doc_id}/analysis[/{id}][/stream|/cancel] — M14,
+// Document 64 CTO-ratified 2026-08-31, implemented `be4949b`). Four fixed,
+// grounded outputs per filing (CQ-1/CQ-2 — no client selection), each the
+// Document 43/64 §8.2 flat cited narrative, keyed by the exact output label
+// string (`agents/filing_analysis.py` OUTPUT_LABELS) in the fixed order the
+// backend already emits them in. `sources[].index` is 1-based and unique only
+// *within* its own output (§8.2) — never assume global uniqueness across
+// outputs.
+export const filingAnalysisSourceSchema = z.object({
+  index: z.number(),
+  doc_id: z.string(),
+  chunk_start: z.number(),
+  chunk_end: z.number(),
+});
+export type FilingAnalysisSource = z.infer<typeof filingAnalysisSourceSchema>;
+
+export const filingAnalysisOutputStateSchema = z.enum([
+  "complete",
+  "partial",
+  "insufficient_evidence",
+]);
+export type FilingAnalysisOutputState = z.infer<typeof filingAnalysisOutputStateSchema>;
+
+export const filingAnalysisOutputSchema = z.object({
+  narrative: z.string(),
+  sources: z.array(filingAnalysisSourceSchema),
+  cited_source_indices: z.array(z.number()),
+  state: filingAnalysisOutputStateSchema,
+  coverage_boundaries: z.array(z.string()),
+});
+export type FilingAnalysisOutput = z.infer<typeof filingAnalysisOutputSchema>;
+
+export const filingAnalysisPayloadSchema = z.object({
+  doc_id: z.string(),
+  ticker: z.string(),
+  company_name: z.string().nullable().optional(),
+  source: z.string(),
+  created_at: z.string(),
+  prompt_version: z.string(),
+  schema_version: z.string(),
+  outputs: z.record(z.string(), filingAnalysisOutputSchema),
+});
+export type FilingAnalysisPayload = z.infer<typeof filingAnalysisPayloadSchema>;
+
+/** BYOK field set, verbatim — same shape as every other AI-generating request (Document 64 §9.2). */
+export const createFilingAnalysisRequestSchema = z.object({
+  llm_provider: z.string().optional(),
+  llm_api_key: z.string().optional(),
+  llm_base_url: z.string().optional(),
+  llm_model: z.string().optional(),
+});
+export type CreateFilingAnalysisRequestBody = z.infer<typeof createFilingAnalysisRequestSchema>;
+
+export const createFilingAnalysisResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  reused: z.boolean(),
+});
+export type CreateFilingAnalysisResponse = z.infer<typeof createFilingAnalysisResponseSchema>;
+
+export const filingAnalysisStatusResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  analysis: filingAnalysisPayloadSchema.optional(),
+});
+export type FilingAnalysisStatusResponse = z.infer<typeof filingAnalysisStatusResponseSchema>;
+
+export const cancelFilingAnalysisResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+});
+
+/** Same `{node, status, message, ts}` envelope as `streamEventSchema`, plus the
+ * `analysis` payload the backend injects on its `node: "final"` event right
+ * after the terminal `pipeline/ok` (`_filing_analysis_stream_events`). Kept as
+ * its own schema rather than widening the report `streamEventSchema` — the two
+ * streams share shape by convention, not by a shared field namespace. */
+export const filingAnalysisStreamEventSchema = z.object({
+  node: z.string(),
+  status: z.string(),
+  message: z.string().optional(),
+  ts: z.string().optional(),
+  analysis: filingAnalysisPayloadSchema.optional(),
+});
+export type FilingAnalysisStreamEvent = z.infer<typeof filingAnalysisStreamEventSchema>;
+
 // ---- Financials acquisition (backend/server.py POST
 // /companies/{ticker}/financials/acquire — Document 33 Amendment, frozen
 // wire contract; backend/domain/financials.py AcquisitionOutcome) ----------

@@ -98,6 +98,21 @@ describe("FilingsSection", () => {
     expect(screen.getByText("10-Q FY24 Q3")).toBeInTheDocument();
   });
 
+  it("M14 — switching to the Analysis tab shows the filing analysis entry point, not the content pane", async () => {
+    fetchFilings.mockResolvedValueOnce({ filings: [FILING] });
+    fetchFilingContent.mockResolvedValueOnce(
+      contentResponse([{ chunk_idx: 0, text: "First chunk." }]),
+    );
+    const { user } = renderWithProviders(<FilingsSection ticker="AAPL" />);
+    await user.click(await screen.findByRole("button", { name: "Read content" }));
+    await screen.findByRole("region", { name: /Filing content/ });
+
+    await user.click(screen.getByRole("button", { name: "Analysis" }));
+
+    expect(screen.getByRole("button", { name: "Analyze this filing" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: /Filing content/ })).not.toBeInTheDocument();
+  });
+
   it("has no detectable accessibility violations with content open", async () => {
     fetchFilings.mockResolvedValueOnce({ filings: [FILING] });
     fetchFilingContent.mockResolvedValueOnce(

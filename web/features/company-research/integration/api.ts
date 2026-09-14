@@ -2,7 +2,12 @@ import { apiFetch } from "@/lib/api/fetch-client";
 import { openEventStream } from "@/lib/api/sse-client";
 import { AppError } from "@/lib/errors/app-error";
 import {
+  cancelFilingAnalysisResponseSchema,
   cancelReportResponseSchema,
+  createFilingAnalysisRequestSchema,
+  createFilingAnalysisResponseSchema,
+  filingAnalysisStatusResponseSchema,
+  filingAnalysisStreamEventSchema,
   filingContentResponseSchema,
   filingsResponseSchema,
   financialsAcquireResponseSchema,
@@ -16,6 +21,8 @@ import {
   ingestResultSchema,
   reportStatusResponseSchema,
   streamEventSchema,
+  type CreateFilingAnalysisRequestBody,
+  type FilingAnalysisStreamEvent,
   type GenerateReportRequestBody,
   type IngestEdgarRequestBody,
   type IngestTextRequestBody,
@@ -72,6 +79,74 @@ export function fetchFilingContent(ticker: string, docId: string) {
   return apiFetch(
     `/api/companies/${encodeURIComponent(ticker)}/filings/${encodeURIComponent(docId)}/content`,
     filingContentResponseSchema,
+  );
+}
+
+function filingBasePath(ticker: string, docId: string): string {
+  return `/api/companies/${encodeURIComponent(ticker)}/filings/${encodeURIComponent(docId)}`;
+}
+
+/**
+ * M14 — POST .../analysis (Document 64, CTO-ratified 2026-08-31). Creates an
+ * async Filing Analysis job for one filing; body is the BYOK field set,
+ * verbatim, always sent (the backend's own field is optional, but an empty
+ * object round-trips through it identically).
+ */
+export function createFilingAnalysis(
+  ticker: string,
+  docId: string,
+  body: CreateFilingAnalysisRequestBody = {},
+) {
+  return apiFetch(`${filingBasePath(ticker, docId)}/analysis`, createFilingAnalysisResponseSchema, {
+    method: "POST",
+    body: createFilingAnalysisRequestSchema.parse(body),
+  });
+}
+
+export function fetchFilingAnalysis(ticker: string, docId: string, id: string) {
+  return apiFetch(
+    `${filingBasePath(ticker, docId)}/analysis/${encodeURIComponent(id)}`,
+    filingAnalysisStatusResponseSchema,
+  );
+}
+
+export function cancelFilingAnalysis(ticker: string, docId: string, id: string) {
+  return apiFetch(
+    `${filingBasePath(ticker, docId)}/analysis/${encodeURIComponent(id)}/cancel`,
+    cancelFilingAnalysisResponseSchema,
+    { method: "POST" },
+  );
+}
+
+/** Mirrors `openReportStream` — same integration-layer streaming boundary (03.13 AD-2). */
+export function openFilingAnalysisStream(
+  ticker: string,
+  docId: string,
+  id: string,
+  handlers: {
+    onEvent: (event: FilingAnalysisStreamEvent) => void;
+    onEnd: () => void;
+    onError: (error: AppError) => void;
+  },
+): () => void {
+  return openEventStream(
+    `${filingBasePath(ticker, docId)}/analysis/${encodeURIComponent(id)}/stream`,
+    {
+      onMessage: (raw) => {
+        const parsed = filingAnalysisStreamEventSchema.safeParse(raw);
+        if (!parsed.success) {
+          handlers.onError(
+            new AppError("validation", "Received a malformed stream event.", {
+              cause: parsed.error,
+            }),
+          );
+          return;
+        }
+        handlers.onEvent(parsed.data);
+      },
+      onEnd: handlers.onEnd,
+      onError: handlers.onError,
+    },
   );
 }
 
