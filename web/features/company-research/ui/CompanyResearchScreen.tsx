@@ -5,6 +5,7 @@ import { Banner } from "@/components/foundation/Banner";
 import { Heading } from "@/components/foundation/Heading";
 import { ResearchTemplate } from "@/components/layouts/ResearchTemplate";
 import { AIInsightsSection } from "./AIInsightsSection";
+import { ChangeBriefSection } from "./ChangeBriefSection";
 import { ExportSection } from "./ExportSection";
 import { FilingsSection } from "./FilingsSection";
 import { FinancialsSection } from "./FinancialsSection";
@@ -39,6 +40,7 @@ export function CompanyResearchScreen({ ticker, jobId }: { ticker?: string; jobI
         )}
         {active === "financials" && <FinancialsSection ticker={normalizedTicker} />}
         {active === "filings" && <FilingsSection ticker={normalizedTicker} />}
+        {active === "changes" && <ChangeBriefSection ticker={normalizedTicker} />}
         {active === "ai-insights" && <AIInsightsSection ticker={normalizedTicker} />}
         {active === "export" && <ExportSection reportId={jobId} />}
       </div>

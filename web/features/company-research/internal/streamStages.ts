@@ -1,4 +1,8 @@
-import type { FilingAnalysisStreamEvent, StreamEvent } from "../integration/schemas";
+import type {
+  ChangeBriefStreamEvent,
+  FilingAnalysisStreamEvent,
+  StreamEvent,
+} from "../integration/schemas";
 
 /**
  * Derives the canonical AI-surface lifecycle stage (03.15 AD — Thinking →
@@ -75,4 +79,37 @@ export function deriveFilingAnalysisStage(event: FilingAnalysisStreamEvent): Fil
   }
   if (event.node === "final") return "completed";
   return "analyzing";
+}
+
+/**
+ * Change Brief (M15) has the same single-phase shape as Filing Analysis —
+ * `pipeline/start` -> terminal `pipeline/ok` + injected `final` event
+ * (`_change_brief_stream_events`, server.py), for both the `period` mode
+ * (no LLM at all) and the `report` mode (one bounded call). "cancelled" is
+ * never derived from a stream event here for the same reason as the other
+ * job hooks — cancellation is the caller's own optimistic local action.
+ */
+export type ChangeBriefStage = "idle" | "computing" | "completed" | "failed" | "cancelled";
+
+const CHANGE_BRIEF_STAGE_LABEL: Record<ChangeBriefStage, string> = {
+  idle: "",
+  computing: "Computing the change brief…",
+  completed: "Change brief complete.",
+  failed: "The change brief failed.",
+  cancelled: "Change brief cancelled.",
+};
+
+export function changeBriefStageLabel(stage: ChangeBriefStage): string {
+  return CHANGE_BRIEF_STAGE_LABEL[stage];
+}
+
+export function deriveChangeBriefStage(event: ChangeBriefStreamEvent): ChangeBriefStage {
+  if (event.node === "pipeline") {
+    if (event.status === "ok") return "completed";
+    if (event.status === "error") return "failed";
+    if (event.status === "warn") return "cancelled";
+    return "computing";
+  }
+  if (event.node === "final") return "completed";
+  return "computing";
 }

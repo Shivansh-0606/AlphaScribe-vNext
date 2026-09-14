@@ -9,7 +9,10 @@ import { cn } from "@/lib/utils";
  * *levels* within one screen, not separate routes — 05_Screen_Inventory.md).
  * Overview (4A), Financials/Filings (4B), AI Insights (4C), and Export
  * (4D — an honest hand-off to the not-yet-built Report View, not a
- * disabled stub; CTO-resolved) are all enabled. There is no remaining
+ * disabled stub; CTO-resolved) are all enabled. "Changes" (M15 — "What
+ * Changed Since Last Review", Document 70 R4) added alongside them; no
+ * frozen Component Inventory entry exists for it, so its placement here
+ * follows this nav's own IA rather than a spec. There is no remaining
  * disabled section — the "Soon"/disabled-Badge pattern (used for the
  * sibling Compare/Library/Learning stubs) stays supported here for
  * whichever section needs it next.
@@ -18,6 +21,7 @@ const SECTIONS = [
   { key: "overview", label: "Overview" },
   { key: "financials", label: "Financials" },
   { key: "filings", label: "Filings" },
+  { key: "changes", label: "Changes" },
   { key: "ai-insights", label: "AI Insights" },
   { key: "export", label: "Export" },
 ] as const;
@@ -28,6 +32,7 @@ const ENABLED: readonly SectionKey[] = [
   "overview",
   "financials",
   "filings",
+  "changes",
   "ai-insights",
   "export",
 ];

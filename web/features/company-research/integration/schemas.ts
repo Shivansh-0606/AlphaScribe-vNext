@@ -284,6 +284,172 @@ export const filingAnalysisStreamEventSchema = z.object({
 });
 export type FilingAnalysisStreamEvent = z.infer<typeof filingAnalysisStreamEventSchema>;
 
+// ---- Reports list, ticker-scoped (backend/server.py GET /reports — reused
+// verbatim by M15's report-mode picker; declared independently of
+// `comparison`'s identical-by-coincidence `reportListItemSchema`, per that
+// feature's own 02.2 AD-3 note — each feature validates its own trust
+// boundary rather than importing another feature's internals). -----------
+
+export const reportListItemSchema = z.object({
+  id: z.string(),
+  ticker: z.string(),
+  query: z.string(),
+  created_at: z.string(),
+  company_name: z.string().nullable().optional(),
+  is_sample: z.boolean().optional(),
+});
+export type ReportListItem = z.infer<typeof reportListItemSchema>;
+
+export const reportsListResponseSchema = z.object({
+  reports: z.array(reportListItemSchema),
+});
+
+// ---- Change brief / "What Changed Since Last Review" (backend/server.py
+// POST/GET/cancel .../changes[/{id}][/stream|/cancel] — M15, Document 70 R4,
+// implemented `f8c0664`). Two independent, mutually exclusive comparison
+// modes discriminated by `comparison_type`: `report` (one bounded LLM call,
+// `agents/change_brief_narrative.py`) and `period` (pure deterministic
+// numeric delta, `agents/change_brief_financial.py`, no LLM). Bound to the
+// actual shipped wire shape — Document 70 R4 §9.1's route family, like M14's
+// Document 64 §9, is the frozen part; item/identity field shapes below were
+// read directly from `change_brief_financial.py`/`change_brief_narrative.py`.
+
+const changeBriefReportIdentitySchema = z.object({
+  report_id: z.string().nullable(),
+  ticker: z.string().nullable(),
+  company_name: z.string().nullable(),
+});
+
+const changeBriefPeriodIdentitySchema = z.object({
+  period_end: z.string(),
+  period_type: z.enum(["annual", "quarterly"]),
+  statement_type: z.enum(["income", "balance_sheet", "cash_flow"]),
+  fiscal_year: z.string(),
+  currency: z.string(),
+});
+
+const changeBriefFinancialSourceSchema = z.object({
+  index: z.number(),
+  statement_type: z.string(),
+  period_end: z.string(),
+  metric: z.string(),
+});
+
+const changeBriefFinancialValueSchema = z.object({
+  period_end: z.string(),
+  value: z.number(),
+});
+
+export const changeBriefFinancialItemSchema = z.object({
+  category: z.literal("financial"),
+  metric: z.string(),
+  statement_type: z.string(),
+  period_type: z.string(),
+  change_kind: z.enum(["changed", "new", "removed"]),
+  unit: z.string(),
+  currency: z.string(),
+  before: changeBriefFinancialValueSchema.nullable(),
+  after: changeBriefFinancialValueSchema.nullable(),
+  absolute_delta: z.number().nullable(),
+  percent_delta: z.number().nullable(),
+  sources: z.array(changeBriefFinancialSourceSchema),
+  cited_source_indices: z.array(z.number()),
+});
+export type ChangeBriefFinancialItem = z.infer<typeof changeBriefFinancialItemSchema>;
+
+const changeBriefNarrativeSourceSchema = z.object({
+  index: z.number(),
+  report_id: z.string(),
+  field: z.string(),
+});
+
+export const changeBriefNarrativeItemSchema = z.object({
+  category: z.literal("narrative"),
+  summary: z.string(),
+  explanation: z.string(),
+  sources: z.array(changeBriefNarrativeSourceSchema),
+  cited_source_indices: z.array(z.number()),
+});
+export type ChangeBriefNarrativeItem = z.infer<typeof changeBriefNarrativeItemSchema>;
+
+const changeBriefStateSchema = z.enum(["complete", "partial", "insufficient_evidence"]);
+
+/** Discriminated on `comparison_type` — `baseline`/`current`/`items` narrow
+ * to the exact mode-specific shape TypeScript-side, matching the backend's
+ * own mode branch (Document 70 R4 §11.1). */
+export const changeBriefPayloadSchema = z.discriminatedUnion("comparison_type", [
+  z.object({
+    ticker: z.string(),
+    comparison_type: z.literal("report"),
+    baseline: changeBriefReportIdentitySchema,
+    current: changeBriefReportIdentitySchema,
+    created_at: z.string(),
+    prompt_version: z.string().nullable(),
+    schema_version: z.string(),
+    items: z.array(changeBriefNarrativeItemSchema),
+    state: changeBriefStateSchema,
+    coverage_boundaries: z.array(z.string()),
+  }),
+  z.object({
+    ticker: z.string(),
+    comparison_type: z.literal("period"),
+    baseline: changeBriefPeriodIdentitySchema,
+    current: changeBriefPeriodIdentitySchema,
+    created_at: z.string(),
+    prompt_version: z.string().nullable(),
+    schema_version: z.string(),
+    items: z.array(changeBriefFinancialItemSchema),
+    state: changeBriefStateSchema,
+    coverage_boundaries: z.array(z.string()),
+  }),
+]);
+export type ChangeBriefPayload = z.infer<typeof changeBriefPayloadSchema>;
+
+/** BYOK field set, verbatim — `report` mode only calls an LLM; `period` mode
+ * ignores these entirely (Document 73 R1 §19) but the request shape is
+ * uniform across both, matching the backend's single `ChangeBriefRequest`. */
+export const createChangeBriefRequestSchema = z.object({
+  comparison_type: z.enum(["report", "period"]),
+  baseline_report_id: z.string().optional(),
+  current_report_id: z.string().optional(),
+  period_type: z.enum(["annual", "quarterly"]).optional(),
+  statement_type: z.enum(["income", "balance_sheet", "cash_flow"]).optional(),
+  baseline_period_end: z.string().optional(),
+  current_period_end: z.string().optional(),
+  llm_provider: z.string().optional(),
+  llm_api_key: z.string().optional(),
+  llm_base_url: z.string().optional(),
+  llm_model: z.string().optional(),
+});
+export type CreateChangeBriefRequestBody = z.infer<typeof createChangeBriefRequestSchema>;
+
+export const createChangeBriefResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  reused: z.boolean(),
+});
+
+export const changeBriefStatusResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  changes: changeBriefPayloadSchema.optional(),
+});
+export type ChangeBriefStatusResponse = z.infer<typeof changeBriefStatusResponseSchema>;
+
+export const cancelChangeBriefResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+});
+
+export const changeBriefStreamEventSchema = z.object({
+  node: z.string(),
+  status: z.string(),
+  message: z.string().optional(),
+  ts: z.string().optional(),
+  changes: changeBriefPayloadSchema.optional(),
+});
+export type ChangeBriefStreamEvent = z.infer<typeof changeBriefStreamEventSchema>;
+
 // ---- Financials acquisition (backend/server.py POST
 // /companies/{ticker}/financials/acquire — Document 33 Amendment, frozen
 // wire contract; backend/domain/financials.py AcquisitionOutcome) ----------

@@ -37,7 +37,12 @@ export interface StatementTableProps {
 // non-Western grouping (e.g. lakh/crore) in some Node/ICU environments.
 const LOCALE = "en-US";
 
-function formatMetricValue(value: number, unit: StatementMetricUnit, currency: string): string {
+/** Exported for reuse by `ChangeBriefSection` (M15) — the same unit-aware formatting a metric value needs anywhere it's shown, not just in this table. */
+export function formatMetricValue(
+  value: number,
+  unit: StatementMetricUnit,
+  currency: string,
+): string {
   switch (unit) {
     case "currency":
       return new Intl.NumberFormat(LOCALE, {

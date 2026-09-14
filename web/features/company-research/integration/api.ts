@@ -2,8 +2,13 @@ import { apiFetch } from "@/lib/api/fetch-client";
 import { openEventStream } from "@/lib/api/sse-client";
 import { AppError } from "@/lib/errors/app-error";
 import {
+  cancelChangeBriefResponseSchema,
   cancelFilingAnalysisResponseSchema,
   cancelReportResponseSchema,
+  changeBriefStatusResponseSchema,
+  changeBriefStreamEventSchema,
+  createChangeBriefRequestSchema,
+  createChangeBriefResponseSchema,
   createFilingAnalysisRequestSchema,
   createFilingAnalysisResponseSchema,
   filingAnalysisStatusResponseSchema,
@@ -19,8 +24,11 @@ import {
   ingestSamplesResponseSchema,
   ingestTextRequestSchema,
   ingestResultSchema,
+  reportsListResponseSchema,
   reportStatusResponseSchema,
   streamEventSchema,
+  type ChangeBriefStreamEvent,
+  type CreateChangeBriefRequestBody,
   type CreateFilingAnalysisRequestBody,
   type FilingAnalysisStreamEvent,
   type GenerateReportRequestBody,
@@ -148,6 +156,70 @@ export function openFilingAnalysisStream(
       onError: handlers.onError,
     },
   );
+}
+
+/** `GET /reports?ticker=` — the candidate list for M15's report-mode picker (Document 70 R4 §7). */
+export function fetchReportsForTicker(ticker: string) {
+  const params = new URLSearchParams({ ticker });
+  return apiFetch(`/api/reports?${params.toString()}`, reportsListResponseSchema);
+}
+
+function changesBasePath(ticker: string): string {
+  return `/api/companies/${encodeURIComponent(ticker)}/changes`;
+}
+
+/**
+ * M15 — POST .../changes (Document 70 R4, implemented `f8c0664`). Creates an
+ * async change-brief job in exactly one mode (`comparison_type`); the
+ * request-shape validation rules (§9.4/§10.2/§15) are enforced server-side —
+ * this layer only forwards the discriminated body verbatim.
+ */
+export function createChangeBrief(ticker: string, body: CreateChangeBriefRequestBody) {
+  return apiFetch(changesBasePath(ticker), createChangeBriefResponseSchema, {
+    method: "POST",
+    body: createChangeBriefRequestSchema.parse(body),
+  });
+}
+
+export function fetchChangeBrief(ticker: string, id: string) {
+  return apiFetch(
+    `${changesBasePath(ticker)}/${encodeURIComponent(id)}`,
+    changeBriefStatusResponseSchema,
+  );
+}
+
+export function cancelChangeBrief(ticker: string, id: string) {
+  return apiFetch(
+    `${changesBasePath(ticker)}/${encodeURIComponent(id)}/cancel`,
+    cancelChangeBriefResponseSchema,
+    { method: "POST" },
+  );
+}
+
+/** Mirrors `openFilingAnalysisStream` — same integration-layer streaming boundary (03.13 AD-2). */
+export function openChangeBriefStream(
+  ticker: string,
+  id: string,
+  handlers: {
+    onEvent: (event: ChangeBriefStreamEvent) => void;
+    onEnd: () => void;
+    onError: (error: AppError) => void;
+  },
+): () => void {
+  return openEventStream(`${changesBasePath(ticker)}/${encodeURIComponent(id)}/stream`, {
+    onMessage: (raw) => {
+      const parsed = changeBriefStreamEventSchema.safeParse(raw);
+      if (!parsed.success) {
+        handlers.onError(
+          new AppError("validation", "Received a malformed stream event.", { cause: parsed.error }),
+        );
+        return;
+      }
+      handlers.onEvent(parsed.data);
+    },
+    onEnd: handlers.onEnd,
+    onError: handlers.onError,
+  });
 }
 
 /** `period_type` is a required query param on this route, not a body field (Document 33 Amendment, frozen). */
