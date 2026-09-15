@@ -13,6 +13,28 @@ vi.mock("../integration/api", () => ({
   fetchRecentReports: vi.fn(),
 }));
 
+/**
+ * Keyed on the query text rather than `mockResolvedValueOnce` — the real
+ * `useDebouncedValue` (250ms, real timers) cancels its timer on every
+ * keystroke, but that cancellation races real wall-clock time against
+ * whatever else is on the event loop. Under a loaded test run an
+ * intermediate value ("a", "ap") can legitimately fire before the next
+ * keystroke cancels it, calling `searchCompanies` more than once before
+ * settling on "app". A single-use mock breaks under that extra call; this
+ * mock instead answers correctly for every call, exactly as the real
+ * backend would (only "app" matches Apple Inc., any other prefix has no
+ * results yet).
+ */
+function mockAppleSearchOnSettledQuery() {
+  searchCompanies.mockImplementation((query: string) =>
+    Promise.resolve(
+      query === "app"
+        ? { results: [{ ticker: "AAPL", name: "Apple Inc.", has_filings: true }] }
+        : { results: [] },
+    ),
+  );
+}
+
 describe("CompanySearch", () => {
   beforeEach(() => {
     push.mockClear();
@@ -25,9 +47,7 @@ describe("CompanySearch", () => {
   });
 
   it("debounces typing, then shows real suggestions from the backend", async () => {
-    searchCompanies.mockResolvedValueOnce({
-      results: [{ ticker: "AAPL", name: "Apple Inc.", has_filings: true }],
-    });
+    mockAppleSearchOnSettledQuery();
     const { user } = renderWithProviders(<CompanySearch />);
     await user.type(screen.getByRole("combobox"), "app");
 
@@ -36,9 +56,7 @@ describe("CompanySearch", () => {
   });
 
   it("navigates to /research?ticker=... when a suggestion is selected", async () => {
-    searchCompanies.mockResolvedValueOnce({
-      results: [{ ticker: "AAPL", name: "Apple Inc.", has_filings: true }],
-    });
+    mockAppleSearchOnSettledQuery();
     const { user } = renderWithProviders(<CompanySearch />);
     await user.type(screen.getByRole("combobox"), "app");
     const option = await screen.findByText("Apple Inc.");
