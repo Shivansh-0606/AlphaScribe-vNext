@@ -284,6 +284,65 @@ export const filingAnalysisStreamEventSchema = z.object({
 });
 export type FilingAnalysisStreamEvent = z.infer<typeof filingAnalysisStreamEventSchema>;
 
+// ---- Filing Q&A (backend/server.py POST/GET/cancel
+// .../filings/{doc_id}/qa[/{id}][/stream|/cancel] — M16, Document 87 R2,
+// implemented `9035e27`/`8844566`). One question, one grounded answer per
+// job — not the fixed four-output shape M14 uses, so despite reusing M14's
+// source-anchor shape verbatim, the payload itself is declared fresh rather
+// than copied from `filingAnalysisPayloadSchema` (brief §3: the actual
+// `answer_payload` dict in server.py has no `company_name`/`source`, and
+// `state` is a 2-value enum here, not M14's 3-value one).
+
+export const filingQAStateSchema = z.enum(["answered", "insufficient_evidence"]);
+export type FilingQAState = z.infer<typeof filingQAStateSchema>;
+
+/** `{ticker, doc_id, question, answer_text, sources, cited_source_indices,
+ * state, coverage_boundaries, created_at, prompt_version, schema_version}` —
+ * read verbatim from `answer_payload` in `server.py` (~3028-3039). */
+export const filingQAAnswerSchema = z.object({
+  ticker: z.string(),
+  doc_id: z.string(),
+  question: z.string(),
+  answer_text: z.string(),
+  sources: z.array(filingAnalysisSourceSchema),
+  cited_source_indices: z.array(z.number()),
+  state: filingQAStateSchema,
+  coverage_boundaries: z.array(z.string()),
+  created_at: z.string(),
+  prompt_version: z.string().nullable(),
+  schema_version: z.string(),
+});
+export type FilingQAAnswer = z.infer<typeof filingQAAnswerSchema>;
+
+/** BYOK field set, verbatim, plus the one field M14's equivalent doesn't
+ * have: `question` is required (empty/missing → 422 server-side). */
+export const createFilingQARequestSchema = z.object({
+  question: z.string(),
+  llm_provider: z.string().optional(),
+  llm_api_key: z.string().optional(),
+  llm_base_url: z.string().optional(),
+  llm_model: z.string().optional(),
+});
+export type CreateFilingQARequestBody = z.infer<typeof createFilingQARequestSchema>;
+
+export const filingQAStatusResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  answer: filingQAAnswerSchema.optional(),
+});
+export type FilingQAStatusResponse = z.infer<typeof filingQAStatusResponseSchema>;
+
+/** Same envelope as `filingAnalysisStreamEventSchema`, `answer` key instead
+ * of `analysis` (`_filing_qa_stream_events`, server.py). */
+export const filingQAStreamEventSchema = z.object({
+  node: z.string(),
+  status: z.string(),
+  message: z.string().optional(),
+  ts: z.string().optional(),
+  answer: filingQAAnswerSchema.optional(),
+});
+export type FilingQAStreamEvent = z.infer<typeof filingQAStreamEventSchema>;
+
 // ---- Reports list, ticker-scoped (backend/server.py GET /reports — reused
 // verbatim by M15's report-mode picker; declared independently of
 // `comparison`'s identical-by-coincidence `reportListItemSchema`, per that

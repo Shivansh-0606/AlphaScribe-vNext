@@ -11,11 +11,12 @@ import { cn } from "@/lib/utils";
 import { useFilingContent } from "../application/useFilingContent";
 import { useFilings } from "../application/useFilings";
 import { FilingAnalysisPanel } from "./FilingAnalysisPanel";
+import { FilingQAPanel } from "./FilingQAPanel";
 
-type FilingView = "content" | "analysis";
+type FilingView = "content" | "analysis" | "qa";
 
 /** Same `aria-current` toggle-button convention as `SectionNav` — no ARIA
- * tablist semantics needed for a two-way, non-nested switch. */
+ * tablist semantics needed for a small, non-nested switch. */
 function FilingViewSwitch({
   view,
   onChange,
@@ -26,6 +27,7 @@ function FilingViewSwitch({
   const options: { key: FilingView; label: string }[] = [
     { key: "content", label: "Content" },
     { key: "analysis", label: "Analysis" },
+    { key: "qa", label: "Q&A" },
   ];
   return (
     <div role="group" aria-label="Filing view" className="flex flex-row gap-1">
@@ -54,10 +56,12 @@ function FilingViewSwitch({
  * (metadata only). Selecting a filing reads its persisted text via M13's
  * `GET /companies/{ticker}/filings/{doc_id}/content` (Document 59/60,
  * CTO-ratified 2026-08-27) and shows it in the frozen `FilingViewer`
- * "Filing content" variant. A Content/Analysis switch (Component Inventory
- * §FilingViewer variants) additionally exposes M14 Filing Analysis (Document
- * 64/65) via `FilingAnalysisPanel`, which owns its own job lifecycle — the
- * content pane's own loading/error/empty states are unchanged.
+ * "Filing content" variant. A Content/Analysis/Q&A switch (Component
+ * Inventory §FilingViewer variants, plus M16's own reuse of the "Filing
+ * analysis" variant) additionally exposes M14 Filing Analysis via
+ * `FilingAnalysisPanel` and M16 Filing Q&A via `FilingQAPanel` — each owns
+ * its own job lifecycle; the content pane's own loading/error/empty states
+ * are unchanged.
  */
 export function FilingsSection({ ticker }: { ticker: string }) {
   const filings = useFilings(ticker);
@@ -161,9 +165,18 @@ export function FilingsSection({ ticker }: { ticker: string }) {
             ) : (
               <FilingViewer chunks={content.data?.content.chunks ?? []} source={selected.source} />
             )
-          ) : (
+          ) : view === "analysis" ? (
             // M14 — key={selected.doc_id} resets the job to idle on filing change.
             <FilingAnalysisPanel
+              key={selected.doc_id}
+              ticker={ticker}
+              docId={selected.doc_id}
+              source={selected.source}
+              chunks={content.data?.content.chunks ?? []}
+            />
+          ) : (
+            // M16 — key={selected.doc_id} resets the job to idle on filing change.
+            <FilingQAPanel
               key={selected.doc_id}
               ticker={ticker}
               docId={selected.doc_id}

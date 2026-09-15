@@ -1,6 +1,7 @@
 import type {
   ChangeBriefStreamEvent,
   FilingAnalysisStreamEvent,
+  FilingQAStreamEvent,
   StreamEvent,
 } from "../integration/schemas";
 
@@ -112,4 +113,35 @@ export function deriveChangeBriefStage(event: ChangeBriefStreamEvent): ChangeBri
   }
   if (event.node === "final") return "completed";
   return "computing";
+}
+
+/**
+ * Filing Q&A (M16) is single-phase like Filing Analysis/Change Brief —
+ * `pipeline/start` -> `retrieving`/`answering`/`validating` trace events
+ * (surfaced via `message`, not distinct stages) -> terminal `pipeline/ok` +
+ * injected `final` event (`_filing_qa_stream_events`, server.py).
+ */
+export type FilingQAStage = "idle" | "answering" | "completed" | "failed" | "cancelled";
+
+const FILING_QA_STAGE_LABEL: Record<FilingQAStage, string> = {
+  idle: "",
+  answering: "Answering the question…",
+  completed: "Answer ready.",
+  failed: "The question could not be answered.",
+  cancelled: "Cancelled.",
+};
+
+export function filingQAStageLabel(stage: FilingQAStage): string {
+  return FILING_QA_STAGE_LABEL[stage];
+}
+
+export function deriveFilingQAStage(event: FilingQAStreamEvent): FilingQAStage {
+  if (event.node === "pipeline") {
+    if (event.status === "ok") return "completed";
+    if (event.status === "error") return "failed";
+    if (event.status === "warn") return "cancelled";
+    return "answering";
+  }
+  if (event.node === "final") return "completed";
+  return "answering";
 }

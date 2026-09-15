@@ -11,9 +11,12 @@ import {
   createChangeBriefResponseSchema,
   createFilingAnalysisRequestSchema,
   createFilingAnalysisResponseSchema,
+  createFilingQARequestSchema,
   filingAnalysisStatusResponseSchema,
   filingAnalysisStreamEventSchema,
   filingContentResponseSchema,
+  filingQAStatusResponseSchema,
+  filingQAStreamEventSchema,
   filingsResponseSchema,
   financialsAcquireResponseSchema,
   financialsResponseSchema,
@@ -30,7 +33,9 @@ import {
   type ChangeBriefStreamEvent,
   type CreateChangeBriefRequestBody,
   type CreateFilingAnalysisRequestBody,
+  type CreateFilingQARequestBody,
   type FilingAnalysisStreamEvent,
+  type FilingQAStreamEvent,
   type GenerateReportRequestBody,
   type IngestEdgarRequestBody,
   type IngestTextRequestBody,
@@ -156,6 +161,60 @@ export function openFilingAnalysisStream(
       onError: handlers.onError,
     },
   );
+}
+
+/**
+ * M16 — POST .../qa (Document 87 R2, implemented `9035e27`). Creates an
+ * async Filing Q&A job for one question about one filing; `question` is the
+ * one required field (server-side 422 on empty/missing/too-long).
+ */
+export function createFilingQA(ticker: string, docId: string, body: CreateFilingQARequestBody) {
+  return apiFetch(`${filingBasePath(ticker, docId)}/qa`, createFilingAnalysisResponseSchema, {
+    method: "POST",
+    body: createFilingQARequestSchema.parse(body),
+  });
+}
+
+export function fetchFilingQA(ticker: string, docId: string, id: string) {
+  return apiFetch(
+    `${filingBasePath(ticker, docId)}/qa/${encodeURIComponent(id)}`,
+    filingQAStatusResponseSchema,
+  );
+}
+
+export function cancelFilingQA(ticker: string, docId: string, id: string) {
+  return apiFetch(
+    `${filingBasePath(ticker, docId)}/qa/${encodeURIComponent(id)}/cancel`,
+    cancelFilingAnalysisResponseSchema,
+    { method: "POST" },
+  );
+}
+
+/** Mirrors `openFilingAnalysisStream` — same integration-layer streaming boundary (03.13 AD-2). */
+export function openFilingQAStream(
+  ticker: string,
+  docId: string,
+  id: string,
+  handlers: {
+    onEvent: (event: FilingQAStreamEvent) => void;
+    onEnd: () => void;
+    onError: (error: AppError) => void;
+  },
+): () => void {
+  return openEventStream(`${filingBasePath(ticker, docId)}/qa/${encodeURIComponent(id)}/stream`, {
+    onMessage: (raw) => {
+      const parsed = filingQAStreamEventSchema.safeParse(raw);
+      if (!parsed.success) {
+        handlers.onError(
+          new AppError("validation", "Received a malformed stream event.", { cause: parsed.error }),
+        );
+        return;
+      }
+      handlers.onEvent(parsed.data);
+    },
+    onEnd: handlers.onEnd,
+    onError: handlers.onError,
+  });
 }
 
 /** `GET /reports?ticker=` — the candidate list for M15's report-mode picker (Document 70 R4 §7). */
