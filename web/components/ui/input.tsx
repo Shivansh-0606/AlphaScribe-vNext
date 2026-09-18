@@ -13,6 +13,12 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
         className,
       )}
+      // Disposable-email browser extensions (e.g. "Temp Mail") inject a
+      // style/data attribute onto type="email" inputs before React
+      // hydrates, tripping a hydration-mismatch warning that originates
+      // outside the page. Scoped to type="email" only, so a real mismatch
+      // on any other input type (password, text, etc.) still warns.
+      suppressHydrationWarning={type === "email"}
       {...props}
     />
   );
