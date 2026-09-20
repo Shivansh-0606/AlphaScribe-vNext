@@ -11,7 +11,7 @@ import { MetricStat } from "@/components/research/MetricStat";
 import { StatementTable } from "@/components/research/StatementTable";
 import { useFinancialsAcquisition } from "../application/useFinancialsAcquisition";
 import { useFinancialStatements } from "../application/useFinancialStatements";
-import { useReport } from "../application/useReport";
+import { useReport, useReportStatus } from "../application/useReport";
 import type { ExtractedFinancials, FinancialStatementGroup } from "../integration/schemas";
 
 /**
@@ -22,7 +22,12 @@ import type { ExtractedFinancials, FinancialStatementGroup } from "../integratio
  * Cash Flow data from `GET /companies/{ticker}/financials` (Document 33
  * §1-§10, CTO-ratified), rendered per statement type via `StatementTable`
  * once `acquisition_state` is `available` (Document 55 §3.2's acceptance
- * matrix) — independent of the report/job above.
+ * matrix) — genuinely independent of the report/job above: it renders
+ * unconditionally, never gated on the Metrics card's own job state
+ * (migrated-parity hardening pass, Company Research Sub-Slice 2 Finding C —
+ * the two cards previously shared one early-return chain, so the Statements
+ * card was unreachable until an Overview job for the same ticker existed
+ * and succeeded, even though its own data source doesn't need one).
  */
 const METRIC_FIELDS: { key: keyof ExtractedFinancials; label: string }[] = [
   { key: "revenue", label: "Revenue" },
@@ -183,9 +188,27 @@ function FinancialStatements({ ticker }: { ticker: string }) {
   );
 }
 
-export function FinancialsSection({ ticker }: { ticker: string }) {
-  const jobId = useSearchParams().get("job");
+/**
+ * The single-period "Financial Metrics" card's own gating — split out so it
+ * no longer gates the independent Statements card below it (Finding C).
+ * Distinguishes a job that's genuinely still running from one that reached
+ * a terminal `failed`/`cancelled` status (Finding B): `useReport` alone
+ * can't tell the two apart, since both currently present as `report.data
+ * === null` — `GET /reports/{id}`'s own `status` field (via
+ * `useReportStatus`) is what actually carries that distinction, and it was
+ * being discarded before this fix.
+ */
+function FinancialMetricsCard({
+  ticker,
+  jobId,
+  onGoToOverview,
+}: {
+  ticker: string;
+  jobId: string | null;
+  onGoToOverview: () => void;
+}) {
   const report = useReport(jobId);
+  const status = useReportStatus(jobId);
 
   if (!jobId) {
     return (
@@ -194,15 +217,22 @@ export function FinancialsSection({ ticker }: { ticker: string }) {
       </Banner>
     );
   }
-  if (report.isPending) {
+  if (report.isPending || status.isPending) {
     return <Loader label="Loading financial metrics…" />;
   }
-  if (report.isError) {
+  if (report.isError || status.isError) {
     return (
       <Banner
         tone="error"
         action={
-          <Button variant="secondary" size="sm" onClick={() => report.refetch()}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              report.refetch();
+              status.refetch();
+            }}
+          >
             Retry
           </Button>
         }
@@ -211,8 +241,27 @@ export function FinancialsSection({ ticker }: { ticker: string }) {
       </Banner>
     );
   }
-  // `report.data` is legitimately `null` — not an error — while the run on
-  // Overview hasn't finished yet (`useReport` resolves null until a report exists).
+  // A terminal non-success status is not "still running" — the honest state
+  // Overview's own job hook already shows a Retry for; Financials has no
+  // live job/stream of its own to retry inline, so it hands off there
+  // rather than faking a retry it can't actually perform.
+  if (status.data === "failed" || status.data === "cancelled") {
+    return (
+      <Banner
+        tone="error"
+        action={
+          <Button variant="secondary" size="sm" onClick={onGoToOverview}>
+            Go to Overview
+          </Button>
+        }
+      >
+        Research {status.data === "cancelled" ? "was cancelled" : "failed"} — go to Overview to see
+        what happened and retry.
+      </Banner>
+    );
+  }
+  // `report.data` is legitimately `null` — not an error — while a genuinely
+  // still-running job hasn't produced a report yet.
   if (!report.data) {
     return (
       <Banner tone="info">
@@ -227,34 +276,48 @@ export function FinancialsSection({ ticker }: { ticker: string }) {
   );
 
   return (
+    <Card>
+      <CardContent className="flex flex-col gap-4">
+        <Text variant="body-strong">Financial Metrics</Text>
+        {metrics.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {metrics.map((m) => (
+              <MetricStat
+                key={m.key}
+                label={m.label}
+                value={m.value}
+                direction={directionFromValue(m.value)}
+              />
+            ))}
+          </div>
+        ) : (
+          <Text variant="small" className="text-muted-foreground">
+            No financial metrics were extracted for this report.
+          </Text>
+        )}
+        {data?.guidance && (
+          <div className="flex flex-col gap-1">
+            <Text variant="label">Guidance</Text>
+            <Text variant="small">{data.guidance}</Text>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function FinancialsSection({
+  ticker,
+  onGoToOverview,
+}: {
+  ticker: string;
+  onGoToOverview: () => void;
+}) {
+  const jobId = useSearchParams().get("job");
+
+  return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardContent className="flex flex-col gap-4">
-          <Text variant="body-strong">Financial Metrics</Text>
-          {metrics.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {metrics.map((m) => (
-                <MetricStat
-                  key={m.key}
-                  label={m.label}
-                  value={m.value}
-                  direction={directionFromValue(m.value)}
-                />
-              ))}
-            </div>
-          ) : (
-            <Text variant="small" className="text-muted-foreground">
-              No financial metrics were extracted for this report.
-            </Text>
-          )}
-          {data?.guidance && (
-            <div className="flex flex-col gap-1">
-              <Text variant="label">Guidance</Text>
-              <Text variant="small">{data.guidance}</Text>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <FinancialMetricsCard ticker={ticker} jobId={jobId} onGoToOverview={onGoToOverview} />
 
       <Card>
         <CardContent className="flex flex-col gap-3">

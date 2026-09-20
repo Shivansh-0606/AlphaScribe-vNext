@@ -29,3 +29,28 @@ export function useReport(jobId: string | null) {
     staleTime: 30_000,
   });
 }
+
+/**
+ * Lightweight companion to `useReport` — exposes just the job's own
+ * terminal `status` (`GET /reports/{id}`'s `status` field, which
+ * `fetchCompletedReport` above discards after extracting `report`). Kept as
+ * a fully separate query (own key, own fetch) rather than widening
+ * `useReport`'s cached shape: `useResearchJob` already seeds
+ * `reportQueryKey` directly with a bare `ReportDoc` on the SSE `final`
+ * event, so changing what's cached under that key would ripple into that
+ * seeding code and every other `useReport` consumer for a need only one
+ * caller (`FinancialsSection`, distinguishing a failed job from a
+ * genuinely still-running one) actually has.
+ */
+export function reportStatusQueryKey(jobId: string) {
+  return ["company-research", "report-status", jobId] as const;
+}
+
+export function useReportStatus(jobId: string | null) {
+  return useQuery({
+    queryKey: reportStatusQueryKey(jobId ?? ""),
+    queryFn: () => companyResearchApi.fetchReport(jobId as string).then((res) => res.status),
+    enabled: jobId != null,
+    staleTime: 30_000,
+  });
+}

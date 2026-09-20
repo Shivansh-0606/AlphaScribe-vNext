@@ -38,7 +38,12 @@ export function CompanyResearchScreen({ ticker, jobId }: { ticker?: string; jobI
         {active === "overview" && (
           <OverviewSection ticker={normalizedTicker} initialJobId={jobId ?? null} />
         )}
-        {active === "financials" && <FinancialsSection ticker={normalizedTicker} />}
+        {active === "financials" && (
+          <FinancialsSection
+            ticker={normalizedTicker}
+            onGoToOverview={() => setActive("overview")}
+          />
+        )}
         {active === "filings" && <FilingsSection ticker={normalizedTicker} />}
         {active === "changes" && <ChangeBriefSection ticker={normalizedTicker} />}
         {active === "ai-insights" && <AIInsightsSection ticker={normalizedTicker} />}

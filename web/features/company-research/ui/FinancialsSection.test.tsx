@@ -18,6 +18,20 @@ vi.mock("../integration/api", () => ({
   fetchFinancialStatements: (...args: unknown[]) => fetchFinancialStatements(...args),
 }));
 
+function renderSection(
+  props: Partial<{ ticker: string; onGoToOverview: () => void }> = {},
+  renderOptions?: Parameters<typeof renderWithProviders>[1],
+) {
+  const onGoToOverview = props.onGoToOverview ?? vi.fn();
+  return {
+    onGoToOverview,
+    ...renderWithProviders(
+      <FinancialsSection ticker={props.ticker ?? "AAPL"} onGoToOverview={onGoToOverview} />,
+      renderOptions,
+    ),
+  };
+}
+
 function emptyGroup() {
   return { acquisition_state: "not_yet_acquired" as const, periods: [] };
 }
@@ -91,14 +105,20 @@ describe("FinancialsSection", () => {
     fetchFinancialStatements.mockResolvedValue(financialsResponse());
   });
 
-  it("shows an empty state prompting Overview when there's no job yet", () => {
-    renderWithProviders(<FinancialsSection ticker="AAPL" />);
+  it("shows an empty state prompting Overview when there's no job yet", async () => {
+    renderSection();
     expect(screen.getByText(/Run research on the Overview tab/)).toBeInTheDocument();
+    // Finding C regression: the Statements card needs nothing but the ticker —
+    // it must render even when there's no Overview job at all.
+    expect(await screen.findByText("Income Statement")).toBeInTheDocument();
   });
 
   it("renders MetricStat cards only for fields that actually have a value, plus guidance separately", async () => {
     searchParams = new URLSearchParams({ job: "job-1" });
-    fetchReport.mockResolvedValueOnce({
+    // Persistent (not "Once"): `useReport` and `useReportStatus` each call
+    // `fetchReport` independently, so every scenario in this file needs its
+    // mock to answer both calls identically, not just the first.
+    fetchReport.mockResolvedValue({
       status: "completed",
       id: "job-1",
       report: {
@@ -114,7 +134,7 @@ describe("FinancialsSection", () => {
         },
       },
     });
-    renderWithProviders(<FinancialsSection ticker="AAPL" />);
+    renderSection();
 
     expect(await screen.findByText("$100B")).toBeInTheDocument();
     expect(screen.getByText("+8.2%")).toBeInTheDocument();
@@ -127,12 +147,12 @@ describe("FinancialsSection", () => {
 
   it("shows a no-metrics message when extracted_data is empty, not a blank grid", async () => {
     searchParams = new URLSearchParams({ job: "job-1" });
-    fetchReport.mockResolvedValueOnce({
+    fetchReport.mockResolvedValue({
       status: "completed",
       id: "job-1",
       report: { ...BASE_REPORT, extracted_data: {} },
     });
-    renderWithProviders(<FinancialsSection ticker="AAPL" />);
+    renderSection();
     expect(
       await screen.findByText("No financial metrics were extracted for this report."),
     ).toBeInTheDocument();
@@ -140,29 +160,66 @@ describe("FinancialsSection", () => {
 
   it("surfaces a load failure with retry", async () => {
     searchParams = new URLSearchParams({ job: "job-1" });
-    fetchReport.mockRejectedValueOnce(new Error("network"));
-    renderWithProviders(<FinancialsSection ticker="AAPL" />);
+    fetchReport.mockRejectedValue(new Error("network"));
+    renderSection();
     expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't load financial metrics.");
   });
 
   it("regression: a still-running job (no report yet) is not treated as a load failure", async () => {
     searchParams = new URLSearchParams({ job: "job-1" });
     // In-flight jobs resolve to {status, id, events} — no `report` field — which is
-    // legitimate, not an error (server.py:1009-1027).
-    fetchReport.mockResolvedValueOnce({ status: "running", id: "job-1", events: [] });
-    renderWithProviders(<FinancialsSection ticker="AAPL" />);
+    // legitimate, not an error (server.py:1009-1027). `useReportStatus` hits the
+    // same endpoint a second time — mocked identically since both calls land here.
+    fetchReport.mockResolvedValue({ status: "running", id: "job-1", events: [] });
+    renderSection();
     expect(await screen.findByText(/Research is still running/)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    // Finding C regression: still reachable while the unrelated job is running.
+    expect(await screen.findByText("Income Statement")).toBeInTheDocument();
+  });
+
+  it("Finding B: a failed job shows an honest banner and hands off to Overview to retry, never 'still running' forever", async () => {
+    searchParams = new URLSearchParams({ job: "job-1" });
+    // A failed job's GET /reports/{id} legitimately returns {status: "failed",
+    // report: null} — indistinguishable from "still running" by `report.data`
+    // alone (both are null), which is exactly the bug: only `status` tells them apart.
+    fetchReport.mockResolvedValue({ status: "failed", id: "job-1" });
+    const { user, onGoToOverview } = renderSection();
+
+    const banner = await screen.findByRole("alert");
+    expect(banner).toHaveTextContent(/Research failed/);
+    expect(banner).toHaveTextContent(/go to Overview/i);
+    expect(screen.queryByText(/Research is still running/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Go to Overview" }));
+    expect(onGoToOverview).toHaveBeenCalledOnce();
+  });
+
+  it("Finding B: a cancelled job is shown honestly too, distinct wording from failed", async () => {
+    searchParams = new URLSearchParams({ job: "job-1" });
+    fetchReport.mockResolvedValue({ status: "cancelled", id: "job-1" });
+    renderSection();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/Research was cancelled/);
+  });
+
+  it("Finding C: a failed job still doesn't block the independent Statements card", async () => {
+    searchParams = new URLSearchParams({ job: "job-1" });
+    fetchReport.mockResolvedValue({ status: "failed", id: "job-1" });
+    renderSection();
+
+    await screen.findByRole("alert");
+    expect(await screen.findByText("Income Statement")).toBeInTheDocument();
   });
 
   it("has no detectable accessibility violations with metrics rendered", async () => {
     searchParams = new URLSearchParams({ job: "job-1" });
-    fetchReport.mockResolvedValueOnce({
+    fetchReport.mockResolvedValue({
       status: "completed",
       id: "job-1",
       report: { ...BASE_REPORT, extracted_data: { revenue: "$100B", eps: "$1.23" } },
     });
-    const { container } = renderWithProviders(<FinancialsSection ticker="AAPL" />);
+    const { container } = renderSection();
     await screen.findByText("$100B");
 
     expect(await axe(container)).toHaveNoViolations();
@@ -171,12 +228,12 @@ describe("FinancialsSection", () => {
   describe("Financial Statements (M12 — GET /companies/{ticker}/financials)", () => {
     async function renderReady() {
       searchParams = new URLSearchParams({ job: "job-1" });
-      fetchReport.mockResolvedValueOnce({
+      fetchReport.mockResolvedValue({
         status: "completed",
         id: "job-1",
         report: { ...BASE_REPORT, extracted_data: {} },
       });
-      const utils = renderWithProviders(<FinancialsSection ticker="AAPL" />);
+      const utils = renderSection();
       await screen.findByText(/No financial metrics were extracted/);
       await screen.findByText("Income Statement");
       return utils;
@@ -187,12 +244,12 @@ describe("FinancialsSection", () => {
       fetchFinancialStatements.mockReset();
       fetchFinancialStatements.mockReturnValueOnce(new Promise((res) => (resolveFinancials = res)));
       searchParams = new URLSearchParams({ job: "job-1" });
-      fetchReport.mockResolvedValueOnce({
+      fetchReport.mockResolvedValue({
         status: "completed",
         id: "job-1",
         report: { ...BASE_REPORT, extracted_data: {} },
       });
-      renderWithProviders(<FinancialsSection ticker="AAPL" />);
+      renderSection();
 
       expect(await screen.findByText(/Loading financial statements/)).toBeInTheDocument();
       resolveFinancials(financialsResponse());
@@ -203,12 +260,12 @@ describe("FinancialsSection", () => {
       fetchFinancialStatements.mockReset();
       fetchFinancialStatements.mockRejectedValueOnce(new Error("network"));
       searchParams = new URLSearchParams({ job: "job-1" });
-      fetchReport.mockResolvedValueOnce({
+      fetchReport.mockResolvedValue({
         status: "completed",
         id: "job-1",
         report: { ...BASE_REPORT, extracted_data: {} },
       });
-      renderWithProviders(<FinancialsSection ticker="AAPL" />);
+      renderSection();
 
       expect(await screen.findByRole("alert")).toHaveTextContent(
         "Couldn't load financial statements.",
