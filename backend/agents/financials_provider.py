@@ -26,6 +26,7 @@ table, applied by a future orchestration use case, not by this module).
 from __future__ import annotations
 
 import asyncio
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -81,7 +82,7 @@ def _infer_unit(provider_label: str) -> MetricUnit:
         return MetricUnit.SHARES
     if "margin" in label or "growth" in label or "yield" in label or "%" in provider_label:
         return MetricUnit.PERCENTAGE
-    if "ratio" in label:
+    if re.search(r"\bratio\b", label):
         return MetricUnit.RATIO
     return MetricUnit.CURRENCY  # the observed default for statement line items (Document 31 §7)
 

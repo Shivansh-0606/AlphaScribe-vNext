@@ -165,6 +165,16 @@ def test_unit_heuristic_recognizes_per_share_and_share_count_and_percentage():
     assert fp._infer_unit("Total Revenue") == MetricUnit.CURRENCY
 
 
+def test_unit_heuristic_matches_ratio_as_whole_word_only():
+    # Regression: "ratio" used to be matched as a bare substring, so any
+    # label containing "operation" or "administration" (both of which
+    # literally contain "ratio") was misclassified as RATIO instead of the
+    # correct CURRENCY default.
+    assert fp._infer_unit("Net Income Continuous Operations") == MetricUnit.CURRENCY
+    assert fp._infer_unit("Selling General And Administration") == MetricUnit.CURRENCY
+    assert fp._infer_unit("Current Ratio") == MetricUnit.RATIO
+
+
 if __name__ == "__main__":
     test_success_full_period_coverage()
     test_definitive_unavailable_on_empty_dataframe()
@@ -176,5 +186,6 @@ if __name__ == "__main__":
     test_invalid_response_on_no_parseable_rows()
     test_partial_success_when_some_periods_have_no_usable_rows()
     test_unit_heuristic_recognizes_per_share_and_share_count_and_percentage()
+    test_unit_heuristic_matches_ratio_as_whole_word_only()
     print("ok: provider outcome classification — success/definitive-unavailable/transient/invalid/partial, "
           "unit heuristic")
