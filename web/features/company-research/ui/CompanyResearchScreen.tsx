@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Banner } from "@/components/foundation/Banner";
 import { Heading } from "@/components/foundation/Heading";
 import { ResearchTemplate } from "@/components/layouts/ResearchTemplate";
+import { useReportStatus } from "../application/useReport";
 import { AIInsightsSection } from "./AIInsightsSection";
 import { ChangeBriefSection } from "./ChangeBriefSection";
 import { ExportSection } from "./ExportSection";
@@ -15,6 +16,13 @@ import { SectionNav, type SectionKey } from "./SectionNav";
 /** SCR-06 Company Research — the feature's public screen composition. */
 export function CompanyResearchScreen({ ticker, jobId }: { ticker?: string; jobId?: string }) {
   const [active, setActive] = useState<SectionKey>("overview");
+  // Export's own hand-off (migrated-parity hardening pass, Sub-Slice 6
+  // Finding A) needs to know the job actually *completed*, not just that a
+  // `?job=` id is present — `jobId` alone is set the instant a run starts.
+  // Distinct root cause from Sub-Slices 2/5 (which discard a fetched
+  // `status`): Export never fetched status at all, so this is the first
+  // status check in its path, not a widened one.
+  const exportJobStatus = useReportStatus(jobId ?? null);
 
   if (!ticker) {
     return (
@@ -46,8 +54,15 @@ export function CompanyResearchScreen({ ticker, jobId }: { ticker?: string; jobI
         )}
         {active === "filings" && <FilingsSection ticker={normalizedTicker} />}
         {active === "changes" && <ChangeBriefSection ticker={normalizedTicker} />}
-        {active === "ai-insights" && <AIInsightsSection ticker={normalizedTicker} />}
-        {active === "export" && <ExportSection reportId={jobId} />}
+        {active === "ai-insights" && (
+          <AIInsightsSection
+            ticker={normalizedTicker}
+            onGoToOverview={() => setActive("overview")}
+          />
+        )}
+        {active === "export" && (
+          <ExportSection reportId={exportJobStatus.data === "completed" ? jobId : undefined} />
+        )}
       </div>
     </ResearchTemplate>
   );
