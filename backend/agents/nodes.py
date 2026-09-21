@@ -1,11 +1,14 @@
 """LangGraph agent nodes for AlphaScribe."""
 from __future__ import annotations
+import logging
 import re
 from datetime import datetime, timezone
 from typing import Any
 from .state import AgentState
 from .schemas import FinancialsSchema, ToneSchema, FactCheckSchema
 from .llm import chat_json, chat_text, _strip_code_fence, DEFAULT_LIGHT_MODEL, DEFAULT_HEAVY_MODEL
+
+logger = logging.getLogger("alphascribe")
 
 
 def _event(node: str, status: str, message: str, **extra) -> dict:
@@ -16,6 +19,18 @@ def _event(node: str, status: str, message: str, **extra) -> dict:
         "ts": datetime.now(timezone.utc).isoformat(),
         **extra,
     }
+
+
+def _safe_failure(label: str, e: Exception) -> str:
+    """A generic, user-safe trace/error message for a node's LLM or retrieval
+    call failure. The raw exception can carry operator-only detail (a
+    `backend/.env` upgrade instruction, an embedded provider API key,
+    depending on which exception class it is) that this project's own
+    convention never surfaces to the client verbatim elsewhere (server.py's
+    "never leak raw provider/validation text" routes; M14/M16's redacted
+    per-output messages). Full detail always goes to the server log."""
+    logger.warning("%s failed: %s", label, e)
+    return f"{label} failed. See server logs for details."
 
 
 def _format_docs(docs: list[dict], *, max_chars: int = 8000) -> str:
@@ -46,7 +61,7 @@ async def retriever_node(state: AgentState, *, db) -> dict:
         # Downstream nodes already handle no source_documents gracefully.
         return {
             "source_documents": [],
-            "trace": [_event("retriever", "error", f"Retrieval failed: {e}")],
+            "trace": [_event("retriever", "error", _safe_failure("Retrieval", e))],
         }
     stages = []
     if meta.get("bm25"):
@@ -92,7 +107,7 @@ async def financial_extractor_node(state: AgentState) -> dict:
     except Exception as e:
         return {
             "extracted_data": {},
-            "trace": [_event("extractor", "error", f"Extraction failed: {e}")],
+            "trace": [_event("extractor", "error", _safe_failure("Extraction", e))],
         }
 
 
@@ -124,7 +139,7 @@ async def tone_risk_node(state: AgentState) -> dict:
     except Exception as e:
         return {
             "sentiment_analysis": {},
-            "trace": [_event("tone", "error", f"Tone analysis failed: {e}")],
+            "trace": [_event("tone", "error", _safe_failure("Tone analysis", e))],
         }
 
 
@@ -191,7 +206,7 @@ async def synthesizer_node(state: AgentState) -> dict:
     except Exception as e:
         return {
             "draft_report": "",
-            "trace": [_event("synthesizer", "error", f"Synthesis failed: {e}")],
+            "trace": [_event("synthesizer", "error", _safe_failure("Synthesis", e))],
         }
 
 
@@ -262,12 +277,13 @@ async def fact_checker_node(state: AgentState) -> dict:
         result: FactCheckSchema = await chat_json(system, user, FactCheckSchema,
                                                    model=DEFAULT_HEAVY_MODEL)
     except Exception as e:
+        safe_msg = _safe_failure("Fact-check", e)
         return {
             "fact_check_status": False,
-            "validation_errors": [f"Fact-check failed: {e}"],
+            "validation_errors": [safe_msg],
             "verified_claims": [],
             "retry_count": retry + 1,
-            "trace": [_event("fact_checker", "error", f"Fact-check failed: {e}")],
+            "trace": [_event("fact_checker", "error", safe_msg)],
         }
 
     # The model may reference each claim by index (claim_id) instead of echoing

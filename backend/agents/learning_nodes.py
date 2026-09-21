@@ -12,7 +12,7 @@ from typing import Match
 
 from .learning_state import LearningState
 from .llm import chat_text, _strip_code_fence, DEFAULT_HEAVY_MODEL
-from .nodes import _event, _format_docs
+from .nodes import _event, _format_docs, _safe_failure
 
 _CITATION_RE = re.compile(r"\[(\d+)\]")
 
@@ -84,7 +84,7 @@ async def explainer_node(state: LearningState) -> dict:
     except Exception as e:  # noqa: BLE001 — mirrors nodes.py's node-level catch
         return {
             "explanation": "",
-            "trace": [_event("explainer", "error", f"Explanation failed: {e}")],
+            "trace": [_event("explainer", "error", _safe_failure("Explanation", e))],
         }
     cleaned, cited = _postprocess_citations(_strip_code_fence(raw), len(docs))
     if not cited:
