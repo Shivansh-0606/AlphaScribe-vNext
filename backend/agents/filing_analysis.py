@@ -44,6 +44,7 @@ without a contract change or a re-ratification.
 """
 from __future__ import annotations
 
+import logging
 import re
 from typing import Awaitable, Callable, Optional
 
@@ -51,6 +52,8 @@ from pydantic import BaseModel, Field
 
 from agents.filing_sections import normalize_text, locate_all
 from agents.llm import NonRetryableLLMError
+
+logger = logging.getLogger("alphascribe")
 
 # Bumped when the prompt wording OR the output-schema shape changes -- both are
 # components of the analysis identity (Document 64 §12; Document 65 §16). A
@@ -480,10 +483,22 @@ async def analyze_filing(chunks: list[dict], doc_id: str, *, db=None, ticker: st
             # exception subclass raised only at the truncation call sites in
             # agents/llm.py, if this proves confusing in practice.
             if isinstance(exc, FilingAnalysisGroundingError):
+                # No dev-facing detail in this exception's message (it's
+                # raised by resolve_and_validate's own fixed, internal
+                # strings) -- safe to surface verbatim.
                 reason = ("citation validation could not produce a structurally consistent "
                           f"grounding for this output ({exc}); no grounded narrative emitted")
             else:
-                reason = f"generation for this output failed ({exc}); no grounded narrative emitted"
+                # NonRetryableLLMError's message can carry operator-only
+                # detail (a backend/.env upgrade instruction, or "No API key
+                # for provider ...") -- never surfaced to the client (this
+                # module's `outputs` -- and its coverage_boundaries -- are
+                # returned straight through by server.py). Full detail goes
+                # to the server log only, matching agents/nodes.py's
+                # `_safe_failure` convention for the same failure class.
+                logger.warning("filing analysis generation failed for output %r: %s", kind, exc)
+                reason = ("generation for this output failed; no grounded narrative emitted. "
+                          "See server logs for details.")
             outputs[OUTPUT_LABELS[kind]] = {
                 "narrative": "",
                 "sources": [],

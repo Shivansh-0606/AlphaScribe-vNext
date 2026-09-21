@@ -251,11 +251,15 @@ def test_filings_finding_a_truncated_generation_in_one_output_isolates_to_insuff
     from agents.llm import NonRetryableLLMError
 
     calls = {"n": 0}
+    dev_facing_message = (
+        "LLM output was truncated by the max_tokens cap (LLM_MAX_OUTPUT_TOKENS). "
+        "Raise it in backend/.env and retry."
+    )
 
     async def _chat_boom_on_second(system, user, schema, *, model=None, temperature=None):
         calls["n"] += 1
         if calls["n"] == 2:  # OUTPUT_KINDS[1] == "risk_factors"
-            raise NonRetryableLLMError("LLM output was truncated by the max_tokens cap.")
+            raise NonRetryableLLMError(dev_facing_message)
         return await _fake_chat(system, user, schema, model=model, temperature=temperature)
 
     res = asyncio.run(fa.analyze_filing(_chunks(_M3_CHUNKS), "d1",
@@ -265,8 +269,11 @@ def test_filings_finding_a_truncated_generation_in_one_output_isolates_to_insuff
     bad = res["outputs"]["Risk Factors Digest"]
     assert bad["state"] == "insufficient_evidence"
     assert bad["narrative"] == "" and bad["sources"] == [] and bad["cited_source_indices"] == []
-    assert any("generation for this output failed" in x and "truncated" in x
-               for x in bad["coverage_boundaries"])
+    # Dev-facing detail (which `outputs`/`coverage_boundaries` surfaces
+    # straight to the client via server.py) must never leak the raw
+    # exception text -- only a generic, redacted message.
+    assert any("generation for this output failed" in x for x in bad["coverage_boundaries"])
+    assert not any("backend/.env" in x or "LLM_MAX_OUTPUT_TOKENS" in x for x in bad["coverage_boundaries"])
     # the siblings still produced normally, not swallowed by the same failure
     assert res["outputs"]["Filing Summary"]["state"] in ("complete", "partial")
 
