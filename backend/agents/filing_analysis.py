@@ -50,11 +50,12 @@ from typing import Awaitable, Callable, Optional
 from pydantic import BaseModel, Field
 
 from agents.filing_sections import normalize_text, locate_all
+from agents.llm import NonRetryableLLMError
 
 # Bumped when the prompt wording OR the output-schema shape changes -- both are
 # components of the analysis identity (Document 64 §12; Document 65 §16). A
 # change must produce a new identity, never silently reuse an old artifact.
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 SCHEMA_VERSION = "v1"
 
 # OAQ-10 threshold -- OPERATIONAL CONFIG (Document 65 §19), not a contract term.
@@ -275,7 +276,10 @@ _SYSTEM_COMMON = (
     "Never issue a buy / sell / hold recommendation or investment advice. Do not compare this "
     "filing to any other filing, prior period, or remembered value -- you have only this "
     "filing's excerpts. If the excerpts do not support any groundable substantive claim for "
-    "this output, return an empty narrative string; never fabricate, estimate, or interpolate."
+    "this output, return an empty narrative string; never fabricate, estimate, or interpolate.\n\n"
+    "Keep the narrative concise: roughly 300-400 words, even when the excerpts contain more "
+    "groundable material than that. Prioritize the most material claims over exhaustive coverage "
+    "of every citable detail."
 )
 
 _KIND_INSTRUCTION = {
@@ -454,27 +458,38 @@ async def analyze_filing(chunks: list[dict], doc_id: str, *, db=None, ticker: st
         candidates, boundaries = await build_candidates(
             chunks, kind, sections, db=db, ticker=ticker, doc_id=doc_id
         )
-        raw = await generate_output(candidates, kind, model=heavy_model, chat_fn=chat_fn)
         try:
+            raw = await generate_output(candidates, kind, model=heavy_model, chat_fn=chat_fn)
             outputs[OUTPUT_LABELS[kind]] = resolve_and_validate(
                 raw, candidates, doc_id, extra_boundaries=boundaries
             )
-        except FilingAnalysisGroundingError as exc:
-            # M-3: a structurally inconsistent citation result is contained to
-            # THIS output -- it degrades to insufficient_evidence (a valid
-            # non-error state, Document 64 §11.6) so the other three still
-            # return; the four-output roster is invariant (CQ-1). Only this
-            # defined grounding failure is caught -- any other exception still
-            # propagates and fails the job loudly.
+        except (FilingAnalysisGroundingError, NonRetryableLLMError) as exc:
+            # M-3 (+ Filings hardening-pass Finding A): a structurally
+            # inconsistent citation result OR a non-retryable generation
+            # failure (output-truncation, most commonly -- Document 65 §19
+            # candidate/output-length tuning is the other side of this) is
+            # contained to THIS output -- it degrades to insufficient_evidence
+            # (a valid non-error state, Document 64 §11.6) so the other three
+            # still return; the four-output roster is invariant (CQ-1). Only
+            # these two defined failure classes are caught -- any other
+            # exception still propagates and fails the job loudly.
+            # ponytail: NonRetryableLLMError also covers non-truncation
+            # config failures (e.g. no API key configured) -- those degrade
+            # every output to insufficient_evidence instead of failing the
+            # job loudly with a clear config error. Upgrade path: a narrower
+            # exception subclass raised only at the truncation call sites in
+            # agents/llm.py, if this proves confusing in practice.
+            if isinstance(exc, FilingAnalysisGroundingError):
+                reason = ("citation validation could not produce a structurally consistent "
+                          f"grounding for this output ({exc}); no grounded narrative emitted")
+            else:
+                reason = f"generation for this output failed ({exc}); no grounded narrative emitted"
             outputs[OUTPUT_LABELS[kind]] = {
                 "narrative": "",
                 "sources": [],
                 "cited_source_indices": [],
                 "state": "insufficient_evidence",
-                "coverage_boundaries": list(boundaries) + [
-                    "citation validation could not produce a structurally consistent "
-                    f"grounding for this output ({exc}); no grounded narrative emitted"
-                ],
+                "coverage_boundaries": list(boundaries) + [reason],
             }
 
     await progress("validating", "Validating citations")

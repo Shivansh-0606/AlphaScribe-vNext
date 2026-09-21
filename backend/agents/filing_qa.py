@@ -63,7 +63,7 @@ from pydantic import BaseModel, Field
 # are components of the answer identity (mirrors Document 64 §12 / Document
 # 65 §16's convention). A change must produce a new identity, never silently
 # reuse an old artifact.
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 SCHEMA_VERSION = "v1"
 
 # Below this many chunks, the whole filing is the candidate universe (subject
@@ -248,7 +248,10 @@ _SYSTEM = (
     "excerpts, and never answer from general knowledge, another filing, or the web.\n\n"
     "Never issue a buy/sell/hold recommendation or investment advice.\n\n"
     "If the excerpts do not contain information that answers the question, return an empty "
-    "string -- do not guess or speculate beyond what the excerpts support."
+    "string -- do not guess or speculate beyond what the excerpts support.\n\n"
+    "Keep the answer concise: roughly 300-400 words, even when the excerpts contain more "
+    "groundable material than that. Prioritize the most material claims over exhaustive coverage "
+    "of every citable detail."
 )
 
 
