@@ -1,15 +1,21 @@
 """Unit check for agents/learning_nodes.py's pure citation post-processor
 (03_Learning_Backend_Design.md §5.2 — the Law 3 enforcement that replaces
-Learning's fact-checker). No LLM, no DB.
+Learning's fact-checker), the CJK-bracket citation-marker normalizer (Learning
+hardening-pass brief Finding A), and `explainer_node` itself with `chat_text`
+monkeypatched. No real LLM call, no DB.
 
     python backend/tests/unit/test_learning_nodes.py
 """
+import asyncio
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from agents.learning_nodes import _build_user_message, _postprocess_citations
+import agents.learning_nodes as learning_nodes  # noqa: E402
+from agents.learning_nodes import (  # noqa: E402
+    _build_user_message, _normalize_citation_markers, _postprocess_citations, explainer_node,
+)
 
 
 def test_valid_citations_are_kept_and_recorded_in_order():
@@ -75,6 +81,112 @@ def test_user_message_caps_prior_brief_at_1200_chars():
     assert "x" * 1201 not in msg
 
 
+# --------------------------------------------------------------------------- #
+# _normalize_citation_markers (Learning hardening-pass brief Finding A)
+# --------------------------------------------------------------------------- #
+def test_normalize_converts_confirmed_lenticular_brackets_to_ascii():
+    # The exact character pair Docs generator 2 captured live on both the
+    # no-context and context_report_id repros: 【n】 (U+3010/U+3011).
+    assert _normalize_citation_markers("Revenue grew【1】.") == "Revenue grew[1]."
+
+
+def test_normalize_converts_defensive_tortoise_shell_brackets_to_ascii():
+    assert _normalize_citation_markers("See〔2〕.") == "See[2]."
+
+
+def test_normalize_converts_fullwidth_square_brackets_via_nfkc():
+    assert _normalize_citation_markers("See［3］.") == "See[3]."
+
+
+def test_normalize_does_not_turn_fullwidth_parens_into_citation_brackets():
+    # A deliberate boundary, not an oversight: fullwidth/ASCII parens are
+    # NFKC-normalized (fullwidth -> ASCII) but never mapped to square
+    # brackets. Parens were never the citation format the prompt asks for --
+    # treating "(4.2%)" as citation marker "4" would be a false positive on
+    # ordinary parenthetical figures, not a fix.
+    normalized = _normalize_citation_markers("Margin was down (（4.2）%).")
+    assert normalized == "Margin was down ((4.2)%)."
+    _, cited = _postprocess_citations(normalized, num_docs=5)
+    assert cited == []
+
+
+def test_normalized_lenticular_citations_pass_the_postprocessor_gate():
+    text = "Revenue grew【1】. Margin held【2】."
+    cleaned, cited = _postprocess_citations(_normalize_citation_markers(text), num_docs=2)
+    assert cleaned == "Revenue grew[1]. Margin held[2]."
+    assert cited == [1, 2]
+
+
+# --------------------------------------------------------------------------- #
+# explainer_node end-to-end (chat_text monkeypatched) -- the two live repros
+# --------------------------------------------------------------------------- #
+def test_explainer_node_grounds_no_context_explanation_with_lenticular_citations():
+    # Equivalent of the brief's run A/C: a starter-chip concept question, no
+    # context_report_id, real content the model correctly grounds but marks
+    # with 【n】 instead of [n].
+    async def _lenticular_response(*_a, **_k):
+        return (
+            "Operating margin measures how much profit a company keeps from each "
+            "dollar of revenue after operating expenses【1】. For NVIDIA, "
+            "this figure reflects strong cost discipline relative to revenue "
+            "growth【2】.\n\nWhat might cause operating margin to compress "
+            "in a future quarter?"
+        )
+
+    original = learning_nodes.chat_text
+    learning_nodes.chat_text = _lenticular_response
+    try:
+        state = {
+            "concept": "operating margin", "ticker": "NVDA",
+            "source_documents": [
+                {"source": "10-Q FY25 Q1", "chunk_idx": 1, "text": "..."},
+                {"source": "10-Q FY25 Q1", "chunk_idx": 2, "text": "..."},
+            ],
+        }
+        result = asyncio.run(explainer_node(state))
+    finally:
+        learning_nodes.chat_text = original
+
+    assert result["cited_sources"] == [1, 2]
+    assert "[1]" in result["explanation"] and "[2]" in result["explanation"]
+    assert "【" not in result["explanation"]  # no raw CJK bracket left in persisted text
+    assert result["trace"][0]["status"] == "ok"
+
+
+def test_explainer_node_grounds_context_report_id_explanation_with_lenticular_citations():
+    # Equivalent of the brief's run F/G: a context_report_id ("Explain This")
+    # follow-up question, same lenticular-bracket failure mode, 2/2 in the
+    # live sample.
+    async def _lenticular_response(*_a, **_k):
+        return (
+            "NVIDIA's Data Center segment revenue is growing quickly because "
+            "demand for AI infrastructure is outpacing available "
+            "supply【1】, which the company describes as Blackwell demand "
+            "exceeding production capacity【2】.\n\nHow might supply "
+            "constraints affect pricing power next quarter?"
+        )
+
+    original = learning_nodes.chat_text
+    learning_nodes.chat_text = _lenticular_response
+    try:
+        state = {
+            "concept": "Data Center segment revenue", "ticker": "NVDA",
+            "context_report_id": "bb355bde-976e-483f-8866-8db9c1c64985",
+            "prior_brief": "NVIDIA Data Center revenue rose sharply this quarter...",
+            "source_documents": [
+                {"source": "10-Q FY25 Q1", "chunk_idx": 1, "text": "..."},
+                {"source": "10-Q FY25 Q1", "chunk_idx": 2, "text": "..."},
+            ],
+        }
+        result = asyncio.run(explainer_node(state))
+    finally:
+        learning_nodes.chat_text = original
+
+    assert result["cited_sources"] == [1, 2]
+    assert "【" not in result["explanation"]
+    assert result["trace"][0]["status"] == "ok"
+
+
 if __name__ == "__main__":
     test_valid_citations_are_kept_and_recorded_in_order()
     test_out_of_range_citation_is_stripped_not_left_dangling()
@@ -84,5 +196,12 @@ if __name__ == "__main__":
     test_empty_docs_means_every_citation_is_out_of_range()
     test_user_message_includes_prior_context_only_when_present()
     test_user_message_caps_prior_brief_at_1200_chars()
-    print("ok: citation post-processor strips out-of-range markers, records first-seen order; "
-          "user message assembly includes/omits prior-context block correctly")
+    test_normalize_converts_confirmed_lenticular_brackets_to_ascii()
+    test_normalize_converts_defensive_tortoise_shell_brackets_to_ascii()
+    test_normalize_converts_fullwidth_square_brackets_via_nfkc()
+    test_normalize_does_not_turn_fullwidth_parens_into_citation_brackets()
+    test_normalized_lenticular_citations_pass_the_postprocessor_gate()
+    test_explainer_node_grounds_no_context_explanation_with_lenticular_citations()
+    test_explainer_node_grounds_context_report_id_explanation_with_lenticular_citations()
+    print("ok: citation post-processor + CJK-bracket normalization + explainer_node end-to-end "
+          "(both live repro shapes) all pass")

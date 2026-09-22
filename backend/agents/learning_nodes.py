@@ -7,14 +7,42 @@ learner-facing explanation (03 §3.1's documented reasoning: one call, no
 retry loop, since the contract has no verification-stage vocabulary).
 """
 from __future__ import annotations
+import logging
 import re
+import unicodedata
 from typing import Match
 
 from .learning_state import LearningState
 from .llm import chat_text, _strip_code_fence, DEFAULT_HEAVY_MODEL
 from .nodes import _event, _format_docs, _safe_failure
 
+logger = logging.getLogger("alphascribe")
+
 _CITATION_RE = re.compile(r"\[(\d+)\]")
+
+# Learning hardening-pass brief Finding A, root-caused: the model sometimes
+# renders an inline citation in a non-ASCII bracket form instead of the
+# ASCII `[n]` the prompt asks for and _CITATION_RE matches -- the content is
+# correctly grounded, but the marker is invisible to the gate, so Law 3
+# discards a genuinely-cited explanation as if it had zero citations.
+# Confirmed live: U+3010/U+3011 (CJK "lenticular brackets", 【n】). NFKC
+# normalization (applied first, below) already canonicalizes the whole
+# "fullwidth ASCII variant" block for free -- ［n］, （n）, fullwidth digits --
+# so only the CJK Symbols/Punctuation brackets NFKC does *not* decompose to
+# ASCII need an explicit map. U+3014/U+3015 (tortoise shell brackets) share
+# the same enumerated-annotation convention as the confirmed lenticular
+# pair; not yet observed live, included defensively per the same narrow-
+# regex trap that caused this bug in the first place.
+_CJK_BRACKET_MAP = str.maketrans({
+    "【": "[", "】": "]",  # LEFT/RIGHT BLACK LENTICULAR BRACKET -- confirmed live
+    "〔": "[", "〕": "]",  # LEFT/RIGHT TORTOISE SHELL BRACKET -- defensive
+})
+
+
+def _normalize_citation_markers(text: str) -> str:
+    """Canonicalize non-ASCII citation-bracket forms to the ASCII `[n]`
+    _CITATION_RE expects, before the gate ever runs."""
+    return unicodedata.normalize("NFKC", text).translate(_CJK_BRACKET_MAP)
 
 
 def _postprocess_citations(text: str, num_docs: int) -> tuple[str, list[int]]:
@@ -86,12 +114,23 @@ async def explainer_node(state: LearningState) -> dict:
             "explanation": "",
             "trace": [_event("explainer", "error", _safe_failure("Explanation", e))],
         }
-    cleaned, cited = _postprocess_citations(_strip_code_fence(raw), len(docs))
+    normalized = _normalize_citation_markers(_strip_code_fence(raw))
+    cleaned, cited = _postprocess_citations(normalized, len(docs))
     if not cited:
         # Law 3: an explanation with zero grounded citations must not be
         # persisted (03 §5.2) — the route layer treats an empty `explanation`
         # + empty `cited_sources` as a failed job, not a success with no
         # sources.
+        # Learning hardening-pass brief §3/§8(a): nothing previously logged
+        # what the model actually returned before this regex ran, so a
+        # citation-gate miss (call succeeded, response didn't satisfy the
+        # gate) was indistinguishable from any other failure. Server log
+        # only -- never returned to the client (same discipline as
+        # _safe_failure; the raw response is diagnostic, not user content).
+        logger.warning(
+            "explainer_node: citation gate rejected the model's response (0 of %d source docs "
+            "cited) -- raw pre-postprocessing output:\n%s", len(docs), raw,
+        )
         return {
             "explanation": "",
             "cited_sources": [],
