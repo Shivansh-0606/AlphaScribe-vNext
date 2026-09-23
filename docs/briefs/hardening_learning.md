@@ -180,20 +180,34 @@ triggers it.
       could not be confirmed given no visibility into pre-postprocessing text.
 - [ ] Findings A and B are not applied here — Docs writes briefs, not
       patches.
+- [x] **Post-fix (§9):** Finding A's fix (commit `6d65aec`) live re-verified
+      against the real backend — 2 of 2 previously-failing no-context cases
+      now succeed cleanly, same inputs, real citations. The
+      `context_report_id` path was not independently re-run to completion
+      this round (unrelated environment instability, not a fix issue — see
+      §9) but shares the identical, already-confirmed root cause and the
+      identical unconditional fix code path.
 
 ## 7. Tracker correction (§6, `web/features/learning/`)
 
-Per explicit direction: correct to reality, not assumed. **Stays In
-Progress — not promoted to Migrated.** The reason has flipped, not
-disappeared: previously In Progress because the backend didn't exist; now
-In Progress because the backend exists, is correctly wired end-to-end, and
-demonstrably does not reliably do the one thing the feature exists to do.
-The tracker's own bar ("full functional parity... verified working
-end-to-end") is not met at an 80% observed live failure rate, let alone a
-100% failure rate on the entry point the frozen spec names first. This
-correction, plus the stale "doesn't exist" language in the tracker, the two
-frontend doc comments named in §0, and the schema header comment, are not
-applied in this brief — flagged for whoever owns each file.
+**As of this brief's original pass (2026-09-22):** correct to reality, not
+assumed. Stays In Progress — not promoted to Migrated. The reason had
+flipped, not disappeared: previously In Progress because the backend didn't
+exist; now In Progress because the backend exists, is correctly wired
+end-to-end, and demonstrably did not reliably do the one thing the feature
+exists to do. The tracker's own bar ("full functional parity... verified
+working end-to-end") was not met at an 80% observed live failure rate, let
+alone a 100% failure rate on the entry point the frozen spec names first.
+
+**Updated by §9 (2026-09-23/24), status unchanged — still In Progress:**
+Finding A's fix landed and was live re-verified clean on the previously-
+failing no-context cases; the `context_report_id` path's confirmation is
+still pending (see §9). Per CTO-2's explicit call, the row stays In
+Progress until that specific path is directly confirmed, not promoted on
+inference alone. This correction, plus the stale "doesn't exist" language
+in the tracker, the two frontend doc comments named in §0, and the schema
+header comment, are not applied in this brief — flagged for whoever owns
+each file.
 
 ## 8. Open Questions / Risks
 
@@ -223,3 +237,65 @@ applied in this brief — flagged for whoever owns each file.
   of a planned sequence — it fell out of catching a stale premise. No
   further Learning work is scoped by this brief beyond Finding A's fix,
   which needs a design decision first.
+
+## 9. Post-fix live re-verification (2026-09-23/24)
+
+Finding A's fix landed as commit `6d65aec` (`_normalize_citation_markers()`
+— NFKC normalization plus an explicit CJK lenticular-bracket map, run before
+the citation gate). Per explicit direction: re-run the same failing cases
+against the real backend and confirm the failure rate actually drops in
+practice, not just that the new unit tests pass — and only update this
+brief/the tracker row if the live evidence actually supports it.
+
+**Confirmed clean, live, same inputs that failed before the fix:** re-ran
+both previously-failing no-context starter-concept cases from §3's table
+(rows A and C — "What is operating margin?" and "What is free cash flow?",
+NVDA, no `context_report_id`) against the real backend and a real reachable
+LLM, post-fix. **2 of 2 now succeed cleanly** — real grounded citations
+(`[1]`), correct figures matching the source filing, a real follow-up
+question suggestion, no gate rejection. Byte-for-byte the same concept
+strings that reliably failed pre-fix (confirmed in §3's table and in the
+6d65aec raw-log capture for row A specifically).
+
+**The `context_report_id` path has not yet been independently re-run live
+to completion post-fix** — not because of a fix problem, but because of
+unrelated environment instability the same night: the LLM provider was
+unusually flaky (multiple real `503`s, one real fact-check output-truncation
+failure), and the Overview report needed to generate a fresh
+`context_report_id` twice hit its own real 300-second job deadline before
+completing (`agents/graph.py`'s existing, already-documented deadline
+enforcement — working exactly as designed, the same mechanism the
+Financials/Filings briefs already exercised, not a Learning-specific or
+fix-related regression). Rather than force a result out of a visibly
+unstable shared LLM provider, this round stopped short of that third
+confirmation — it remains outstanding, not abandoned, and is cheap to close
+once the provider settles.
+
+**Why the inference is sound, even though it doesn't substitute for that
+confirmation:** the fix is not path-conditional. `_normalize_citation_markers()`
+runs unconditionally on every `explainer_node` output, before the citation
+gate, regardless of whether `prior_brief`/`prior_financials` were injected —
+there is no branch in the code that treats a context-seeded call
+differently. Finding A's own original diagnosis (§3) already directly
+confirmed, via raw log capture, that the *pre-fix* failure mechanism was
+byte-for-byte identical on both paths (both cited using 【n】, both
+zero-ASCII-marker rejections). A fix applied to the one shared code path
+both diagnoses ran through does not have a plausible mechanism to fix one
+call site and not the other. **This is a documented inference, not a
+substitute for direct evidence on the specific path that had a 100%
+pre-fix failure rate and is the frozen primary entry point** — that path's
+own track record here earns it a direct confirmation before being called
+Migrated, not just general caution extended from a sibling path.
+
+**Recommendation (CTO-2's call, 2026-09-24): stays In Progress, not
+promoted yet.** The 2-of-2 no-context confirmation and the shared-code-path
+inference are real, meaningful progress — but `context_report_id` is the
+one path that had a *100%* pre-fix failure rate and is the frozen primary
+entry point (`OverviewSection`'s "Explain This"), and that specific track
+record earns a direct confirmation rather than an inference extended from
+its sibling path, however sound that inference is. This is not a structural
+blocker — it's one pending live run, not yet done, cheap to close once the
+shared LLM provider stops being flaky. No further design or code work is
+implied; this is purely "run the same case a third time and confirm," the
+same bar every other live-verification in this hardening pass has held
+itself to before a row gets called Migrated.
