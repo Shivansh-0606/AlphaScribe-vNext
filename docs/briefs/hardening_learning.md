@@ -187,6 +187,9 @@ triggers it.
       this round (unrelated environment instability, not a fix issue — see
       §9) but shares the identical, already-confirmed root cause and the
       identical unconditional fix code path.
+- [ ] **Direct `context_report_id` confirmation (§10, 2026-09-24): FAILED,
+      2 of 2.** The §9 inference did not hold — a new, context-path-specific
+      root cause (Finding C) not covered by `6d65aec`. Not promotable.
 
 ## 7. Tracker correction (§6, `web/features/learning/`)
 
@@ -204,13 +207,45 @@ Finding A's fix landed and was live re-verified clean on the previously-
 failing no-context cases; the `context_report_id` path's confirmation is
 still pending (see §9). Per CTO-2's explicit call, the row stays In
 Progress until that specific path is directly confirmed, not promoted on
-inference alone. This correction, plus the stale "doesn't exist" language
+inference alone.
+
+**Updated by §10 (2026-09-24), status unchanged — still In Progress:** the
+direct `context_report_id` confirmation was run and failed 2 of 2 on a new
+root cause (Finding C). The hold was the right call; the row stays In
+Progress pending Finding C's fix and a fresh direct re-run of the same path.
+
+This correction, plus the stale "doesn't exist" language
 in the tracker, the two frontend doc comments named in §0, and the schema
 header comment, are not applied in this brief — flagged for whoever owns
 each file.
 
 ## 8. Open Questions / Risks
 
+- **⚠ SECURITY — cross-tenant read via `context_report_id` (found 2026-09-24,
+  routed by CTO-2 to Backend and AI Engineer as its own urgent item).**
+  `explain_concept` (`backend/server.py`, the `if req.context_report_id:`
+  block in `POST /learning/explain`) loads the context report with
+  `db.reports.find_one({"id": req.context_report_id}, ...)` — **no owner
+  predicate**. It then injects that report's `draft_report` (first 1,200
+  chars) and `extracted_data` into the explainer prompt
+  (`learning_nodes.py::_build_user_message`), and appends its `query` to the
+  retrieval query. Any
+  authenticated user who supplies another tenant's report id gets that
+  report's brief fed to the LLM, and the resulting explanation (which the
+  caller reads) can restate it — a cross-tenant data disclosure. This is
+  inconsistent with EQ-3's read-scoping cutover: `GET /reports/{id}` scopes
+  every tier to `{"user_id": user["id"]}` or `{"is_sample": True}` and makes
+  a foreign id indistinguishable from a nonexistent one. **The same
+  unscoped lookup also exists in `POST /reports/generate`'s follow-up path**
+  (the `if req.context_report_id:` block that loads `prior_brief`), so the
+  gap is not Learning-only. The context report's ticker is also not checked
+  against the request's ticker in either route. **Evidence basis: code
+  reading only** — this pass did not attempt a live cross-tenant
+  exploitation (that would need two accounts and is the fixing engineer's
+  call to reproduce). Obvious shape of a fix: apply `get_report`'s
+  owner-or-sample predicate to both lookups and treat a non-match exactly
+  like a missing report. Recorded here for the paper trail regardless of
+  who fixes it first.
 - **Fix direction, not decided here.** Candidates, none chosen: (a) add
   visibility into the raw pre-postprocessing model output (even just in the
   trace/log) so the actual failure mechanism can be diagnosed — currently
@@ -239,6 +274,11 @@ each file.
   which needs a design decision first.
 
 ## 9. Post-fix live re-verification (2026-09-23/24)
+
+> **Superseded in part by §10:** the pending direct `context_report_id`
+> confirmation below was run on 2026-09-24 and **failed 2 of 2** on a new
+> root cause (Finding C). The shared-code-path inference in this section
+> did not hold. It is kept as written, for the record.
 
 Finding A's fix landed as commit `6d65aec` (`_normalize_citation_markers()`
 — NFKC normalization plus an explicit CJK lenticular-bracket map, run before
@@ -299,3 +339,84 @@ shared LLM provider stops being flaky. No further design or code work is
 implied; this is purely "run the same case a third time and confirm," the
 same bar every other live-verification in this hardening pass has held
 itself to before a row gets called Migrated.
+
+## 10. Finding C: direct `context_report_id` confirmation FAILED — a new, context-path-specific root cause (2026-09-24)
+
+**Result: 2 of 2 failed through the frozen "Explain This" entry point. The
+same question with no context succeeded (1 of 1).** This is the direct
+confirmation §9 said was owed. It came back negative, so §9's
+shared-code-path inference is falsified for this path.
+
+**Method:** a fresh disposable account on the real running stack (Managed AI,
+NVIDIA-hosted). A fresh NVDA Overview report (`no_cache`, job
+`f275ed54-af57-48c8-bdee-35014f4cc373`) completed in ~2.5 minutes with
+`fact_check_status: true`. There were no provider `503`s and no deadline hit
+this time, so provider flakiness is excluded. Learning was then run with
+§3 row G's question verbatim, "What is NVIDIA's Data Center segment revenue
+and why is it growing so fast?", ticker NVDA. The account was deleted
+afterwards (`DELETE /auth/me → 200`, then `/auth/me → 401`).
+
+| Run | `context_report_id` | Result |
+|---|---|---|
+| C1 (`343cce7c…`) | `f275ed54…` | **Failed** — "could not be grounded in the retrieved filings" |
+| C2 (`43121d04…`) | `f275ed54…` | **Failed** — same |
+| C3 (`655ccbbc…`) | none (control) | **Succeeded** — 4 of 4 sources cited, $22.6B / +427% YoY, correct |
+
+Each run retrieved `4/4 chunks` and made exactly one LLM call, which
+succeeded. The failure is the citation gate again, not the provider.
+
+**Root cause (directly observed, not inferred):** `6d65aec`'s gate-miss
+logging captured both failed runs' raw model output. In both, the
+explanation is **correctly grounded**: the figures are right, and every
+claim carries a citation to one of the 4 retrieved sources. The model wrote
+those citations in the form **`【2†L1-L4】`** (source index plus a `†L…`
+line-range suffix), and once in a malformed form, `【1†L1-L4}`.
+
+It copied this convention from the prompt. On this path,
+`_build_user_message` injects the context report's `draft_report` (first
+1,200 characters) under a "What this company's latest brief found" heading.
+The Overview synthesizer's own persisted output uses exactly this style:
+report `f275ed54…`'s `draft_report` contains 17 such markers
+(`【1†L1-L4】`, `【3†L5-L6】`, ...). The no-context control never sees that
+text, and it cites in plain `[n]`.
+
+`6d65aec`'s fix maps the brackets, but the suffix still breaks the gate.
+`_normalize_citation_markers()` maps `【】` to `[]`, turning `【2†L1-L4】` into
+`[2†L1-L4]`. `_CITATION_RE = \[(\d+)\]` requires `]` immediately after the
+digits, so it matches zero markers. The result is 0 of 4 cited, a Law-3
+reject, and a failed job. The fix is not wrong for what it covers, and it
+does run unconditionally on this path. The model's *input* differs by path,
+though, and so does the citation form it produces. §9 reasoned only about
+the code path, and that is the gap this finding exposes.
+
+**A second, latent hazard on the same path:** the `【n†…】` markers inside
+the injected brief refer to *the Overview report's* source numbering, not
+to the Learning retrieval's 4 documents. Even with a more tolerant gate, a
+model echoing the brief's markers could produce in-range indices that point
+at the wrong Learning source. The gate would count these as grounded when
+they are mis-grounded.
+
+**Fix direction (not decided here; for Backend and AI Engineer via CTO-2):**
+- (a) Widen the normalization or gate to accept an optional
+  `†…` suffix, and a tolerant close, inside a numeric citation. Rewrite each
+  match to canonical `[n]` before `_postprocess_citations`, so the
+  persisted/rendered text uses the one convention every other surface
+  expects.
+- (b) Strip citation markers from `prior_brief` before injecting it into the
+  explainer prompt. This removes the style the model copies and closes the
+  index-collision hazard above.
+
+(b) addresses the cause and (a) is defense in depth; doing both is likely
+right. Any fix needs a unit test built from the logged C1/C2 raw outputs,
+plus a fresh direct live re-run of this path. An inference will not do.
+
+**Side observation, out of scope for this brief:** the Overview synthesizer
+itself persists `【n†Lx-Ly】` markers in `draft_report`. Whether Company
+Research's Overview renders these correctly as citations has not been
+checked in this pass. It is flagged for whoever owns that surface.
+
+**Recommendation: stays In Progress, not promoted.** This is a real,
+reproducible defect on the frozen primary entry point, and its failure rate
+(2/2 here, 2/2 pre-`6d65aec` in §3) is unchanged. The no-context path stays
+confirmed clean (§9, plus control run C3 here). CTO-2's decision to require
+direct confirmation instead of promoting on inference is what caught this.
