@@ -38,11 +38,45 @@ _CJK_BRACKET_MAP = str.maketrans({
     "〔": "[", "〕": "]",  # LEFT/RIGHT TORTOISE SHELL BRACKET -- defensive
 })
 
+# Finding C (brief §10): on the context_report_id path, the model copies a
+# source-index-plus-line-range convention (`【2†L1-L4】`, or a malformed
+# `【1†L1-L4}` with a mismatched closing bracket) from the Overview report's
+# own draft_report, which is injected as prior_brief context. The `†Lx-Ly`
+# suffix refers to *that report's* source numbering, not Learning's own
+# retrieved documents -- kept around, it would let a more tolerant gate
+# accept an in-range but mis-grounded citation (§10's "second, latent
+# hazard"). Rewritten to canonical `[n]` (suffix dropped) before the plain
+# bracket-swap below, which would otherwise leave the suffix intact and
+# still fail `_CITATION_RE`.
+_SUFFIXED_CITATION_RE = re.compile(
+    r"[【〔\[]\s*(\d+)\s*†\s*L\d+-L\d+\s*[】〕\]}]"
+)
+
 
 def _normalize_citation_markers(text: str) -> str:
-    """Canonicalize non-ASCII citation-bracket forms to the ASCII `[n]`
-    _CITATION_RE expects, before the gate ever runs."""
+    """Canonicalize non-ASCII/suffixed citation-bracket forms to the ASCII
+    `[n]` _CITATION_RE expects, before the gate ever runs."""
+    text = _SUFFIXED_CITATION_RE.sub(lambda m: f"[{m.group(1)}]", text)
     return unicodedata.normalize("NFKC", text).translate(_CJK_BRACKET_MAP)
+
+
+# Finding C fix direction (b): the actual cause, not just its downstream
+# symptom -- strip any citation-shaped marker (Overview's dagger-suffixed
+# form or a plain [n]/CJK-bracket one) out of the injected prior_brief
+# before it ever reaches the prompt, so the model has no citation convention
+# to copy from its own context in the first place. The dagger-suffix half is
+# optional so this also catches a plain copied `[n]`/`【n】`.
+_ANY_CITATION_MARKER_RE = re.compile(
+    r"[【〔\[]\s*\d+(?:\s*†\s*L\d+-L\d+)?\s*[】〕\]}]"
+)
+
+
+def _strip_citation_markers(text: str) -> str:
+    """Remove citation-shaped markers from injected context text (never from
+    the model's own output -- that's `_normalize_citation_markers`'s job)."""
+    stripped = _ANY_CITATION_MARKER_RE.sub("", text)
+    stripped = re.sub(r"[ \t]{2,}", " ", stripped)
+    return re.sub(r" +([.,;:!?])", r"\1", stripped)
 
 
 def _postprocess_citations(text: str, num_docs: int) -> tuple[str, list[int]]:
@@ -91,7 +125,7 @@ def _build_user_message(state: LearningState, docs: list[dict]) -> str:
     if prior_brief:
         context_block = (
             "\n\n## What this company's latest brief found (context for the explanation)\n"
-            f"{prior_brief[:1200]}\n"
+            f"{_strip_citation_markers(prior_brief)[:1200]}\n"
             f"### Figures already extracted from that brief\n{prior_financials}\n"
         )
     return (

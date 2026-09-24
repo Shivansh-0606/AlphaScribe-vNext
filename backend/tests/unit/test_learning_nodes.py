@@ -14,7 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 import agents.learning_nodes as learning_nodes  # noqa: E402
 from agents.learning_nodes import (  # noqa: E402
-    _build_user_message, _normalize_citation_markers, _postprocess_citations, explainer_node,
+    _build_user_message, _normalize_citation_markers, _postprocess_citations,
+    _strip_citation_markers, explainer_node,
 )
 
 
@@ -187,6 +188,82 @@ def test_explainer_node_grounds_context_report_id_explanation_with_lenticular_ci
     assert result["trace"][0]["status"] == "ok"
 
 
+# --------------------------------------------------------------------------- #
+# Finding C (brief §10): dagger-suffixed citations (【n†Lx-Ly】) copied from an
+# injected Overview-report prior_brief
+# --------------------------------------------------------------------------- #
+def test_normalize_converts_canonical_dagger_suffixed_citation():
+    # Exact form logged live in C1's raw pre-postprocessing output.
+    assert _normalize_citation_markers("Data Center revenue grew【2†L1-L4】.") == \
+        "Data Center revenue grew[2]."
+
+
+def test_normalize_converts_malformed_dagger_suffixed_citation_with_mismatched_close():
+    # The malformed variant also logged live: closes with `}` instead of 】.
+    assert _normalize_citation_markers("Revenue reflects growth【1†L1-L4}") == \
+        "Revenue reflects growth[1]"
+
+
+def test_dagger_suffixed_citations_pass_the_postprocessor_gate():
+    text = "Demand outpaced supply【1†L1-L4】, per management【2†L5-L6】."
+    cleaned, cited = _postprocess_citations(_normalize_citation_markers(text), num_docs=2)
+    assert cleaned == "Demand outpaced supply[1], per management[2]."
+    assert cited == [1, 2]
+
+
+def test_strip_citation_markers_removes_dagger_suffixed_and_plain_forms():
+    text = "NVIDIA revenue rose【1†L1-L4】 due to Data Center growth【3†L5-L6】, per management."
+    stripped = _strip_citation_markers(text)
+    assert "†" not in stripped and "【" not in stripped
+    assert stripped == "NVIDIA revenue rose due to Data Center growth, per management."
+
+
+def test_user_message_strips_dagger_suffixed_citations_from_injected_prior_brief():
+    # Reproduces the actual §10 mechanism: prior_brief carries the Overview
+    # report's own citation convention (17 such markers in the real report
+    # that triggered this); the injected context block must never expose it.
+    state = {
+        "concept": "Data Center segment revenue", "ticker": "NVDA",
+        "prior_brief": "Data Center revenue grew 427% YoY【1†L1-L4】, driven by AI demand【3†L5-L6】.",
+    }
+    msg = _build_user_message(state, docs=[])
+    assert "†" not in msg and "【" not in msg and "L1-L4" not in msg
+    assert "Data Center revenue grew 427% YoY" in msg
+
+
+def test_explainer_node_grounds_context_report_id_response_using_dagger_suffixed_citations():
+    # Defense in depth (a): even if the model produces the dagger-suffixed
+    # form regardless of (b) stripping it from its own input, the gate must
+    # still ground it -- the actual C1/C2 failure shape.
+    async def _dagger_suffixed_response(*_a, **_k):
+        return (
+            "NVIDIA's Data Center segment revenue is growing quickly because demand "
+            "for AI infrastructure is outpacing available supply【1†L1-L4】, which the "
+            "company describes as Blackwell demand exceeding production "
+            "capacity【2†L1-L4}.\n\nHow might supply constraints affect pricing power "
+            "next quarter?"
+        )
+
+    original = learning_nodes.chat_text
+    learning_nodes.chat_text = _dagger_suffixed_response
+    try:
+        state = {
+            "concept": "Data Center segment revenue", "ticker": "NVDA",
+            "prior_brief": "NVIDIA Data Center revenue rose sharply【1†L1-L4】this quarter...",
+            "source_documents": [
+                {"source": "10-Q FY25 Q1", "chunk_idx": 1, "text": "..."},
+                {"source": "10-Q FY25 Q1", "chunk_idx": 2, "text": "..."},
+            ],
+        }
+        result = asyncio.run(explainer_node(state))
+    finally:
+        learning_nodes.chat_text = original
+
+    assert result["cited_sources"] == [1, 2]
+    assert "【" not in result["explanation"] and "†" not in result["explanation"]
+    assert result["trace"][0]["status"] == "ok"
+
+
 if __name__ == "__main__":
     test_valid_citations_are_kept_and_recorded_in_order()
     test_out_of_range_citation_is_stripped_not_left_dangling()
@@ -203,5 +280,11 @@ if __name__ == "__main__":
     test_normalized_lenticular_citations_pass_the_postprocessor_gate()
     test_explainer_node_grounds_no_context_explanation_with_lenticular_citations()
     test_explainer_node_grounds_context_report_id_explanation_with_lenticular_citations()
-    print("ok: citation post-processor + CJK-bracket normalization + explainer_node end-to-end "
-          "(both live repro shapes) all pass")
+    test_normalize_converts_canonical_dagger_suffixed_citation()
+    test_normalize_converts_malformed_dagger_suffixed_citation_with_mismatched_close()
+    test_dagger_suffixed_citations_pass_the_postprocessor_gate()
+    test_strip_citation_markers_removes_dagger_suffixed_and_plain_forms()
+    test_user_message_strips_dagger_suffixed_citations_from_injected_prior_brief()
+    test_explainer_node_grounds_context_report_id_response_using_dagger_suffixed_citations()
+    print("ok: citation post-processor + CJK-bracket normalization + dagger-suffix (Finding C) "
+          "+ prior_brief stripping + explainer_node end-to-end (all live repro shapes) all pass")
