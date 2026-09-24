@@ -1337,8 +1337,16 @@ async def generate_report(req: GenerateRequest, user: dict = Depends(current_use
     job_id = str(uuid.uuid4())
     prior_brief = ""
     if req.context_report_id:
+        # EQ-3 owner-or-sample scoping (matches get_report and every other
+        # report lookup in this file) -- an unscoped lookup here let any
+        # authenticated user supply another tenant's report id and have its
+        # draft_report injected into their own job (Learning hardening-pass
+        # brief §8, SECURITY). A cross-tenant id now falls through exactly
+        # like a nonexistent one would -- the `if prior:` below already
+        # handles that as a no-op, same as before.
         prior = await db.reports.find_one(
-            {"id": req.context_report_id}, {"draft_report": 1, "_id": 0}
+            {"id": req.context_report_id, "$or": [{"user_id": user["id"]}, {"is_sample": True}]},
+            {"draft_report": 1, "_id": 0},
         )
         if prior:
             prior_brief = prior.get("draft_report", "") or ""
@@ -1665,8 +1673,13 @@ async def explain_concept(req: ExplainRequest, user: dict = Depends(current_user
     prior_brief = ""
     prior_financials: dict = {}
     if req.context_report_id:
+        # EQ-3 owner-or-sample scoping -- see the identical fix + comment on
+        # POST /reports/generate's follow-up path above (Learning hardening-
+        # pass brief §8, SECURITY: this lookup was unscoped, letting any
+        # authenticated user inject another tenant's report into their own
+        # explanation).
         prior = await db.reports.find_one(
-            {"id": req.context_report_id},
+            {"id": req.context_report_id, "$or": [{"user_id": user["id"]}, {"is_sample": True}]},
             {"draft_report": 1, "extracted_data": 1, "query": 1, "_id": 0},
         )
         if prior:
