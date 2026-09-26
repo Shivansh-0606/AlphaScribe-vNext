@@ -190,6 +190,13 @@ triggers it.
 - [ ] **Direct `context_report_id` confirmation (§10, 2026-09-24): FAILED,
       2 of 2.** The §9 inference did not hold — a new, context-path-specific
       root cause (Finding C) not covered by `6d65aec`. Not promotable.
+- [x] **Direct `context_report_id` confirmation, post-Finding-C-fix (§11,
+      2026-09-26): PASSED 4 of 4** — including 2 of 2 against an Overview
+      report whose injected brief carried the exact `【n†Lx-Ly】` trigger.
+      Direct live evidence, not inference.
+- [x] **Cross-tenant fix (`94b01ba`) live-verified (§11):** a second account
+      passing the first account's report id gets no injected context,
+      confirmed by a canary test against a positive control.
 
 ## 7. Tracker correction (§6, `web/features/learning/`)
 
@@ -214,6 +221,11 @@ direct `context_report_id` confirmation was run and failed 2 of 2 on a new
 root cause (Finding C). The hold was the right call; the row stays In
 Progress pending Finding C's fix and a fresh direct re-run of the same path.
 
+**Updated by §11 (2026-09-26) — promoted to Migrated (CTO-2 sign-off).**
+Finding C's fix (`d937e68`) and the cross-tenant fix (`94b01ba`) are both
+live-verified by direct evidence on the exact path that failed. CTO-2
+signed off; the tracker row is now Migrated.
+
 This correction, plus the stale "doesn't exist" language
 in the tracker, the two frontend doc comments named in §0, and the schema
 header comment, are not applied in this brief — flagged for whoever owns
@@ -222,7 +234,9 @@ each file.
 ## 8. Open Questions / Risks
 
 - **⚠ SECURITY — cross-tenant read via `context_report_id` (found 2026-09-24,
-  routed by CTO-2 to Backend and AI Engineer as its own urgent item).**
+  routed by CTO-2 to Backend and AI Engineer as its own urgent item).
+  ✅ Resolved: fixed in `94b01ba` (owner-or-sample predicate on both
+  lookups), live-verified 2026-09-26 (§11).**
   `explain_concept` (`backend/server.py`, the `if req.context_report_id:`
   block in `POST /learning/explain`) loads the context report with
   `db.reports.find_one({"id": req.context_report_id}, ...)` — **no owner
@@ -342,6 +356,9 @@ itself to before a row gets called Migrated.
 
 ## 10. Finding C: direct `context_report_id` confirmation FAILED — a new, context-path-specific root cause (2026-09-24)
 
+> **Resolved by §11:** Finding C was fixed in `d937e68` and live-verified
+> on 2026-09-26 against the exact dagger-style trigger (2/2 pass).
+
 **Result: 2 of 2 failed through the frozen "Explain This" entry point. The
 same question with no context succeeded (1 of 1).** This is the direct
 confirmation §9 said was owed. It came back negative, so §9's
@@ -420,3 +437,86 @@ reproducible defect on the frozen primary entry point, and its failure rate
 (2/2 here, 2/2 pre-`6d65aec` in §3) is unchanged. The no-context path stays
 confirmed clean (§9, plus control run C3 here). CTO-2's decision to require
 direct confirmation instead of promoting on inference is what caught this.
+
+## 11. Post-Finding-C live re-verification — `context_report_id` path PASSES, cross-tenant fix confirmed (2026-09-26)
+
+Both fixes routed out of §8/§10 landed and were reviewed PASS:
+- `94b01ba` applies the owner-or-sample predicate to both `context_report_id`
+  lookups.
+- `d937e68` (Finding C) does two things. It normalizes dagger-suffixed
+  citation markers in the model's output, and it strips citation markers
+  from the injected `prior_brief`.
+
+This section is the direct live evidence CTO-2 required before promotion.
+It is not an inference.
+
+**Method:** the real running stack with Managed AI (NVIDIA-hosted). Two
+fresh disposable accounts, A and B. Account A generated two fresh NVDA
+Overview reports (`no_cache`), and both completed with
+`fact_check_status: true`. Every Learning run used
+§3 row G's question verbatim unless noted. Both accounts were deleted
+afterwards (`DELETE /auth/me → 200`, then `/auth/me → 401`, for each).
+
+**The Overview synthesizer's citation style is nondeterministic, so the
+trigger input was confirmed deliberately.** Report 1
+(`89814216-ba0d-4e4b-93d3-7693bf5b75dd`) cited in plain `[n]`, with zero
+`†` markers, so it exercises the context path but not Finding C's actual
+trigger. Report 2 (`2bd3c690-fc4c-4077-8047-b265077cdf3c`) cited in the
+`【n†Lx-Ly】` style: 14 markers, 8 inside the 1,200 characters that
+`_build_user_message` injects. That is the exact input that produced
+§10's 2/2 failure. Both reports were tested.
+
+| Run | Account | `context_report_id` | Result |
+|---|---|---|---|
+| R1, R2 | A | report 2 (**dagger-style**, the Finding C trigger) | **Succeeded 2/2**: `[1]`–`[4]` cited, 4 sources, no `†` in output |
+| R3, R4 | A | report 1 (plain `[n]` style) | **Succeeded 2/2**: `[1]`–`[4]` cited, 4 sources |
+| R5 | A | none (control) | **Succeeded**: `[1]`–`[4]` cited, 4 sources |
+| R6 | A | report 1 (own), canary prompt | Positive control: the model **listed the brief's `###` headings verbatim** ("Snapshot", "Financial Highlights"), so the context *was* injected |
+| R7 | **B** | report 1 (**A's**), same canary prompt | **"NO CONTEXT BRIEF"**, so A's report was *not* injected into B's job |
+
+Every run produced a figure-correct, cited explanation ($22.6B, +427% YoY),
+and the backend log contains **zero** citation-gate-miss warnings for the
+whole session.
+
+**How the cross-tenant check works:** the fixed route ignores a foreign id
+silently, exactly as it treats a nonexistent one. That matches EQ-3's
+"indistinguishable from nonexistent" invariant, but it means there is no
+error response to observe. The check is behavioral instead. The canary
+prompt asks the model to quote the `###` headings of any context brief in
+its input, or to say "NO CONTEXT BRIEF". The retrieved filing excerpts
+don't carry those headings, so only an injected Overview brief can supply
+them. The same prompt yields the headings for A's own report (R6) and
+"NO CONTEXT BRIEF" for B passing A's id (R7). That is a controlled, direct
+demonstration that `94b01ba` closes the gap on `POST /learning/explain`.
+`POST /reports/generate`'s follow-up path received the identical predicate.
+It was not separately live-probed here: a full report run is a
+harder-to-observe signal. It is covered by `94b01ba`'s hermetic regression
+tests and Backend Reviewer's sweep of every `db.reports` lookup in
+`server.py`.
+
+**Residual gap (minor, non-blocking; for Backend and AI Engineer):**
+both of `d937e68`'s new patterns (`_SUFFIXED_CITATION_RE` and
+`_ANY_CITATION_MARKER_RE`) require the range form `†Lx-Ly`. A single-line
+marker such as `【3†L7】`, which appeared in §10's Overview draft, matches
+neither: it is not stripped from `prior_brief` and not normalized in the
+output. Checked directly against the committed regexes. If the model copies
+that form, a citation in that exact form is still rejected. Neither brief
+tested here contained a single-line marker, so this was not triggered live.
+The fix is small: make `-L\d+` optional in both patterns (`L\d+(?:-L\d+)?`).
+It is flagged, not blocking. §10's failures, and every dagger marker
+observed across all reports in this pass, used the range form, which is
+now covered.
+
+**Recommendation: promote Learning (SCR-08) to Migrated.**
+- Every path the brief set out to verify has now been verified live by
+  direct evidence: no-context (§9, plus R5), the frozen "Explain This"
+  `context_report_id` entry point against its actual failure trigger (R1/R2)
+  and a plain brief (R3/R4), cancel, and the no-filings and no-context
+  honest-failure paths (§5).
+- The security issue this pass surfaced is fixed and live-confirmed.
+- What remains is non-blocking: Finding B (no Retry button on
+  failed/cancelled, §4), the single-line-marker residual above, and the
+  stale doc comments flagged in §0/§7.
+- **CTO-2 signed off (2026-09-26): promoted to Migrated.** The
+  single-line-marker residual is routed to Backend and AI Engineer as a
+  separate non-blocking follow-up.
