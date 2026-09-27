@@ -7,6 +7,7 @@
  * (02.7 AD-2).
  */
 export { AuthGate } from "./ui/AuthGate";
+export { ReturningUserRedirect } from "./ui/ReturningUserRedirect";
 export { LoginForm } from "./ui/LoginForm";
 export { SignupForm } from "./ui/SignupForm";
 export { ForgotPasswordForm } from "./ui/ForgotPasswordForm";
