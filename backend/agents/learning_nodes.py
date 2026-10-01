@@ -48,8 +48,12 @@ _CJK_BRACKET_MAP = str.maketrans({
 # hazard"). Rewritten to canonical `[n]` (suffix dropped) before the plain
 # bracket-swap below, which would otherwise leave the suffix intact and
 # still fail `_CITATION_RE`.
+# §11's residual: the range half (`-L\d+`) was mandatory, so a single-line
+# marker (`【3†L7】`, observed in §10's own Overview draft, just never as the
+# live-reproduced trigger) matched neither this regex nor
+# _ANY_CITATION_MARKER_RE below. Made optional per §11's own fix shape.
 _SUFFIXED_CITATION_RE = re.compile(
-    r"[【〔\[]\s*(\d+)\s*†\s*L\d+-L\d+\s*[】〕\]}]"
+    r"[【〔\[]\s*(\d+)\s*†\s*L\d+(?:-L\d+)?\s*[】〕\]}]"
 )
 
 
@@ -65,9 +69,11 @@ def _normalize_citation_markers(text: str) -> str:
 # form or a plain [n]/CJK-bracket one) out of the injected prior_brief
 # before it ever reaches the prompt, so the model has no citation convention
 # to copy from its own context in the first place. The dagger-suffix half is
-# optional so this also catches a plain copied `[n]`/`【n】`.
+# optional so this also catches a plain copied `[n]`/`【n】`; the range half
+# within it is independently optional too (§11's residual: a single-line
+# `【n†Lx】` marker needs stripping just as much as the range form).
 _ANY_CITATION_MARKER_RE = re.compile(
-    r"[【〔\[]\s*\d+(?:\s*†\s*L\d+-L\d+)?\s*[】〕\]}]"
+    r"[【〔\[]\s*\d+(?:\s*†\s*L\d+(?:-L\d+)?)?\s*[】〕\]}]"
 )
 
 

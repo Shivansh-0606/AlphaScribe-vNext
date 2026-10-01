@@ -231,6 +231,30 @@ def test_user_message_strips_dagger_suffixed_citations_from_injected_prior_brief
     assert "Data Center revenue grew 427% YoY" in msg
 
 
+# --------------------------------------------------------------------------- #
+# §11 residual: single-line marker (【n†Lx】, no range) -- the range half of
+# both regexes was mandatory, so this form (present in §10's own Overview
+# draft, just never the live-reproduced trigger) matched neither.
+# --------------------------------------------------------------------------- #
+def test_normalize_converts_single_line_dagger_suffixed_citation():
+    assert _normalize_citation_markers("Data Center revenue grew【3†L7】.") == \
+        "Data Center revenue grew[3]."
+
+
+def test_single_line_dagger_suffixed_citation_passes_the_postprocessor_gate():
+    text = "Demand outpaced supply【1†L1】, per management【2†L5】."
+    cleaned, cited = _postprocess_citations(_normalize_citation_markers(text), num_docs=2)
+    assert cleaned == "Demand outpaced supply[1], per management[2]."
+    assert cited == [1, 2]
+
+
+def test_strip_citation_markers_removes_single_line_dagger_suffixed_form():
+    text = "NVIDIA revenue rose【1†L7】 due to Data Center growth, per management."
+    stripped = _strip_citation_markers(text)
+    assert "†" not in stripped and "【" not in stripped
+    assert stripped == "NVIDIA revenue rose due to Data Center growth, per management."
+
+
 def test_explainer_node_grounds_context_report_id_response_using_dagger_suffixed_citations():
     # Defense in depth (a): even if the model produces the dagger-suffixed
     # form regardless of (b) stripping it from its own input, the gate must
@@ -285,6 +309,10 @@ if __name__ == "__main__":
     test_dagger_suffixed_citations_pass_the_postprocessor_gate()
     test_strip_citation_markers_removes_dagger_suffixed_and_plain_forms()
     test_user_message_strips_dagger_suffixed_citations_from_injected_prior_brief()
+    test_normalize_converts_single_line_dagger_suffixed_citation()
+    test_single_line_dagger_suffixed_citation_passes_the_postprocessor_gate()
+    test_strip_citation_markers_removes_single_line_dagger_suffixed_form()
     test_explainer_node_grounds_context_report_id_response_using_dagger_suffixed_citations()
-    print("ok: citation post-processor + CJK-bracket normalization + dagger-suffix (Finding C) "
-          "+ prior_brief stripping + explainer_node end-to-end (all live repro shapes) all pass")
+    print("ok: citation post-processor + CJK-bracket normalization + dagger-suffix (Finding C, "
+          "range and single-line forms) + prior_brief stripping + explainer_node end-to-end "
+          "(all live repro shapes) all pass")
