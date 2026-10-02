@@ -42,7 +42,7 @@ No Terms of Service or Privacy Policy document exists anywhere in the repo.
 
 **Evidence note on the two planning documents above (added 2026-10-01).**
 - *They are local-only.* The whole `docs/planning/` directory is gitignored
-  (`.gitignore` line 123: "Local product/planning docs — keep private";
+  (`.gitignore` line 122: "Local product/planning docs — keep private";
   `git ls-files docs/planning` is empty). The two files exist only on
   the machine(s) where that directory was kept, are not in any clone, and
   cannot be checked from the repository.
