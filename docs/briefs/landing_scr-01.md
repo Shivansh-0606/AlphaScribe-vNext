@@ -6,9 +6,9 @@ Reviewer). **Governing docs (all 🧊 Frozen unless noted):**
 [`06_UX_Specifications.md`](../design/06_UX_Specifications.md) SCR-01,
 [`07_Wireframes.md`](../design/07_Wireframes.md) SCR-01 + the shared frame,
 [`00_Design_Constitution.md`](../design/00_Design_Constitution.md) §15
-(Content & Copywriting Principles). Non-frozen, cited for requirements only:
-[`planning/01-PRD.md`](../planning/01-PRD.md) §7 ("Living draft") and
-[`planning/07-Roadmap-Milestones.md`](../planning/07-Roadmap-Milestones.md)
+(Content & Copywriting Principles). Non-frozen, cited for requirements only
+(**local-only sources; see the evidence note in §0**): `docs/planning/01-PRD.md`
+§7 ("Living draft") and `docs/planning/07-Roadmap-Milestones.md`
 milestone 5. Current code was read this session: `web/app/(public)/page.tsx`,
 `web/components/layouts/{Footer,PublicTemplate}.tsx`, and
 `web/features/account-setup/` (`AuthGate`, `useAuthStatus`, `LoginForm`).
@@ -39,6 +39,29 @@ Two non-frozen planning docs add a **requirement** but no approved wording:
 - Roadmap milestone 5: "disclaimers, ToS/Privacy".
 
 No Terms of Service or Privacy Policy document exists anywhere in the repo.
+
+**Evidence note on the two planning documents above (added 2026-10-01).**
+- *They are local-only.* The whole `docs/planning/` directory is gitignored
+  (`.gitignore` line 123: "Local product/planning docs — keep private";
+  `git ls-files docs/planning` is empty). The two files exist only on
+  the machine(s) where that directory was kept, are not in any clone, and
+  cannot be checked from the repository.
+- *The index calls them superseded.* `docs/Documentation_Index.md` line 148
+  describes `docs/planning/` as: "Pre-dates `docs/master-plan/`,
+  `docs/design/`, and `docs/experience_design/`. Superseded by those packages
+  where they overlap; not maintained as a source of truth. Retained for
+  history."
+- *The text relied on, quoted verbatim from `docs/planning/01-PRD.md`.* Its
+  header reads "**Status:** Living draft · ... **Last updated:** 2026-07-12".
+  Under "## 7. Constraints / Risks" it lists: "**Not investment advice** —
+  legal disclaimer required (esp. India/SEBI)." Under milestone 5 of
+  `07-Roadmap-Milestones.md`: "Harden + launch: rate limits, email verify,
+  disclaimers, ToS/Privacy, dual-currency display".
+- *Scope of this note.* It concerns only the *evidence trail* for the
+  statement that a disclaimer is required. It changes nothing about the
+  decision recorded in §5 OQ-2: the disclaimer stays an open compliance item,
+  its wording needs real legal/compliance review, and no engineering or Docs
+  session drafts it.
 
 The legacy `frontend/src/pages/Landing.jsx` does contain trust copy (e.g.
 "Every claim traces back to a source.", "No hallucinated numbers..."). It is
@@ -184,7 +207,8 @@ in the frozen SCR-01 wireframe.
   Docs recommended (a) now, then (b) or (c) as a follow-up if wanted.
   **Decision: (a), labels only, verbatim, nothing more.**
 - **OQ-2: the "not investment advice" disclaimer.** PRD §7 says this is
-  *required* ("esp. India/SEBI"). The PRD is a living draft, not frozen,
+  *required* ("esp. India/SEBI"; local-only, superseded source: see the
+  evidence note in §0). The PRD is a living draft, not frozen,
   and gives no wording. This is a legal requirement, not a design nicety.
   It arguably belongs on every AI-output surface, not only Landing's
   footer, and its wording should come from whoever owns legal and
