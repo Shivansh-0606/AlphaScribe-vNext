@@ -194,7 +194,7 @@ describe("CopilotPanel", () => {
       });
 
       const banner = await screen.findByText("Pipeline failed");
-      expect(banner.closest('[tabindex="-1"]')).toHaveFocus();
+      await waitFor(() => expect(banner.closest('[tabindex="-1"]')).toHaveFocus());
     });
 
     it("moves focus to the answer card when a follow-up completes", async () => {
@@ -208,7 +208,7 @@ describe("CopilotPanel", () => {
       lastStreamHandlers().onEnd();
 
       const heading = await screen.findByText("Follow-up answer");
-      expect(heading.closest('[tabindex="-1"]')).toHaveFocus();
+      await waitFor(() => expect(heading.closest('[tabindex="-1"]')).toHaveFocus());
     });
 
     it("does not steal focus back on an unrelated re-render once already in a terminal state", async () => {

@@ -419,7 +419,7 @@ describe("OverviewSection", () => {
       });
 
       const alert = await screen.findByRole("alert");
-      expect(alert.closest('[tabindex="-1"]')).toHaveFocus();
+      await waitFor(() => expect(alert.closest('[tabindex="-1"]')).toHaveFocus());
     });
 
     it("moves focus to the response card when a run completes", async () => {
@@ -432,7 +432,7 @@ describe("OverviewSection", () => {
       lastStreamHandlers().onEnd();
 
       const heading = await screen.findByText("Well-supported");
-      expect(heading.closest('[tabindex="-1"]')).toHaveFocus();
+      await waitFor(() => expect(heading.closest('[tabindex="-1"]')).toHaveFocus());
     });
 
     it("does not steal focus back on an unrelated re-render once already in a terminal state", async () => {

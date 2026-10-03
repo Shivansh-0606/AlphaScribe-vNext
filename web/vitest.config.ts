@@ -17,7 +17,7 @@ export default defineConfig({
     globals: false,
     css: false,
     // The default 5000ms is too tight for a click/focus-then-findBy
-    // interaction once the full suite (130+ tests, real userEvent + Radix
+    // interaction once the full suite (~400 tests, real userEvent + Radix
     // effects) runs together on a loaded machine — this doesn't fail any
     // single file in isolation, only intermittently under full-suite
     // concurrency, and rotates across unrelated test files run-to-run

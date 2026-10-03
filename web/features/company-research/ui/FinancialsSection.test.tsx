@@ -1,6 +1,6 @@
 import { axe } from "jest-axe";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { renderWithProviders, screen } from "@/tests/setup/render";
+import { renderWithProviders, screen, waitFor } from "@/tests/setup/render";
 import type { ReportDoc } from "../integration/schemas";
 import { FinancialsSection } from "./FinancialsSection";
 
@@ -351,7 +351,9 @@ describe("FinancialsSection", () => {
       // — no trigger button remains anywhere in the card, so focus must land
       // somewhere intentional (the card's focusable wrapper), never <body>.
       expect(screen.queryByRole("button", { name: /Check/ })).not.toBeInTheDocument();
-      expect(screen.getByRole("table").closest('[tabindex="-1"]')).toHaveFocus();
+      await waitFor(() =>
+        expect(screen.getByRole("table").closest('[tabindex="-1"]')).toHaveFocus(),
+      );
     });
 
     it("confirmed_unavailable: reports the terminal negative outcome per statement type, not an error", async () => {
