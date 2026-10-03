@@ -73,8 +73,8 @@ written, and the user would need to re-rule it.
 - The frozen `ListItem` is "title, subtitle/date, primary action" and "Full item focusable"; SCR-09 says
   "Enter opens focused item". The row is today one `<button>`, and a nested button is invalid HTML
   (brief §3.4).
-- Legacy put a trash icon on each history item that appears only on hover (`AppLayout.jsx:147–157`, the
-  classes `opacity-0 group-hover:opacity-100`). The frozen SCR-09 says "Keyboard behaviour: Lists and
+- Legacy put a trash icon on each history item that appears only on hover (the button at `AppLayout.jsx:191–198`,
+  the classes `opacity-0 group-hover:opacity-100` on line 195; its handler and confirm are at lines 147–157). The frozen SCR-09 says "Keyboard behaviour: Lists and
   filters keyboard operable".
 - SCR-10's frozen actions are Read / inspect sources / Export / return to the company; its wireframe's
   only primary action is "Export" (`07_Wireframes.md`).
