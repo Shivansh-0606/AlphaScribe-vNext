@@ -1,10 +1,13 @@
 # Report Deletion — Decision Sheet for the 11 Open Questions
 
 **Date:** 2026-10-03. **Author:** Docs (Docs generator 3), at the request of CTO 3. **For:** the user.
-**Status:** 📝 **DRAFT for the user. Not a decision, not approved.**
+**Status:** 🗄 **SUPERSEDED by the 2026-10-05 decisions** (below). Kept as the historical record of the analysis. It was written on 2026-10-03 as a DRAFT for the user and is not itself a decision.
+
+> **Superseded 2026-10-05.** The user approved CR-SCOPE-004 and adopted this sheet's "CTO-adjacent recommendation" for Q2–Q11 **except Q8** (the dialog wording stays for the user), as relayed by CTO 3. The decided answers are recorded in [`report-deletion_research-library.md`](report-deletion_research-library.md) ("Decisions recorded 2026-10-05" and §5) and in the CR's §13. The body of this sheet below is **unchanged** except for Q1 and the "Where things stand" paragraph, and its present-tense wording about open questions describes 2026-10-03.
 **Companion documents:**
 [`report-deletion_research-library.md`](report-deletion_research-library.md) (the implementation brief,
-whose §5 holds Q1–Q11, committed `a4670c4`, "DRAFT — NOT READY TO BUILD") and the draft Change Request
+whose §5 held Q1–Q11 as open questions; as committed in `a4670c4` and since updated with the 2026-10-05
+decisions) and the Change Request (approved 2026-10-05)
 [`CR-SCOPE-004_Report_Deletion.md`](../governance/change_requests/CR-SCOPE-004_Report_Deletion.md).
 
 **How to read this sheet.** For each question there are two clearly separated parts:
@@ -14,9 +17,7 @@ whose §5 holds Q1–Q11, committed `a4670c4`, "DRAFT — NOT READY TO BUILD") a
   It is deliberately the *shortest* part of each entry. Where a question is really a product, copy or
   legal judgment I say so and make no recommendation. Nothing here changes any frozen document.
 
-**Where things stand.** The user ruled (2026-10-03, relayed by CTO 3) that report deletion is to be
-treated as needing a governance Change Request, and that the build stays blocked until the CR is raised
-and answered. Several answers below depend on how the CR is decided (Q2, Q3 above all), so the sheet
+**Where things stand (as of 2026-10-05; the rest of the sheet describes 2026-10-03).** The user ruled on 2026-10-03 (relayed by CTO 3) that report deletion is to be treated as needing a governance Change Request, and **on 2026-10-05 approved CR-SCOPE-004** and adopted the recommendations below except Q8 (see the banner at the top). *As originally written on 2026-10-03:* the build stays blocked until the CR is raised and answered. Several answers below depend on how the CR is decided (Q2, Q3 above all), so the sheet
 notes which questions are **independent of the CR** and could be settled now.
 
 ---
@@ -25,7 +26,7 @@ notes which questions are **independent of the CR** and could be settled now.
 
 | Q | Question | Depends on the CR? | Short form of my recommendation (detail below) |
 |---|---|:---:|---|
-| Q1 | Is a Change Request required? | — | **Already answered by the user's 2026-10-03 ruling: yes** |
+| Q1 | Is a Change Request required? | — | **Answered: yes; CR-SCOPE-004 approved 2026-10-05** |
 | Q2 | Where does the control live? | Yes | Library list, via a per-row menu |
 | Q3 | Hard delete or undo? | **Yes (this is CR Question B)** | Confirmed hard delete for launch; revisit undo later |
 | Q4 | Per-item or bulk? | No | Per-item only |
@@ -49,15 +50,12 @@ notes which questions are **independent of the CR** and could be settled now.
   judgment call"; Documentation Governance says a frozen document changes only through the Change
   Request workflow; the frozen "# Uploads" pattern shows the same route for out-of-spec capabilities.
 
-**Status: answered.** The user's 2026-10-03 ruling (relayed by CTO 3) is that this is to be treated as
-needing a CR, and the build stays blocked until the CR is raised and answered.
+**Status: answered, and the CR is approved.** The user's 2026-10-03 ruling (relayed by CTO 3) was that this is to be treated as needing a CR; **on 2026-10-05 CR-SCOPE-004 was approved** (relayed by CTO 3; Question A: yes; Question B: confirmed hard delete, no undo). *Original 2026-10-03 text:* the build stays blocked until the CR is raised and answered.
 
 **What is left to decide here:** only *what the CR should ask* (CR-SCOPE-004 asks two things: Question A,
 whether the frozen specs should gain a delete action, and Question B, confirm versus undo).
 
-**CTO-adjacent recommendation.** None needed; the question is closed. If the CR is rejected or deferred,
-the Removal Plan's earlier "port before deletion of `frontend/`" ruling for #13 cannot be carried out as
-written, and the user would need to re-rule it.
+**CTO-adjacent recommendation.** None needed; the question is closed. *Original 2026-10-03 note, now moot:* if the CR were rejected or deferred, the Removal Plan's earlier "port before deletion of `frontend/`" ruling for #13 could not be carried out as written, and the user would need to re-rule it.
 
 ---
 
