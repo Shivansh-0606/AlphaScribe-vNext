@@ -2,12 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 🧊 Frozen |
-| **Version** | 0.1.1 |
+| **Document Status** | 🧊 Frozen — amended via CR-SCOPE-004; re-freeze pending approver confirmation |
+| **Version** | 1.0.0 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | CTO |
-| **Last Updated** | 2026-07-18 |
+| **Last Updated** | 2026-10-05 |
 | **Source of Truth** | For the reusable component catalogue |
 
 **Downstream Dependencies:** Interaction Patterns · Responsive Behavior · Accessibility ·
@@ -21,6 +21,7 @@ States · Frontend implementation · PRDs
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial Atomic-Design component catalogue for the MVP screens. |
 | 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added an Experiential Contract (interaction, motion intent, loading, focus, transition, accessibility, AI behavior) required of every component. No new components or scope. |
+| 1.0.0 | 2026-10-05 | Docs (applying [CR-SCOPE-004](../governance/change_requests/CR-SCOPE-004_Report_Deletion.md)) | Amended via CR-SCOPE-004; re-freeze pending approver confirmation | **Reason (Frozen Document Policy):** Executive decision (user approval 2026-10-05, relayed by CTO 3). **Change:** ListItem gains optional secondary actions and a confirmed Delete on own Report items; LibraryList usage rule updated. ReportDocument is unchanged. **Impact and affected documents:** CR-SCOPE-004 §3 and §13. **Version note:** a change that adds scope is MAJOR under the Versioning Policy, and that policy's "frozen baseline is 1.0.0"; this document first reaches 1.0.0 through this CR. **Approval:** the user, in chat (relayed by CTO 3), with CTO 3 concurring; no signed document exists; the re-freeze awaits the CTO's confirmation. |
 
 ---
 
@@ -193,12 +194,12 @@ this contract is otherwise assumed.
 ## ListItem
 - **Purpose:** A selectable entry in a list (recent research, results, library items).
 - **Variants:** Company, Research Session (with Resume Session), Report, Export, History.
-- **Properties:** title, subtitle/date, primary action.
+- **Properties:** title, subtitle/date, primary action; the Report item on SCR-09 may also carry one optional secondary action, Delete (CR-SCOPE-004).
 - **States:** Default, Hover, Focus, Selected.
 - **Accessibility:** Full item focusable; labeled with subject and date.
 - **Screens Used:** SCR-04, SCR-05, SCR-09.
 - **Dependencies:** Label, Button, Badge.
-- **Usage Rules:** Session items expose **Resume Session**.
+- **Usage Rules:** Session items expose **Resume Session**. A Report item may expose **Delete** as a secondary action, only for the user's own reports and only behind an explicit confirmation; it does not displace the full-item primary action (CR-SCOPE-004).
 
 ## Tab / SectionNav
 - **Purpose:** Secondary navigation across content levels within a domain.
@@ -322,7 +323,7 @@ this contract is otherwise assumed.
 - **Accessibility:** Labeled list; filters operable; items focusable.
 - **Screens Used:** SCR-09.
 - **Dependencies:** ListItem, Input (filter), Button.
-- **Usage Rules:** Session items expose Resume Session.
+- **Usage Rules:** Session items expose Resume Session. Report items may expose a confirmed Delete for the user's own reports (CR-SCOPE-004).
 
 ## ReportDocument
 - **Purpose:** Present a grounded, source-backed report with export.

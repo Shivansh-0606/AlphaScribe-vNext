@@ -2,12 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 🧊 Frozen |
-| **Version** | 0.1.1 |
+| **Document Status** | 🧊 Frozen — amended via CR-SCOPE-004; re-freeze pending approver confirmation |
+| **Version** | 1.0.0 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | CTO |
-| **Last Updated** | 2026-07-18 |
+| **Last Updated** | 2026-10-05 |
 | **Source of Truth** | For the MVP screen set |
 
 **Downstream Dependencies:** UX Specifications · Wireframes · Component Inventory ·
@@ -21,6 +21,7 @@ Interaction Patterns · Responsive Behavior · Accessibility · States · PRDs �
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial MVP screen inventory derived from the frozen Information Architecture and Navigation Structure. |
 | 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the approved Design Constitution (v1.1): added per-screen Experiential Profile (emotional goal, experience goal, AI presence, motion opportunities, continuity). No structural or scope change. |
+| 1.0.0 | 2026-10-05 | Docs (applying [CR-SCOPE-004](../governance/change_requests/CR-SCOPE-004_Report_Deletion.md)) | Amended via CR-SCOPE-004; re-freeze pending approver confirmation | **Reason (Frozen Document Policy):** Executive decision (user approval 2026-10-05, relayed by CTO 3). **Change:** SCR-09 Available Actions gains a confirmed delete of the user's own reports. SCR-10 is unchanged. No other screen, state or structure changed. **Impact and affected documents:** CR-SCOPE-004 §3 and §13. **Version note:** a change that adds scope is MAJOR under the Versioning Policy, and that policy's "frozen baseline is 1.0.0"; this document first reaches 1.0.0 through this CR. **Approval:** the user, in chat (relayed by CTO 3), with CTO 3 concurring; no signed document exists; the re-freeze awaits the CTO's confirmation. |
 
 ---
 
@@ -285,7 +286,7 @@ Interface (§6), AI Experience (§9), Motion (§14), and Micro-interaction (§19
 | **Entry Points** | Global navigation; Workspace Home (SCR-04). |
 | **Exit Points** | Report View (SCR-10); Company Research (SCR-06) via Resume Session; Comparison (SCR-07). |
 | **Primary User Goal** | Retrieve prior work and resume or update it (J-06). |
-| **Available Actions** | Browse/filter sessions, reports, saved exports, history; open a report; **Resume Session**; open a saved export. |
+| **Available Actions** | Browse/filter sessions, reports, saved exports, history; open a report; **Resume Session**; open a saved export; **delete one of the user's own reports, behind an explicit confirmation** (CR-SCOPE-004). |
 | **Information Displayed** | Research sessions (with saved reasoning/sources); research reports; saved exports; research history. |
 | **AI Features Used** | None directly (routes back into AI-bearing research). |
 | **Related Components** | Library lists, filters, list items, empty state, history list. |

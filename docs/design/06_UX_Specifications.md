@@ -2,12 +2,12 @@
 
 | Field | Value |
 |-------|-------|
-| **Document Status** | 🧊 Frozen |
-| **Version** | 0.1.1 |
+| **Document Status** | 🧊 Frozen — amended via CR-SCOPE-004; re-freeze pending approver confirmation |
+| **Version** | 1.0.0 |
 | **Phase** | Design (pre-PRD) |
 | **Owner** | Product & Design |
 | **Approved By** | CTO |
-| **Last Updated** | 2026-07-18 |
+| **Last Updated** | 2026-10-05 |
 | **Source of Truth** | For per-screen UX behavior |
 
 **Downstream Dependencies:** Wireframes · Component Inventory · Interaction Patterns ·
@@ -21,6 +21,7 @@ Responsive Behavior · Accessibility · States · PRDs · QA Test Plans
 |---------|------|--------|--------|-------------|
 | 0.1.0 | 2026-07-18 | Product & Design | 📝 Draft | Initial behavioral UX specifications for the eleven MVP screens. |
 | 0.1.1 | 2026-07-18 | Product & Design | 📝 Draft | Experiential alignment to the Design Constitution (v1.1): added required Experiential Facets (emotional intention, perceived performance, interaction rhythm, responsiveness, confidence, continuity) applying to every screen; enriched core AI behaviour. No behavioral or scope change. |
+| 1.0.0 | 2026-10-05 | Docs (applying [CR-SCOPE-004](../governance/change_requests/CR-SCOPE-004_Report_Deletion.md)) | Amended via CR-SCOPE-004; re-freeze pending approver confirmation | **Reason (Frozen Document Policy):** Executive decision (user approval 2026-10-05, relayed by CTO 3). **Change:** SCR-09 gains the confirmed report-delete task, its interaction rule, and the sample-report edge case. SCR-10 is unchanged. **Impact and affected documents:** CR-SCOPE-004 §3 and §13. **Version note:** a change that adds scope is MAJOR under the Versioning Policy, and that policy's "frozen baseline is 1.0.0"; this document first reaches 1.0.0 through this CR. **Approval:** the user, in chat (relayed by CTO 3), with CTO 3 concurring; no signed document exists; the re-freeze awaits the CTO's confirmation. |
 
 ---
 
@@ -269,13 +270,13 @@ These apply to all screens and are assumed in every specification below.
 
 - **Objective:** Retrieve and resume durable research.
 - **User Goals:** Find prior work and resume or update it (J-06).
-- **Primary Tasks:** Browse/filter sessions, reports, saved exports, history; open; **Resume Session**.
+- **Primary Tasks:** Browse/filter sessions, reports, saved exports, history; open; **Resume Session**; delete one of the user's own reports after an explicit confirmation (CR-SCOPE-004).
 - **User Flow:** Open library → browse/filter → select session/report/export → Resume Session or open report (J-06).
 - **Information Hierarchy:** Research Sessions → Research Reports → Saved Exports → Research History.
 - **AI Behaviour:** None directly; Resume Session returns to AI-bearing research with context intact.
-- **Interaction Rules:** Resume Session restores prior reasoning and sources; nothing is lost on return (J-06).
+- **Interaction Rules:** Resume Session restores prior reasoning and sources; nothing is lost on return (J-06). Deleting a report is permanent, so it requires an explicit confirmation that names the report; if a delete fails (other than "already gone"), the list is left unchanged and the failure is explained (CR-SCOPE-004).
 - **Validation Rules:** Filters tolerate empty/!partial input.
-- **Edge Cases:** No saved research → Empty; filtered to nothing → No Results.
+- **Edge Cases:** No saved research → Empty; filtered to nothing → No Results; curated public sample reports are not the user's to delete, so no delete action is offered on them (CR-SCOPE-004).
 - **Loading Behaviour:** Lists load progressively.
 - **Empty Behaviour:** First-time empty state explains how research is saved.
 - **Error Behaviour:** Load failure offers retry without losing filters.

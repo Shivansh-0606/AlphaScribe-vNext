@@ -5,7 +5,7 @@
 | **Purpose** | Track formal Change Requests raised against the frozen Product & Design baseline |
 | **Owner** | Governance (CTO decision authority) |
 | **Process** | [Documentation Governance](../Documentation_Governance.md) |
-| **Last Updated** | 2026-07-21 |
+| **Last Updated** | 2026-10-05 |
 
 > A Change Request is raised whenever downstream work (design, engineering) encounters something that
 > would **add, remove, or alter** frozen product scope. Scope is not changed unilaterally — the CR
@@ -22,6 +22,7 @@
 | [CR-SCOPE-001](CR-SCOPE-001_Portfolio.md) | Portfolio (Portfolio Card / Workspace) | Experience Design (M2/P2) | Scope addition | **Defer → V2.0** | 🟢 Resolved |
 | [CR-SCOPE-002](CR-SCOPE-002_News.md) | News (News Card / News Intelligence) | Experience Design (M2/P2) | Scope addition | **Defer → V1.1** | 🟢 Resolved |
 | [CR-SCOPE-003](CR-SCOPE-003_Research_Timeline.md) | Research Timeline | Experience Design (M2/P2) | Presentation clarification | **Approve (bounded to Research History); Reject activity-log reading** | 🟢 Resolved |
+| [CR-SCOPE-004](CR-SCOPE-004_Report_Deletion.md) | Report deletion (confirmed delete action on Research Reports) | Docs, for the user (drafted 2026-10-03) | Scope addition | **Approve** (confirmed hard delete; no undo) | 🟢 Resolved |
 
 ## Context: why these three were raised
 
@@ -33,6 +34,7 @@ and [Feature Roadmap](../../master-plan/03_Feature_Roadmap.md), their *capabilit
 traced to the MVP baseline. They were documented in
 [Family 09](../../experience_design/Components/09_Research_Components.md) as **⚠ SCOPE — presentation
 patterns only, gated behind these CRs**, and no capability has been designed pending decision.
+**CR-SCOPE-004 is separate**: it did not come from M2/P2 but from the Legacy Frontend Removal Plan's parity sweep (drafted 2026-10-03, approved 2026-10-05); see its own file.
 
 ## Decision summary (at a glance)
 
@@ -41,6 +43,7 @@ patterns only, gated behind these CRs**, and no capability has been designed pen
 | **Portfolio** | ❌ No (explicitly excluded ×4 docs) | Roadmap **V2.0** — Portfolio Workspace | **Defer to V2.0** |
 | **News** | ❌ No | Roadmap **V1.1** — News Intelligence | **Defer to V1.1** |
 | **Research Timeline** | ✅ Yes, as **Research History** | MVP — Research Sessions / Research Library | **Approve** as a presentation of Research History; **reject** any new activity-tracking scope |
+| **Report deletion** | ❌ No (SCR-09/SCR-10/`ListItem` define no delete action) | Frozen Research Library surfaces; Constitution 258–259 allow a confirmed user-initiated discard | **Approve** — SCR-09 / `ListItem` gain a confirmed delete; hard delete, no undo for launch |
 
 ## Decision log
 
@@ -49,6 +52,7 @@ patterns only, gated behind these CRs**, and no capability has been designed pen
 | CR-SCOPE-001 | Defer → V2.0 | CTO | 2026-07-21 | Portfolio Card withdrawn from MVP component library; re-raised as part of V2.0 Portfolio Workspace design. |
 | CR-SCOPE-002 | Defer → V1.1 | CTO | 2026-07-21 | News Card withdrawn from MVP component library; re-raised inside V1.1 News Intelligence design. |
 | CR-SCOPE-003 | Approve (bounded to Interpretation A) | CTO | 2026-07-21 | Research Timeline approved strictly as a presentation of existing Research History within Research Library. Interpretation B (new activity/audit log) rejected for MVP. |
+| CR-SCOPE-004 | Approve (Question A: yes; Question B: confirmed hard delete, no undo) | User, in chat (relayed by CTO 3); CTO 3 concurs | 2026-10-05 | Reason: Executive decision (user approval 2026-10-05). No signed document exists; the CR's §13 is the record. Scope: Library list only (confirmed by CTO 3), so SCR-10 was not amended; Report View deletion would need a later CR. The four amended frozen docs are 1.0.0 (MAJOR), re-freeze pending approver confirmation. |
 
 ---
 
@@ -56,6 +60,8 @@ patterns only, gated behind these CRs**, and no capability has been designed pen
 no MVP scope change from CR-SCOPE-001/002 (both deferred, no roadmap change needed); CR-SCOPE-003
 introduces no new scope (bounded to an existing MVP capability). Downstream artifacts (Component
 Inventory, Family 09) may now reflect these dispositions.*
+
+*CR-SCOPE-004 (Report deletion) was raised after the three above and is resolved separately: **Approved** on 2026-10-05. Unlike CR-SCOPE-003, it **does** add scope: a confirmed report-delete action on the Research Library, applied to the frozen Screen Inventory, UX Specifications, Wireframes and Component Inventory (each bumped from 0.1.1 to 1.0.0, MAJOR, with re-freeze pending approver confirmation). See [CR-SCOPE-004](CR-SCOPE-004_Report_Deletion.md) §13.*
 
 ---
 

@@ -4,12 +4,12 @@
 |-------|-------|
 | **CR ID** | CR-SCOPE-004 |
 | **Title** | Report deletion (a delete action with confirmation on Research Reports) |
-| **Status** | 📝 **DRAFT — not submitted, not approved.** Prepared for the user to approve and submit. Nothing in this file is a decision. |
-| **Raised By** | Not yet raised. Drafted by Docs (Docs generator 3) at the request of CTO 3, following the user's ruling of 2026-10-03 (relayed by CTO 3) that report deletion is to be treated as needing a governance Change Request. |
-| **Raised On** | — (drafted 2026-10-03; not submitted) |
+| **Status** | 🟢 **Resolved — Approved** (decided by the user on 2026-10-05, as relayed by CTO 3; see §13). Question A: yes. Question B: confirmed hard delete, no undo. Drafted 2026-10-03 as a DRAFT; §1–§12 are kept as drafted. |
+| **Raised By** | Docs (drafted for the user), 2026-10-03, at the request of CTO 3, following the user's ruling of that date (relayed by CTO 3) that report deletion is to be treated as needing a governance Change Request. |
+| **Raised On** | 2026-10-03 (drafted); decided 2026-10-05 |
 | **Type** | Scope addition (adds a user action to frozen screens and components) |
-| **Affects** | Screen Inventory (SCR-09, SCR-10) · UX Specifications (SCR-09, SCR-10) · Wireframes (SCR-09, SCR-10) · Component Inventory (`ListItem`, `LibraryList`, `ReportDocument`) · possibly Interaction Patterns · Experience Design Family 09 and Component Mapping. Full list in §3. |
-| **Decision** | ☐ Approve ☐ Reject ☐ Defer — **not decided.** To be completed by the CTO / user. |
+| **Affects** | Screen Inventory (SCR-09 amended; SCR-10 not amended, see §13) · UX Specifications (SCR-09 amended; SCR-10 not amended) · Wireframes (SCR-09 amended; SCR-10 not amended) · Component Inventory (`ListItem`, `LibraryList` amended; `ReportDocument` not amended, see §13) · Interaction Patterns and States (not amended; see §13) · Experience Design Family 09 and Component Mapping (not amended). Full list in §3. |
+| **Decision** | ☑ Approve ☐ Reject ☐ Defer — decided by the user, 2026-10-05, as relayed by CTO 3 (see §13 for the verbatim quote and its provenance). |
 
 > Raised because the user ruled (2026-10-02, relayed by CTO 3) that report deletion is to be ported
 > before `frontend/` is deleted ([Legacy Frontend Removal Plan](../Legacy_Frontend_Removal_Plan.md)
@@ -21,7 +21,7 @@
 > ([`docs/briefs/report-deletion_research-library.md`](../../briefs/report-deletion_research-library.md))
 > is committed but marked "DRAFT — NOT READY TO BUILD" for this reason.
 >
-> **This draft deliberately makes no recommendation** (§12). It sets out the question, the evidence,
+> **Update 2026-10-05: approved; see §13.** *As drafted,* this document deliberately made no recommendation (§12). It sets out the question, the evidence,
 > the options and their consequences; the answer is the CTO's and the user's.
 
 ---
@@ -93,7 +93,7 @@ Line numbers were read in the files on 2026-10-03.
 | **Frontend Architecture** `01_Frontend_Architecture_Constitution.md` lines 372–373 (Law 6); `03.12_Offline_Synchronization_Philosophy.md` lines 53–54 | "must not discard in-progress research across navigation, error, or timeout"; no sync decision "may discard the user's completed or in-progress research" | ⚠ Written about unintended loss; silent on a deliberate delete |
 | **Backend** (not frozen design) `server.py:1477–1493` | Owner-scoped hard delete; samples undeletable (404) | See §6 |
 
-**Frozen documents that would need a MAJOR/MINOR amendment if Question A is answered "yes"** (to be
+**Frozen documents that would need an amendment (MAJOR, per §13) if Question A is answered "yes"** (to be
 enumerated precisely at the Impact Analysis step; this draft **edits none of them**):
 `05_Screen_Inventory.md` (SCR-09, and SCR-10 if chosen), `06_UX_Specifications.md` (same screens),
 `07_Wireframes.md` (same screens), `09_Component_Inventory.md` (`ListItem`, `LibraryList`, and
@@ -176,6 +176,8 @@ undo (later or sooner), reject, or defer past launch.
 
 ## 12. CTO Recommendation
 
+*(As drafted on 2026-10-03. The decision is recorded in §13.)*
+
 **None given in this draft.** The Documentation Governance workflow ends in approval by the required
 approver. This file does **not** recommend an outcome for either Question A or Question B, because the
 choice between "confirmed, irreversible delete", "reversible delete" and "no delete" turns on a product
@@ -190,11 +192,78 @@ non-binding analysis of each open implementation question, labelled as such, is 
 | 1. Proposed Change | Drafted (§1) |
 | 2. Impact Analysis | Partly drafted (§3, §6–§10); to be completed |
 | 3. Affected Documents | Provisional list in §3 |
-| 4. Review | Not started |
-| 5. Approval | **Not decided** (☐ Approve ☐ Reject ☐ Defer, above) |
-| 6–9. Implementation, verification, revision history, re-freeze | Not started; only after approval |
+| 4. Review | Docs Reviewer 2 reviewed the draft (2026-10-03); the implemented amendments were reviewed and passed on 2026-10-05 (§13) |
+| 5. Approval | **Approved 2026-10-05** (☑ Approve above; relayed, §13) |
+| 6–9. Implementation, verification, revision history, re-freeze | See §13 (step-by-step) |
 
-*Draft Change Request, prepared for the [Documentation Governance](../Documentation_Governance.md)
-process. It has not been entered in the [Change Request Register](00_Change_Request_Register.md); doing
-so, and submitting it, is the user's step. The frozen baseline remains authoritative until this CR is
-explicitly approved.*
+*Change Request raised under the [Documentation Governance](../Documentation_Governance.md) process and
+entered in the [Change Request Register](00_Change_Request_Register.md) on 2026-10-05.*
+
+---
+
+## 13. Decision Record (2026-10-05)
+
+**Decision: Approve.**
+
+**Reason (Frozen Document Policy):** Executive decision (user approval 2026-10-05).
+
+**Provenance, stated plainly.** The decision below was **relayed by CTO 3**, who reported that the user typed the following in CTO 3's chat session on 2026-10-05. Verbatim as relayed: *"Approve CR-SCOPE-004 and go with your recommendations"*. The author of this record did not see the chat and has not verified the quote first-hand; CTO 3 has told the committer.
+
+**Approver of record.** The user acted as approver, in chat (relayed by CTO 3), and **CTO 3 co-signs this CR record** as the CTO's concurrence. **No signed document exists**; this paragraph is the record.
+
+**Answers (attributed to the user, relayed by CTO 3):**
+
+| Question | Answer |
+|---|---|
+| **A — scope** | **Yes.** The frozen screen specifications gain a report-delete action behind an explicit confirmation (as relayed: SCR-09, SCR-10 and `ListItem`; but see the scope note below) |
+| **B — reversibility** | **Confirmed hard delete for launch, no undo.** Undo is a later enhancement and goes through its own Change Request |
+
+**"Go with your recommendations" was relayed as adopting** the "CTO-adjacent recommendation" for each of
+the decision sheet's Q2–Q11 ([`report-deletion_decision-sheet.md`](../../briefs/report-deletion_decision-sheet.md)),
+**except Q8**: the confirmation dialog's wording stays for the user to approve. Placeholder copy marked
+"TBD-user" is used, and the build must not ship final copy without the user's sign-off.
+
+**Scope note (confirmed by CTO 3, 2026-10-05).** The relayed answer to Question A names SCR-09, SCR-10 and
+`ListItem`, but the adopted Q2 recommendation puts the control on the **Library list only** (a per-row
+menu), not on Report View. **CTO 3 confirmed the Library-list-only reading**, so **SCR-10 and
+`ReportDocument` were NOT amended**. Report View deletion would need a later Change Request.
+
+**Amendments applied to the frozen documents** (each bumped from 0.1.1 to 1.0.0, each with a revision-history row
+citing this CR and giving the Reason above). The bump is **MAJOR**: the Versioning Policy treats a change that
+adds scope as MAJOR, and CTO 3 ruled so on 2026-10-05 after Docs Reviewer 2 checked it against the policy. That
+policy also says "the frozen baseline is 1.0.0", so these four documents first reach 1.0.0 through this CR. Each
+revision row's status reads "Amended via CR-SCOPE-004; re-freeze pending approver confirmation":
+
+| Document | Change |
+|---|---|
+| `design/05_Screen_Inventory.md` | SCR-09 Available Actions: adds a confirmed delete of the user's own reports |
+| `design/06_UX_Specifications.md` | SCR-09: Primary Tasks, Interaction Rules (permanent; explicit confirmation naming the report; failure leaves the list unchanged) and Edge Cases (samples are not deletable) |
+| `design/07_Wireframes.md` | SCR-09 Secondary Actions: adds the per-item confirmed delete (drawn layout unchanged) |
+| `design/09_Component_Inventory.md` | `ListItem`: the Report item on SCR-09 may carry one optional secondary action, Delete (own reports only, behind an explicit confirmation); `LibraryList` usage rule ("may expose") |
+
+**Not amended, and why:** `10_Interaction_Patterns.md` and `13_States.md` (no undo; the existing "# Dialogs"
+and Success/Error states already cover a confirmation), SCR-10 and `ReportDocument` (scope note above),
+the Design Constitution (no change; this CR is the explicit, confirmed exception it allows at lines
+258–259, and line 590's preference for undo is not taken for launch because undo is not feasible without
+backend work). The mockups' presentation and any Experience Design component documents are not changed
+by this record.
+
+**Documentation Governance workflow, step by step:**
+
+| Step | Status |
+|---|---|
+| 1. Proposed Change | Done (§1) |
+| 2. Impact Analysis | Done as far as the repo evidence allows (§3, §6–§10) |
+| 3. Affected Documents | Done: the four documents above (SCR-10, `ReportDocument`, 10 and 13 deliberately excluded) |
+| 4. Review | Draft reviewed by Docs Reviewer 2 (2026-10-03); **the amendments, the brief and the plan edits were reviewed and passed by Docs Reviewer 2 on 2026-10-05** |
+| 5. Approval | Approved 2026-10-05 by the user in chat (relayed by CTO 3), with **CTO 3 co-signing this record**; **no signed document exists** |
+| 6. Implementation | The four amendments above, committed with this change |
+| 7. Verification | Done: Docs Reviewer 2 checked that each amendment matches the CR and cites it (passed 2026-10-05) |
+| 8. Revision History Update | Done: a 1.0.0 row in each amended document, with the Reason |
+| 9. Freeze Again | **Pending.** Each revision row reads "re-freeze pending approver confirmation"; the Frozen Document Policy requires CTO sign-off before re-freezing, an approver act the author cannot perform. CTO concurs now; re-freeze confirmation by the CTO/user is still pending |
+
+**Consequences recorded elsewhere:** the implementation brief
+([`report-deletion_research-library.md`](../../briefs/report-deletion_research-library.md)) records the
+Q1–Q11 answers and was reviewed and passed by Docs Reviewer 2 on 2026-10-05 and is ready to build (its Q5 is now a CTO architecture ruling, see its §3.3); the Removal Plan §3 #13 records the approval and that the
+build is the remaining F6 item.
+
