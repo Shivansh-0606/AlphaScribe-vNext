@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { reportKeys } from "@/lib/api/report-keys";
 import * as researchLibraryApi from "../integration/api";
 import type { ReportDoc } from "../integration/schemas";
 
 /** Server-state ownership for a single saved report (03.14 row 2/3). */
 export function reportQueryKey(id: string) {
-  return ["research-library", "report", id] as const;
+  return reportKeys.detail(id, "research-library");
 }
 
 async function fetchSavedReport(id: string): Promise<ReportDoc | null> {

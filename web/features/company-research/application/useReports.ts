@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { reportKeys } from "@/lib/api/report-keys";
 import * as companyResearchApi from "../integration/api";
 
 /**
@@ -10,7 +11,7 @@ import * as companyResearchApi from "../integration/api";
  */
 export function useReports(ticker: string) {
   return useQuery({
-    queryKey: ["company-research", "reports", ticker],
+    queryKey: reportKeys.list("company-research", ticker),
     queryFn: () => companyResearchApi.fetchReportsForTicker(ticker),
     staleTime: 30_000,
   });

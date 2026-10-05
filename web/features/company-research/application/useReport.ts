@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { reportKeys } from "@/lib/api/report-keys";
 import * as companyResearchApi from "../integration/api";
 import type { ReportDoc } from "../integration/schemas";
 
@@ -13,7 +14,7 @@ import type { ReportDoc } from "../integration/schemas";
  * hook picks it up reactively without a redundant fetch.
  */
 export function reportQueryKey(jobId: string) {
-  return ["company-research", "report", jobId] as const;
+  return reportKeys.detail(jobId, "company-research");
 }
 
 async function fetchCompletedReport(jobId: string): Promise<ReportDoc | null> {
@@ -43,7 +44,7 @@ export function useReport(jobId: string | null) {
  * genuinely still-running one) actually has.
  */
 export function reportStatusQueryKey(jobId: string) {
-  return ["company-research", "report-status", jobId] as const;
+  return reportKeys.status(jobId, "company-research");
 }
 
 export function useReportStatus(jobId: string | null) {

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { reportKeys } from "@/lib/api/report-keys";
 import * as workspaceHomeApi from "../integration/api";
 
 /** Search is available immediately and never blocked by anything else on the screen (SCR-04 UX spec). */
@@ -19,7 +20,7 @@ export function useCompanySearch(query: string, limit = 8) {
  */
 export function useRecentReports(limit = 10) {
   return useQuery({
-    queryKey: ["workspace-home", "recent-reports", limit],
+    queryKey: reportKeys.list("workspace-home", "recent", limit),
     queryFn: () => workspaceHomeApi.fetchRecentReports(limit),
     staleTime: 30_000,
   });

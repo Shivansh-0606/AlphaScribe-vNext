@@ -8,11 +8,17 @@ import { Input } from "@/components/foundation/Input";
 import { Skeleton, SkeletonGroup } from "@/components/foundation/Skeleton";
 import { Text } from "@/components/foundation/Text";
 import type { ReportListItem } from "../integration/schemas";
+import { ReportActionsMenu } from "./ReportActionsMenu";
 
 /**
  * LibraryList (09_Component_Inventory.md) — SCR-09's frozen component:
  * `items, filters` properties; `ListItem`(Report variant)/`Input`(filter)
  * dependencies; states `Default, Empty, No Results, Loading, Error`.
+ *
+ * Each row is a whole-row open button plus, for the user's own reports, a
+ * sibling actions menu (CR-SCOPE-004) — siblings, never nested, so the row
+ * stays valid HTML and keyboard-operable. Public samples get no menu: the
+ * backend answers 404 for them (Q6).
  *
  * Curated public samples ARE included here (unlike `workspace-home`'s
  * "Recent Research", which deliberately excludes them as "not the user's
@@ -28,6 +34,7 @@ export function LibraryList({
   filter,
   onFilterChange,
   onSelect,
+  onDeleteRequest,
 }: {
   reports: ReportListItem[] | undefined;
   isLoading: boolean;
@@ -36,6 +43,8 @@ export function LibraryList({
   filter: string;
   onFilterChange: (value: string) => void;
   onSelect: (report: ReportListItem) => void;
+  /** The user chose Delete on a row; `trigger` is that row's menu trigger (where Cancel returns focus). */
+  onDeleteRequest: (report: ReportListItem, trigger: HTMLElement | null) => void;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -84,11 +93,14 @@ export function LibraryList({
       {!isLoading && !isError && reports && reports.length > 0 && (
         <ul className="flex flex-col gap-1">
           {reports.map((report) => (
-            <li key={report.id}>
+            <li
+              key={report.id}
+              className="hover:bg-surface-hover flex items-center gap-1 rounded-md"
+            >
               <button
                 type="button"
                 onClick={() => onSelect(report)}
-                className="hover:bg-surface-hover flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left"
+                className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-3 py-2.5 text-left"
               >
                 <span className="text-foreground shrink-0 font-mono text-sm">{report.ticker}</span>
                 <span className="text-muted-foreground min-w-0 flex-1 truncate text-sm">
@@ -99,6 +111,14 @@ export function LibraryList({
                   {new Date(report.created_at).toLocaleDateString()}
                 </span>
               </button>
+              {!report.is_sample && (
+                <div className="shrink-0 pr-2">
+                  <ReportActionsMenu
+                    report={report}
+                    onDelete={(trigger) => onDeleteRequest(report, trigger)}
+                  />
+                </div>
+              )}
             </li>
           ))}
         </ul>

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { reportKeys } from "@/lib/api/report-keys";
 import * as comparisonApi from "../integration/api";
 
 /**
@@ -12,7 +13,7 @@ import * as comparisonApi from "../integration/api";
 export function useCompare(reportIds: string[]) {
   const sorted = [...reportIds].sort();
   return useQuery({
-    queryKey: ["comparison", "compare", sorted],
+    queryKey: reportKeys.compare(sorted),
     queryFn: () => comparisonApi.compareReports(sorted),
     enabled: sorted.length >= 2,
     staleTime: 30_000,

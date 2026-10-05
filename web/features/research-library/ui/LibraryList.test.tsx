@@ -2,6 +2,7 @@ import { axe } from "jest-axe";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithProviders, screen } from "@/tests/setup/render";
 import type { ReportListItem } from "../integration/schemas";
+import { REPORT_DELETE_COPY as copy } from "./copy";
 import { LibraryList } from "./LibraryList";
 
 const REPORTS: ReportListItem[] = [
@@ -28,6 +29,7 @@ describe("LibraryList", () => {
         filter=""
         onFilterChange={noop}
         onSelect={noop}
+        onDeleteRequest={noop}
       />,
     );
     expect(screen.getByText("Loading research library")).toBeInTheDocument();
@@ -44,6 +46,7 @@ describe("LibraryList", () => {
         filter=""
         onFilterChange={noop}
         onSelect={noop}
+        onDeleteRequest={noop}
       />,
     );
     await user.click(screen.getByRole("button", { name: "Retry" }));
@@ -60,6 +63,7 @@ describe("LibraryList", () => {
         filter=""
         onFilterChange={noop}
         onSelect={noop}
+        onDeleteRequest={noop}
       />,
     );
     expect(screen.getByText(/No saved research yet/)).toBeInTheDocument();
@@ -75,6 +79,7 @@ describe("LibraryList", () => {
         filter="ZZZZ"
         onFilterChange={noop}
         onSelect={noop}
+        onDeleteRequest={noop}
       />,
     );
     expect(screen.getByText('No reports match "ZZZZ".')).toBeInTheDocument();
@@ -91,6 +96,7 @@ describe("LibraryList", () => {
         filter=""
         onFilterChange={noop}
         onSelect={noop}
+        onDeleteRequest={noop}
       />,
     );
     expect(screen.getByText("AAPL")).toBeInTheDocument();
@@ -109,9 +115,11 @@ describe("LibraryList", () => {
         filter=""
         onFilterChange={noop}
         onSelect={onSelect}
+        onDeleteRequest={noop}
       />,
     );
-    await user.click(screen.getByRole("button", { name: /AAPL.*Key risks/ }));
+    // Anchored: the row's menu trigger (a sibling button) also names this report.
+    await user.click(screen.getByRole("button", { name: /^AAPL.*Key risks/ }));
     expect(onSelect).toHaveBeenCalledWith(REPORTS[0]);
   });
 
@@ -126,6 +134,7 @@ describe("LibraryList", () => {
         filter=""
         onFilterChange={onFilterChange}
         onSelect={noop}
+        onDeleteRequest={noop}
       />,
     );
     // Controlled input with no state in this test — each keystroke's event
@@ -145,8 +154,81 @@ describe("LibraryList", () => {
         filter=""
         onFilterChange={noop}
         onSelect={noop}
+        onDeleteRequest={noop}
       />,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  describe("per-row actions menu (CR-SCOPE-004)", () => {
+    function renderList() {
+      const onDeleteRequest = vi.fn();
+      return {
+        onDeleteRequest,
+        ...renderWithProviders(
+          <LibraryList
+            reports={REPORTS}
+            isLoading={false}
+            isError={false}
+            onRetry={noop}
+            filter=""
+            onFilterChange={noop}
+            onSelect={noop}
+            onDeleteRequest={onDeleteRequest}
+          />,
+        ),
+      };
+    }
+    const triggerFor = (report: ReportListItem) =>
+      screen.getByRole("button", { name: copy.menuTriggerLabel(report) });
+
+    it("offers a menu on the user's own report, with an accessible name that names that report", () => {
+      renderList();
+      expect(triggerFor(REPORTS[0])).toBeInTheDocument();
+    });
+
+    it("offers no menu on a public sample — the backend would 404, so the control is hidden (Q6)", () => {
+      renderList();
+      expect(
+        screen.queryByRole("button", { name: copy.menuTriggerLabel(REPORTS[1]) }),
+      ).not.toBeInTheDocument();
+      // Menu triggers are the only buttons that report an expanded state: exactly one, the own report's.
+      expect(screen.getAllByRole("button", { expanded: false })).toHaveLength(1);
+    });
+
+    it("keeps the row's open button and the menu as siblings — never nested interactive elements", () => {
+      renderList();
+      expect(screen.getByRole("button", { name: /^AAPL/ })).not.toContainElement(
+        triggerFor(REPORTS[0]),
+      );
+    });
+
+    it("choosing Delete hands the report and that row's own trigger up", async () => {
+      const { user, onDeleteRequest } = renderList();
+      await user.click(triggerFor(REPORTS[0]));
+      await user.click(await screen.findByRole("menuitem", { name: copy.menuDeleteItem }));
+      expect(onDeleteRequest).toHaveBeenCalledOnce();
+      expect(onDeleteRequest).toHaveBeenCalledWith(REPORTS[0], triggerFor(REPORTS[0]));
+    });
+
+    it("is operable from the keyboard alone", async () => {
+      const { user, onDeleteRequest } = renderList();
+      triggerFor(REPORTS[0]).focus();
+      await user.keyboard("{Enter}");
+      await screen.findByRole("menuitem", { name: copy.menuDeleteItem });
+      await user.keyboard("{Enter}");
+      expect(onDeleteRequest).toHaveBeenCalledOnce();
+    });
+
+    it("has no detectable accessibility violations with the menu open", async () => {
+      const { user, baseElement } = renderList();
+      await user.click(triggerFor(REPORTS[0]));
+      await screen.findByRole("menuitem", { name: copy.menuDeleteItem });
+      // baseElement, so the portaled menu itself is checked. Only axe's page-level
+      // `region` rule is off: a test page has no landmarks for portaled content to sit in.
+      expect(
+        await axe(baseElement, { rules: { region: { enabled: false } } }),
+      ).toHaveNoViolations();
+    });
   });
 });

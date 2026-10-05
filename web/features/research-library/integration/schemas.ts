@@ -65,3 +65,12 @@ export type ReportListItem = z.infer<typeof reportListItemSchema>;
 export const reportsListResponseSchema = z.object({
   reports: z.array(reportListItemSchema),
 });
+
+/**
+ * `DELETE /reports/{id}` (`delete_report`, backend/server.py ~line 1477) —
+ * `{"deleted": "<report_id>"}` on success. Hard delete, owner-scoped; a
+ * missing, foreign or sample id is a `404` (an `AppError`, not this schema).
+ */
+export const deleteReportResponseSchema = z.object({
+  deleted: z.string(),
+});
