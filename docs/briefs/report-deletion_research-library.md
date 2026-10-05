@@ -1,7 +1,7 @@
 # Report Deletion in Research Library (SCR-09) — Implementation Brief
 
 **Date:** 2026-10-02 (drafted); updated 2026-10-05. **Author:** Docs. **For:** Frontend Engineer (via Docs Reviewer).
-**Status:** ✅ **Ready to build** (reviewed and passed by Docs Reviewer 2 on 2026-10-05). Q8 and all user-visible copy stay `TBD-user` placeholders until the user signs off. The blocking question, whether a
+**Status:** ✅ **Built** (`9d84dd0`, `e0fec48`); see "Implementation status" below. The brief was reviewed and passed by Docs Reviewer 2 on 2026-10-05 before the build. Q8 and all user-visible copy stay `TBD-user` placeholders until the user signs off. The blocking question, whether a
 governance Change Request was needed, is answered: [`CR-SCOPE-004`](../governance/change_requests/CR-SCOPE-004_Report_Deletion.md) was **approved on 2026-10-05** (decided by the
 user, as relayed by CTO 3; see the CR's §13). The Q1–Q11 answers are recorded in §5. **One thing is still
 open on the user's side: the confirmation dialog's wording (Q8).** All user-visible copy in this feature is
@@ -312,7 +312,7 @@ function of the report id (the file's documented convention for dynamic IDs).
   `?ids=` containing a deleted id against the running stack. **"Breaks" means Comparison renders a crash or an
   unhandled error for a deleted id**; a silently shorter set is acceptable (it is what the backend does), and a
   *handled* error state for "fewer than 2 remain" is acceptable. The finding goes in the engineer's report and here:
-  **Q9 finding: _not yet recorded_.**
+  **Q9 finding (recorded 2026-10-05, run live against the running stack): the Comparison screen does not crash for a missing id.** With 3 ids (a sample, an own report and a never-existed id) it shows a normal, shorter table (the picker label still says "3/4 selected", which is cosmetic). With a sample plus a never-existed id (fewer than 2 remain) it shows the handled error "Couldn't load the comparison." with Retry. *Caveat:* a never-existed id was the proxy, because the backend cannot tell it from a deleted one; a **real deleted id with real compare-able documents was not exercised**. *Residual (Frontend Reviewer 2, F3):* a deleted id left in a bookmarked `?ids=` URL stays as a phantom selection that cannot be deselected and takes one of the 4 slots; an optional follow-up.
 - Keyboard: open the menu, choose Delete, Cancel and confirm without a pointer; the focus rules are in §3.8.
 
 ### 3.7 Copy mechanics (placeholder strings, Q8)
@@ -337,6 +337,16 @@ function of the report id (the file's documented convention for dynamic IDs).
 - **On success**, focus moves to the list heading ("Research Library"), because the row and its trigger are gone.
 - **On failure**, focus stays in the dialog and the inline error is announced.
 - These behaviours are asserted in tests (the focus rules are testable with Testing Library and `jest-axe`).
+
+## Implementation status (recorded 2026-10-05)
+
+- **Built** in `9d84dd0` (26 files: 7 key-line edits, `report-keys.ts` and the feature), with a formatting fix in `e0fec48`.
+- **Frontend Reviewer 2 code review: PASS**, as reported by Frontend Reviewer 2 to CTO 3 (no git artifact; the evidence is that session's report).
+- **Live two-account real-browser verification: PASS on 2026-10-05** for items 1–6 of its list: cross-account `404` with a neutral toast; cache reach to Workspace Home, the Compare picker and Company Research without a reload; samples have no control; the `/reports/<deleted-id>` error state; real-browser pointer and focus after Cancel, Esc and success. Environment: real browser against local dev Mongo with minimally seeded report docs; no research job was run; test accounts deleted afterwards. These results are as reported by Frontend Reviewer 2 to CTO 3 (no git artifact; the evidence is that session's report).
+- **Checks:** the Frontend Engineer reported to CTO 3 a full `npm run verify` end to end on `e0fec48` on a quiet machine (exit 0; typecheck, lint, `format:check`, 82 files / 449 tests; no git artifact, the evidence is that session's report). `9d84dd0`'s commit message independently records 82 files / 449 tests passing on `9d84dd0`; `e0fec48`'s own message says the vitest stage was not re-run after the format change. Separately, Docs Reviewer 2 reported to CTO 3 one full run with 448 passed plus 1 load-timeout (the `LibraryScreen.test.tsx` delete test "menu → confirm → the row is gone…": 10.4 s against the 10 s limit; the file passes 9/9 alone in about 4 s). This looks load-sensitive rather than a logic defect; a follow-up (a faster test or a per-test timeout) is recommended and not yet assigned. So a green `npm run verify` is not claimed on every run.
+- **Not verified:** a real `401`/expired session; a `5xx`/network inline error in a live browser; a screen-reader announcement; Compare with a real deleted id.
+- **Known follow-ups:** a `401` shows a generic inline failure with a Try again that cannot succeed (no global 401 handler; accepted for launch); the phantom deleted id in a bookmarked `?ids=` URL (§3.6).
+- **Release gate unchanged:** all user-visible copy is `TBD-user` placeholder text in `ui/copy.ts`; final user-approved copy is required before any deploy.
 
 ## 4. Acceptance Criteria
 

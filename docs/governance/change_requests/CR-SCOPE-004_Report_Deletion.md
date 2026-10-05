@@ -211,6 +211,8 @@ entered in the [Change Request Register](00_Change_Request_Register.md) on 2026-
 
 **Approver of record.** The user acted as approver, in chat (relayed by CTO 3), and **CTO 3 co-signs this CR record** as the CTO's concurrence. **No signed document exists**; this paragraph is the record.
 
+Confirmed directly by the user to the committing (Github) session on 2026-10-05 (reported by that session: "yes I approved it, commit them"); the original approval was relayed by CTO 3.
+
 **Answers (attributed to the user, relayed by CTO 3):**
 
 | Question | Answer |
@@ -264,6 +266,6 @@ by this record.
 
 **Consequences recorded elsewhere:** the implementation brief
 ([`report-deletion_research-library.md`](../../briefs/report-deletion_research-library.md)) records the
-Q1–Q11 answers and was reviewed and passed by Docs Reviewer 2 on 2026-10-05 and is ready to build (its Q5 is now a CTO architecture ruling, see its §3.3); the Removal Plan §3 #13 records the approval and that the
+Q1–Q11 answers and was reviewed and passed by Docs Reviewer 2 on 2026-10-05 and is built (`9d84dd0`, `e0fec48`) (its Q5 is now a CTO architecture ruling, see its §3.3); the Removal Plan §3 #13 records the approval and that the
 build is the remaining F6 item.
 
