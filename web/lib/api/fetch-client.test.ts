@@ -19,14 +19,12 @@ describe("apiFetch error normalization", () => {
   it("reads the backend's real {detail, type} envelope (domain_error_handler), not {message}", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          jsonResponse(429, {
-            detail: "Too many acquisition requests for this ticker. Retry in a moment.",
-            type: "rate_limited",
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        jsonResponse(429, {
+          detail: "Too many acquisition requests for this ticker. Retry in a moment.",
+          type: "rate_limited",
+        }),
+      ),
     );
 
     await expect(
