@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/errors/app-error";
@@ -63,6 +64,14 @@ const triggerFor = (report: ReportListItem) =>
   screen.getByRole("button", { name: copy.menuTriggerLabel(report) });
 const heading = () => screen.getByRole("heading", { name: "Research Library" });
 
+// `delay: null`: no timer tick between user-event steps. These tests drive many
+// menu → dialog → confirm steps, and each default-delay step is a macrotask wait that
+// machine load stretches; every assertion still waits on real DOM/state via findBy/waitFor.
+function renderScreen() {
+  const rendered = renderWithProviders(<LibraryScreen />);
+  return { ...rendered, user: userEvent.setup({ delay: null }) };
+}
+
 async function chooseDelete(
   user: ReturnType<typeof renderWithProviders>["user"],
   report: ReportListItem,
@@ -87,8 +96,7 @@ describe("LibraryScreen — deleting a report", () => {
   });
 
   it("menu → confirm → the row is gone, a toast confirms, the other rows stay, and focus lands on the list heading", async () => {
-    const { user } = renderWithProviders(<LibraryScreen />);
-    await screen.findByRole("button", { name: /^AAPL/ });
+    const { user } = renderScreen();
 
     const dialog = await chooseDelete(user, R1);
     expect(dialog.contains(document.activeElement)).toBe(true);
@@ -114,8 +122,7 @@ describe("LibraryScreen — deleting a report", () => {
           };
         }),
     );
-    const { user } = renderWithProviders(<LibraryScreen />);
-    await screen.findByRole("button", { name: /^AAPL/ });
+    const { user } = renderScreen();
     const dialog = await chooseDelete(user, R1);
 
     await user.click(within(dialog).getByRole("button", { name: copy.confirmButton }));
@@ -127,8 +134,7 @@ describe("LibraryScreen — deleting a report", () => {
   });
 
   it("Cancel leaves the list untouched and returns focus to that row's OWN menu trigger", async () => {
-    const { user } = renderWithProviders(<LibraryScreen />);
-    await screen.findByRole("button", { name: /^MSFT/ });
+    const { user } = renderScreen();
     const dialog = await chooseDelete(user, R2);
 
     await user.click(within(dialog).getByRole("button", { name: copy.cancelButton }));
@@ -142,8 +148,7 @@ describe("LibraryScreen — deleting a report", () => {
 
   it("deleting the last remaining report shows the Empty state", async () => {
     db = [R1];
-    const { user } = renderWithProviders(<LibraryScreen />);
-    await screen.findByRole("button", { name: /^AAPL/ });
+    const { user } = renderScreen();
     const dialog = await chooseDelete(user, R1);
 
     await user.click(within(dialog).getByRole("button", { name: copy.confirmButton }));
@@ -153,7 +158,8 @@ describe("LibraryScreen — deleting a report", () => {
   });
 
   it("deleting the last match while a ticker filter is active shows No Results, not Empty", async () => {
-    const { user } = renderWithProviders(<LibraryScreen />);
+    const { user } = renderScreen();
+    // Load-bearing wait: the filter must apply to a LOADED list, or the "MSFT is gone" check below passes vacuously.
     await screen.findByRole("button", { name: /^AAPL/ });
     await user.type(screen.getByLabelText("Filter by ticker"), "AAPL");
     await waitFor(() => expect(screen.queryByRole("button", { name: /^MSFT/ })).toBeNull());
@@ -169,8 +175,7 @@ describe("LibraryScreen — deleting a report", () => {
     deleteReport
       .mockReset()
       .mockRejectedValueOnce(new AppError("server", "Server error.", { status: 500 }));
-    const { user } = renderWithProviders(<LibraryScreen />);
-    await screen.findByRole("button", { name: /^AAPL/ });
+    const { user } = renderScreen();
     const dialog = await chooseDelete(user, R1);
 
     await user.click(within(dialog).getByRole("button", { name: copy.confirmButton }));
@@ -192,8 +197,7 @@ describe("LibraryScreen — deleting a report", () => {
       db = db.filter((report) => report.id !== "r1"); // removed elsewhere (another tab)
       throw new AppError("unknown", "report not found", { status: 404 });
     });
-    const { user } = renderWithProviders(<LibraryScreen />);
-    await screen.findByRole("button", { name: /^AAPL/ });
+    const { user } = renderScreen();
     const dialog = await chooseDelete(user, R1);
 
     await user.click(within(dialog).getByRole("button", { name: copy.confirmButton }));
@@ -206,7 +210,7 @@ describe("LibraryScreen — deleting a report", () => {
   });
 
   it("never offers a delete control on a public sample — only the user's own reports have a menu", async () => {
-    renderWithProviders(<LibraryScreen />);
+    renderScreen();
     await screen.findByRole("button", { name: /^NVDA/ });
 
     expect(
@@ -216,7 +220,7 @@ describe("LibraryScreen — deleting a report", () => {
   });
 
   it("has no detectable accessibility violations", async () => {
-    const { container } = renderWithProviders(<LibraryScreen />);
+    const { container } = renderScreen();
     await screen.findByRole("button", { name: /^AAPL/ });
     expect(await axe(container)).toHaveNoViolations();
   });
