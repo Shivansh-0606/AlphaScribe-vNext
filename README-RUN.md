@@ -10,7 +10,8 @@ running on your own machine with a single click — no manual installs.
 
 1. Make sure **Python 3.11+** and **Node.js 20.11+** are installed.
 2. **Double-click `scripts/run.bat`** (Windows) — or run `python scripts/run.py` (any OS).
-3. Wait for the first-run setup to finish, then open **http://localhost:3001**.
+3. Wait for the first-run setup (including the one-time web build, about 3 minutes)
+   to finish, then open **http://localhost:3001**.
 4. Load demo data: open the **Ingest** page in the UI and click *Load samples*
    (or run `curl -X POST http://localhost:8001/api/ingest/samples`).
 
@@ -48,26 +49,50 @@ python scripts/run.py
 
 ### Useful variants
 ```bash
+python scripts/run.py --dev      # `next dev` (hot reload), bound to 127.0.0.1, instead of the production build
+python scripts/run.py --rebuild  # force a fresh production web build
 python scripts/run.py --setup    # install/download everything but don't start the app
-python scripts/run.py --clean    # delete .venv, .mongo, node_modules, .env.local
+python scripts/run.py --clean    # delete .venv, .mongo, node_modules, .next, .env.local
 ```
+
+### Production build vs. `--dev`
+
+By default the web app is served from a **production build** (`next build`, then
+`next start` on `127.0.0.1:3001` only — never exposed to your network). Pages
+open in milliseconds. The cost is the build: about 3 minutes the first time.
+
+The launcher rebuilds only when it has to — when `web/.next` is missing, when
+you changed, added, deleted or renamed web source files (`app`, `components`, `features`, `lib`, `providers`,
+`public`, `styles`, `package.json`, `package-lock.json`, `next.config.*`,
+`postcss.config.*`, `tsconfig.json`) since the last build, or when the
+`NEXT_PUBLIC_*` environment / `.env*` files changed (those values are baked in at
+build time). Editing tests or Markdown doesn't trigger a rebuild. Otherwise the
+build is skipped and startup takes seconds. If the build fails, the launcher
+stops with the error — it does not fall back to dev mode.
+
+Use **`--dev`** while you are actively editing the frontend: it runs `next dev`,
+also bound to `127.0.0.1` only, with hot reload, but every page compiles the first
+time you visit it (6–14 seconds each), so it is much slower to click around in.
+`--dev` builds nothing, and the next normal launch rebuilds.
 
 ---
 
 ## What happens on the first run
 
 The first launch takes **a few minutes** because it downloads and installs a
-lot. Everything it creates stays **inside the project folder** — nothing is
-installed system-wide:
+lot, then builds the web app. Everything it creates stays **inside the project
+folder** — nothing is installed system-wide:
 
 | Folder created | What it is |
 |----------------|------------|
 | `.venv/` | Python virtual environment with the backend dependencies |
 | `.mongo/` | A portable MongoDB (~250 MB, downloaded once) **and its data** |
 | `web/node_modules/` | Frontend JavaScript dependencies |
+| `web/.next/` | The production web build (about 3 minutes; rebuilt only when sources change) |
 | `web/.env.local` | Points the UI at your local backend (auto-generated) |
 
-Subsequent runs skip all of this and start in **seconds**.
+Subsequent runs skip all of this and start in **seconds** (they rebuild the web
+app only if its sources changed — see "Production build vs. `--dev`" above).
 
 Once running, three services share the one terminal window with colour-coded
 log prefixes:
@@ -76,7 +101,16 @@ log prefixes:
 |--------|---------|-----|
 | `[mongo]` | MongoDB database | `mongodb://localhost:27017` |
 | `[api]` | FastAPI backend | http://localhost:8001/api/health |
-| `[web]` | Next.js frontend | http://localhost:3001 |
+| `[web]` | Next.js frontend (production server; `next dev` with `--dev`) | http://localhost:3001 |
+
+Everything listens on your own machine only. The web server and MongoDB bind
+`127.0.0.1`; the API binds `localhost`, which means both `127.0.0.1` and `::1`, so
+`http://localhost:8001` connects instantly in browsers that try IPv6 first (on
+Windows that otherwise costs about 0.3 s per new connection). If `localhost` ever
+resolves to a non-loopback address, the launcher falls back to `127.0.0.1` and
+says so in the `[api]` log. The API and the production web server keep idle
+connections open for 75 seconds, so pausing between clicks doesn't force a
+reconnect.
 
 ---
 
@@ -137,6 +171,16 @@ re-run `scripts/run.bat`.
 **Frontend won't start / `npm not found`**
 Install Node.js LTS from https://nodejs.org/ (it includes `npm`), then re-run.
 
+**The launcher stops with "the web build failed"**
+The production build (`next build`) found an error in the web code — type, lint
+or compile — and printed it above the message. Fix it and re-run, or run
+`python scripts/run.py --dev` to start without a build (dev mode only compiles
+the pages you open).
+
+**My frontend change isn't showing up**
+A normal launch rebuilds when web sources changed, so restart the launcher. For
+a live-editing loop use `--dev`; use `--rebuild` if you suspect a stale build.
+
 **Reports fail with an API-key error**
 Make sure `GEMINI_API_KEY` is set in `backend/.env` (free key at
 [aistudio.google.com/apikey](https://aistudio.google.com/apikey)). Restart the
@@ -154,7 +198,7 @@ the local download, then re-run.
 ```bash
 python scripts/run.py --clean
 ```
-This removes `.venv`, `.mongo` (including its data), `node_modules`, and
+This removes `.venv`, `.mongo` (including its data), `node_modules`, `.next`, and
 `.env.local`. The next run rebuilds everything from scratch.
 
 **First run is very slow / lots of output**
