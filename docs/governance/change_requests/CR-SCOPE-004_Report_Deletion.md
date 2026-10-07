@@ -267,5 +267,5 @@ by this record.
 **Consequences recorded elsewhere:** the implementation brief
 ([`report-deletion_research-library.md`](../../briefs/report-deletion_research-library.md)) records the
 Q1–Q11 answers and was reviewed and passed by Docs Reviewer 2 on 2026-10-05 and is built (`9d84dd0`, `e0fec48`) (its Q5 is now a CTO architecture ruling, see its §3.3); the Removal Plan §3 #13 records the approval and that the
-build is the remaining F6 item.
+build is complete (`9d84dd0`, `e0fec48`; reviewed and live-verified 2026-10-05). **What remains:** final user-approved dialog copy before any deploy (all user-visible copy is `TBD-user` placeholder text), the re-freeze confirmation of the four amended documents, the absent signed approval record, and the follow-ups recorded in the brief's "Implementation status" (a faster `LibraryScreen` delete test, the `401` handling, the phantom deleted id in a bookmarked `?ids=` URL).
 
